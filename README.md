@@ -219,3 +219,4 @@ For support, email support@zanav.io or create an issue in this repository.
 
 **Built with ❤️ for kennel owners worldwide**
 # Test deployment trigger
+# Pro plan deployment test
