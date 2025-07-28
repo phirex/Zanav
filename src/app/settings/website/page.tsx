@@ -297,10 +297,22 @@ export default function WebsiteSettingsPage() {
 
   const updateSubdomain = async (newSubdomain: string) => {
     try {
+      // Get tenant ID from localStorage
+      const tenantId = localStorage.getItem("tenantId");
+      if (!tenantId) {
+        toast({
+          title: "Error",
+          description: "No tenant ID found",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch("/api/tenants/update-subdomain", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          "x-tenant-id": tenantId,
         },
         body: JSON.stringify({ subdomain: newSubdomain }),
       });
