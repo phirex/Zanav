@@ -8,6 +8,8 @@ export async function GET(
   try {
     console.log("GET /api/kennel-website/public/[subdomain] called");
     console.log("Subdomain:", params.subdomain);
+    console.log("Full URL:", request.url);
+    console.log("Headers:", Object.fromEntries(request.headers.entries()));
 
     const supabase = supabaseServer();
 

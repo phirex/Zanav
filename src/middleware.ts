@@ -29,11 +29,14 @@ export async function middleware(request: NextRequest) {
     const hostname = request.headers.get("host") || "";
     const subdomain = hostname.split(".")[0];
     
+    console.log("[Middleware] Hostname:", hostname, "Subdomain:", subdomain, "Path:", currentPath);
+    
     // If this is a subdomain (not www, not the main domain), route to kennel page
     if (subdomain && subdomain !== "www" && subdomain !== "zanav" && !hostname.includes("localhost")) {
       // Check if the path is not already a kennel path
       if (!currentPath.startsWith("/kennel/")) {
         const kennelUrl = new URL(`/kennel/${subdomain}${currentPath}`, request.url);
+        console.log("[Middleware] Rewriting to:", kennelUrl.toString());
         return NextResponse.rewrite(kennelUrl);
       }
     }

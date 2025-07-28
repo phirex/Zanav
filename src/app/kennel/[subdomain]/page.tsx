@@ -82,6 +82,8 @@ export default function KennelWebsitePage({
     try {
       setIsLoading(true);
 
+      console.log("[Kennel Page] Fetching data for subdomain:", params.subdomain);
+
       // Fetch the website data using the public API
       const response = await fetch(
         `/api/kennel-website/public/${params.subdomain}`,
