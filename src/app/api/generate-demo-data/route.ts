@@ -393,26 +393,26 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       // Create gallery images
       const galleryImages = [
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           image_url: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&h=600&fit=crop",
           caption: "Spacious indoor play area",
           sort_order: 1,
         },
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           image_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&h=600&fit=crop",
           caption: "Comfortable sleeping quarters",
           sort_order: 2,
         },
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           image_url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=600&fit=crop",
           caption: "Outdoor exercise yard",
           sort_order: 3,
         },
       ];
 
-      await adminSupabase.from("kennel_website_images").delete().eq("kennel_website_id", websiteId);
+      await adminSupabase.from("kennel_website_images").delete().eq("website_id", websiteId);
       const { data: images, error: imagesError } = await adminSupabase
         .from("kennel_website_images")
         .insert(galleryImages as any)
@@ -427,7 +427,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       // Create testimonials
       const testimonials = [
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           customer_name: "Sarah Cohen",
           customer_photo_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
           rating: 5,
@@ -435,7 +435,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
           sort_order: 1,
         },
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           customer_name: "David Levi",
           customer_photo_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
           rating: 5,
@@ -443,7 +443,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
           sort_order: 2,
         },
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           customer_name: "Rachel Goldberg",
           customer_photo_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
           rating: 5,
@@ -452,7 +452,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
         },
       ];
 
-      await adminSupabase.from("kennel_website_testimonials").delete().eq("kennel_website_id", websiteId);
+      await adminSupabase.from("kennel_website_testimonials").delete().eq("website_id", websiteId);
       const { data: testimonialData, error: testimonialsError } = await adminSupabase
         .from("kennel_website_testimonials")
         .insert(testimonials as any)
@@ -467,32 +467,32 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       // Create FAQs
       const faqs = [
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           question: "What vaccinations does my dog need?",
           answer: "All dogs must be up to date on rabies, DHPP, and bordetella vaccinations. Please bring vaccination records.",
           sort_order: 1,
         },
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           question: "Can I bring my dog's own food?",
           answer: "Yes! We encourage you to bring your dog's regular food to maintain their diet and avoid stomach upset.",
           sort_order: 2,
         },
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           question: "Do you offer pick-up and drop-off services?",
           answer: "Yes, we offer convenient pick-up and drop-off services within Tel Aviv for an additional fee.",
           sort_order: 3,
         },
         {
-          kennel_website_id: websiteId,
+          website_id: websiteId,
           question: "What if my dog has special needs?",
           answer: "We accommodate dogs with special needs, medications, and dietary requirements. Please discuss with us in advance.",
           sort_order: 4,
         },
       ];
 
-      await adminSupabase.from("kennel_website_faqs").delete().eq("kennel_website_id", websiteId);
+      await adminSupabase.from("kennel_website_faqs").delete().eq("website_id", websiteId);
       const { data: faqData, error: faqsError } = await adminSupabase
         .from("kennel_website_faqs")
         .insert(faqs as any)
