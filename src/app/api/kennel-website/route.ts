@@ -16,6 +16,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch tenant data to get subdomain
+    const { data: tenantData, error: tenantError } = await supabase
+      .from("Tenant")
+      .select("subdomain")
+      .eq("id", tenantId)
+      .single();
+
+    if (tenantError) {
+      console.error("Error fetching tenant data:", tenantError);
+      return NextResponse.json(
+        { error: "Failed to fetch tenant data" },
+        { status: 500 },
+      );
+    }
+
     // Fetch kennel website data
     const { data: websiteData, error: websiteError } = await supabase
       .from("kennel_websites")
@@ -26,6 +41,7 @@ export async function GET(request: NextRequest) {
     console.log("GET - Website data query result:", {
       websiteData,
       websiteError,
+      tenantData,
     });
 
     if (websiteError && websiteError.code !== "PGRST116") {
@@ -36,6 +52,12 @@ export async function GET(request: NextRequest) {
         { status: 500 },
       );
     }
+
+    // Merge tenant subdomain with website data
+    const mergedWebsiteData = {
+      ...websiteData,
+      subdomain: tenantData.subdomain,
+    };
 
     // If website exists, fetch related data
     let galleryImages: any[] = [];
@@ -79,7 +101,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      data: websiteData || null,
+      data: mergedWebsiteData || null,
       galleryImages,
       videos,
       testimonials,
