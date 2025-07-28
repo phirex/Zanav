@@ -1,0 +1,405 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Settings as SettingsIcon, MessageSquare, Save, Link as LinkIcon } from "lucide-react";
+import Link from "next/link";
+import { fetchWithTenant, createTenantHeaders } from "@/lib/client-tenant";
+
+interface Room {
+  id: number;
+  name: string;
+  displayName: string;
+  capacity: number;
+  maxCapacity: number;
+}
+
+interface WhatsAppSettings {
+  whatsappAccountSid: string;
+  whatsappAuthToken: string;
+  whatsappPhoneNumber: string;
+  whatsappEnabled: boolean;
+}
+
+export default function SettingsPage() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  
+  const [whatsappSettings, setWhatsappSettings] = useState<WhatsAppSettings>({
+    whatsappAccountSid: '',
+    whatsappAuthToken: '',
+    whatsappPhoneNumber: '',
+    whatsappEnabled: false,
+  });
+
+  useEffect(() => {
+    fetchRooms();
+    fetchSettings();
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      const data = await fetchWithTenant<Room[]>('/api/rooms');
+      if (Array.isArray(data)) {
+        setRooms(data);
+      } else {
+        console.error('Invalid rooms data format:', data);
+        setRooms([]);
+      }
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+      setRooms([]);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const data = await fetchWithTenant<Record<string, string>>('/api/settings');
+      
+      setWhatsappSettings({
+        whatsappAccountSid: data?.whatsappAccountSid || '',
+        whatsappAuthToken: data?.whatsappAuthToken || '',
+        whatsappPhoneNumber: data?.whatsappPhoneNumber || '',
+        whatsappEnabled: data?.whatsappEnabled === 'true',
+      });
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      // Keep default settings on error
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      // Make sure rooms is an array before mapping
+      const updates = Array.isArray(rooms) ? rooms.map(room => ({
+        id: room.id,
+        maxCapacity: parseInt(formData.get(`maxCapacity-${room.id}`) as string)
+      })) : [];
+
+      const headers = createTenantHeaders({
+        'Content-Type': 'application/json',
+      });
+
+      const response = await fetch('/api/rooms/update-capacity', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ rooms: updates }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update rooms');
+
+      setMessage({ type: 'success', text: 'הגדרות נשמרו בהצלחה' });
+      fetchRooms();
+    } catch (error) {
+      setMessage({ type: 'error', text: 'שגיאה בשמירת ההגדרות' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWhatsAppSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const headers = createTenantHeaders({
+        'Content-Type': 'application/json',
+      });
+
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(whatsappSettings),
+      });
+
+      if (!response.ok) throw new Error('Failed to update WhatsApp settings');
+
+      setMessage({ type: 'success', text: 'הגדרות ווטסאפ נשמרו בהצלחה' });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'שגיאה בשמירת הגדרות ווטסאפ' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWhatsAppChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    
+    if (type === 'checkbox') {
+      setWhatsappSettings(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    } else {
+      setWhatsappSettings(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleResetExemptLastDay = async () => {
+    if (!confirm('האם אתה בטוח? פעולה זו תעדכן את כל ההזמנות כך שהיום האחרון יהיה יום לתשלום')) {
+      return;
+    }
+    
+    setResetLoading(true);
+    setResetMessage(null);
+    
+    try {
+      const headers = createTenantHeaders();
+      
+      const response = await fetch('/api/bookings/reset-exempt', {
+        method: 'POST',
+        headers,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to reset bookings');
+      }
+      
+      const data = await response.json();
+      setResetMessage({ 
+        type: 'success', 
+        text: `ההגדרות עודכנו בהצלחה! ${data.updatedCount} הזמנות עודכנו` 
+      });
+    } catch (error) {
+      console.error('Error resetting bookings:', error);
+      setResetMessage({ 
+        type: 'error', 
+        text: 'שגיאה בעדכון ההזמנות' 
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">הגדרות</h1>
+        <p className="text-gray-500 mt-1">ניהול הגדרות המערכת</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Link
+          href="/settings/templates"
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-2 text-gray-700 mb-2">
+            <MessageSquare className="h-5 w-5 text-blue-600" />
+            <h2 className="text-xl font-bold">תבניות הודעות</h2>
+          </div>
+          <p className="text-gray-500">ניהול תבניות להודעות ווטסאפ</p>
+        </Link>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm">
+        <div className="p-6">
+          <div className="flex items-center gap-2 text-gray-700 mb-6">
+            <MessageSquare className="h-5 w-5" />
+            <h2 className="text-xl font-bold">הגדרות ווטסאפ</h2>
+          </div>
+          
+          <form onSubmit={handleWhatsAppSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
+              <div className="flex items-center gap-2 p-4 bg-blue-50 text-blue-800 rounded-xl mb-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="whatsappEnabled"
+                    name="whatsappEnabled"
+                    checked={whatsappSettings.whatsappEnabled}
+                    onChange={handleWhatsAppChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="whatsappEnabled" className="mr-2 block font-medium">
+                    הפעל הודעות ווטסאפ
+                  </label>
+                </div>
+                <div className="text-sm">
+                  {whatsappSettings.whatsappEnabled ? 
+                    'הודעות ווטסאפ מופעלות ויישלחו ללקוחות' : 
+                    'הודעות ווטסאפ מושבתות - לא יישלחו הודעות ללקוחות'
+                  }
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <label htmlFor="whatsappAccountSid" className="block text-sm font-medium text-gray-700">
+                  Twilio Account SID
+                </label>
+                <input
+                  type="text"
+                  id="whatsappAccountSid"
+                  name="whatsappAccountSid"
+                  value={whatsappSettings.whatsappAccountSid}
+                  onChange={handleWhatsAppChange}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <label htmlFor="whatsappAuthToken" className="block text-sm font-medium text-gray-700">
+                  Twilio Auth Token
+                </label>
+                <input
+                  type="password"
+                  id="whatsappAuthToken"
+                  name="whatsappAuthToken"
+                  value={whatsappSettings.whatsappAuthToken}
+                  onChange={handleWhatsAppChange}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <label htmlFor="whatsappPhoneNumber" className="block text-sm font-medium text-gray-700">
+                  Twilio WhatsApp Number (with country code)
+                </label>
+                <input
+                  type="text"
+                  id="whatsappPhoneNumber"
+                  name="whatsappPhoneNumber"
+                  value={whatsappSettings.whatsappPhoneNumber}
+                  onChange={handleWhatsAppChange}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="+972xxxxxxxxx"
+                />
+              </div>
+            </div>
+
+            {message && (
+              <div className={`p-4 rounded-xl ${
+                message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+              }`}>
+                {message.text}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {loading ? 'שומר...' : 'שמור הגדרות ווטסאפ'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm">
+        <div className="p-6">
+          <div className="flex items-center gap-2 text-gray-700 mb-6">
+            <SettingsIcon className="h-5 w-5" />
+            <h2 className="text-xl font-bold">הגדרות חדרים</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-6">
+              {Array.isArray(rooms) && rooms.length > 0 ? (
+                rooms.map((room) => (
+                  <div key={room.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{room.displayName}</h3>
+                      <p className="text-sm text-gray-500">תפוסה נוכחית: {room.capacity}</p>
+                    </div>
+                    <div className="w-48">
+                      <label htmlFor={`maxCapacity-${room.id}`} className="block text-sm font-medium text-gray-700 mb-1">
+                        תפוסה מקסימלית
+                      </label>
+                      <input
+                        type="number"
+                        id={`maxCapacity-${room.id}`}
+                        name={`maxCapacity-${room.id}`}
+                        value={room.maxCapacity}
+                        onChange={(e) => {
+                          const newMaxCapacity = parseInt(e.target.value);
+                          setRooms(prevRooms => prevRooms.map(r =>
+                            r.id === room.id ? { ...r, maxCapacity: newMaxCapacity } : r
+                          ));
+                        }}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="תפוסה מקסימלית"
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-gray-500">אין חדרים להצגה</div>
+              )}
+            </div>
+
+            {message && (
+              <div className={`p-4 rounded-xl ${
+                message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+              }`}>
+                {message.text}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading || !Array.isArray(rooms) || rooms.length === 0}
+                className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {loading ? 'שומר...' : 'שמור הגדרות חדרים'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm">
+        <div className="p-6">
+          <div className="flex items-center gap-2 text-gray-700 mb-6">
+            <SettingsIcon className="h-5 w-5" />
+            <h2 className="text-xl font-bold">הגדרות מערכת</h2>
+          </div>
+
+          <div className="space-y-6">
+            <div className="border border-gray-200 rounded-xl p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">עדכון הזמנות - חישוב ימים</h3>
+              <p className="text-gray-600 mb-4">
+                לחיצה על כפתור זה תעדכן את כל ההזמנות במערכת כך שהיום האחרון יהיה כלול בחישוב התשלום (ברירת המחדל).
+                פעולה זו נדרשת רק פעם אחת, לאחר שינוי המדיניות.
+              </p>
+              
+              {resetMessage && (
+                <div className={`p-4 rounded-xl mb-4 ${
+                  resetMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                }`}>
+                  {resetMessage.text}
+                </div>
+              )}
+              
+              <button
+                type="button"
+                onClick={handleResetExemptLastDay}
+                disabled={resetLoading}
+                className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50"
+              >
+                {resetLoading ? 'מעדכן...' : 'עדכן את כל ההזמנות לכלול יום אחרון בתשלום'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 

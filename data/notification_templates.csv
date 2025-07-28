@@ -1,0 +1,9 @@
+id,name,description,subject,body,trigger,delayHours,active,createdAt,updatedAt
+d875dc4e-6826-4bfd-ae1a-bc997a7acb62,הזמנה אושרה,נשלח ללקוח בעת יצירת הזמנה,ההזמנה אושרה,"היי {firstName}!
+הזמנתך אושרה!
+
+נשמח לארח את {petName} בין התאריכים {checkInDate} ל {checkOutDate} !
+
+אם יש לך שאלות - נא ליצור קשר בטלפון 054-783-4090
+
+תודה!",BOOKING_CONFIRMATION,0,false,2025-04-17T09:34:26.833Z,2025-04-17T09:34:43.083Z
