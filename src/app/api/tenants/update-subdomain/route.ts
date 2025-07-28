@@ -67,15 +67,49 @@ export async function PATCH(request: NextRequest) {
 
     console.log("Tenant update result:", updateResult);
 
-    // Also update the kennel_websites table if it exists
-    const { error: websiteError } = await supabase
+    // First, check if kennel_websites record exists
+    const { data: existingWebsite, error: checkWebsiteError } = await supabase
       .from("kennel_websites")
-      .update({ subdomain })
-      .eq("tenant_id", tenantId);
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
 
-    if (websiteError) {
-      console.warn("Warning: Could not update kennel_websites subdomain:", websiteError);
-      // Don't fail the request if this fails, as the website might not exist yet
+    console.log("Existing website record:", existingWebsite, "Error:", checkWebsiteError);
+
+    if (existingWebsite) {
+      // Update existing kennel_websites record
+      const { error: websiteError } = await supabase
+        .from("kennel_websites")
+        .update({ subdomain })
+        .eq("tenant_id", tenantId);
+
+      if (websiteError) {
+        console.error("Error updating kennel_websites subdomain:", websiteError);
+        return NextResponse.json(
+          { error: "Failed to update website subdomain" },
+          { status: 500 },
+        );
+      }
+      console.log("Successfully updated kennel_websites subdomain");
+    } else {
+      // Create new kennel_websites record
+      const { error: createError } = await supabase
+        .from("kennel_websites")
+        .insert({
+          tenant_id: tenantId,
+          subdomain: subdomain,
+          hero_title: "Welcome to Our Kennel",
+          hero_tagline: "Where your furry friends feel at home"
+        });
+
+      if (createError) {
+        console.error("Error creating kennel_websites record:", createError);
+        return NextResponse.json(
+          { error: "Failed to create website record" },
+          { status: 500 },
+        );
+      }
+      console.log("Successfully created new kennel_websites record");
     }
 
     return NextResponse.json({ 

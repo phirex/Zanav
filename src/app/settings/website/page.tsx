@@ -663,6 +663,36 @@ export default function WebsiteSettingsPage() {
                     >
                       🔍 Debug
                     </button>
+                    <button
+                      onClick={async () => {
+                        const tenantId = localStorage.getItem("tenantId");
+                        if (tenantId) {
+                          const response = await fetch("/api/sync-subdomains", {
+                            method: "POST",
+                            headers: { "x-tenant-id": tenantId }
+                          });
+                          const data = await response.json();
+                          console.log("Sync subdomains result:", data);
+                          if (data.success) {
+                            toast({
+                              title: "Success",
+                              description: "Subdomains synced successfully",
+                            });
+                            // Refresh the page data
+                            fetchWebsiteData();
+                          } else {
+                            toast({
+                              title: "Error",
+                              description: data.error || "Failed to sync subdomains",
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                      }}
+                      className="inline-flex items-center px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                    >
+                      🔄 Sync
+                    </button>
                   </div>
                 )}
               </div>
