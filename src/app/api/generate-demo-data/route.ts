@@ -217,13 +217,13 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       ownerId: owner!.id,
       startDate: bookingStart.toISOString(),
       endDate: bookingEnd.toISOString(),
-      priceType: "DAILY",
+      priceType: "DAILY" as const,
       pricePerDay,
       totalPrice: pricePerDay * duration,
-      paymentMethod: ["CASH", "CREDIT_CARD", "BANK_TRANSFER", "BIT"][
+      paymentMethod: (["CASH", "CREDIT_CARD", "BANK_TRANSFER", "BIT"] as const)[
         Math.floor(Math.random() * 4)
       ],
-      status,
+      status: status as "PENDING" | "CONFIRMED" | "CANCELLED",
       tenantId: tenantId,
     });
   }
@@ -245,7 +245,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     if (booking.status !== "CANCELLED") {
       paymentsData.push({
         bookingId: booking.id,
-        amount: booking.totalPrice * (Math.random() * 0.5 + 0.5), // 50-100% of total
+        amount: (booking.totalPrice || 0) * (Math.random() * 0.5 + 0.5), // 50-100% of total
         method: booking.paymentMethod,
         tenantId: tenantId,
       });
@@ -275,7 +275,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       description: "Sent immediately when booking is confirmed",
       subject: "Booking Confirmed - Welcome to Our Kennel!",
       body: "Hello {ownerName}, your booking for {dogName} from {startDate} to {endDate} has been confirmed. Room: {roomName}. Total: {totalPrice} ILS. Thank you!",
-      trigger: "BOOKING_CONFIRMATION",
+      trigger: "BOOKING_CONFIRMATION" as const,
       delayHours: 0,
       active: true,
       tenantId: tenantId,
@@ -285,7 +285,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       description: "Sent 24 hours before check-in",
       subject: "Check-in Reminder - {dogName} Tomorrow",
       body: "Hi {ownerName}, this is a reminder that {dogName} is scheduled to check in tomorrow at {startDate}. Please bring vaccination records and any special items.",
-      trigger: "CHECK_IN_REMINDER",
+      trigger: "CHECK_IN_REMINDER" as const,
       delayHours: 24,
       active: true,
       tenantId: tenantId,
@@ -295,7 +295,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       description: "Sent for unpaid bookings",
       subject: "Payment Reminder - {dogName} Booking",
       body: "Hello {ownerName}, this is a friendly reminder about the outstanding payment for {dogName}'s stay. Amount due: {remainingAmount} ILS.",
-      trigger: "PAYMENT_REMINDER",
+      trigger: "PAYMENT_REMINDER" as const,
       delayHours: 0,
       active: true,
       tenantId: tenantId,
