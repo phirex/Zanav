@@ -70,28 +70,28 @@ export async function GET(request: NextRequest) {
       const { data: images } = await supabase
         .from("kennel_website_images")
         .select("*")
-        .eq("kennel_website_id", websiteData.id)
+        .eq("website_id", websiteData.id)
         .order("sort_order");
 
       // Fetch videos
       const { data: videoData } = await supabase
         .from("kennel_website_videos")
         .select("*")
-        .eq("kennel_website_id", websiteData.id)
+        .eq("website_id", websiteData.id)
         .order("sort_order");
 
       // Fetch testimonials
       const { data: testimonialData } = await supabase
         .from("kennel_website_testimonials")
         .select("*")
-        .eq("kennel_website_id", websiteData.id)
+        .eq("website_id", websiteData.id)
         .order("sort_order");
 
       // Fetch FAQs
       const { data: faqData } = await supabase
         .from("kennel_website_faqs")
         .select("*")
-        .eq("kennel_website_id", websiteData.id)
+        .eq("website_id", websiteData.id)
         .order("sort_order");
 
       galleryImages = images || [];
@@ -283,9 +283,10 @@ export async function POST(request: NextRequest) {
       const testimonialsToInsert = testimonials.map(
         (testimonial: any, index: number) => ({
           website_id: websiteId,
-          author_name: testimonial.customer_name,
-          author_photo: testimonial.customer_photo_url || null,
-          text: testimonial.testimonial_text,
+          customer_name: testimonial.customer_name,
+          customer_photo_url: testimonial.customer_photo_url || null,
+          rating: testimonial.rating || 5,
+          testimonial_text: testimonial.testimonial_text,
           sort_order: index,
           created_at: new Date().toISOString(),
         }),

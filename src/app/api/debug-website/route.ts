@@ -36,21 +36,21 @@ export async function GET(request: NextRequest) {
     const { data: galleryImages, error: galleryError } = await supabase
       .from("kennel_website_images")
       .select("*")
-      .eq("kennel_website_id", websiteData?.id || "none")
+      .eq("website_id", websiteData?.id || "none")
       .order("sort_order");
 
     // Check testimonials
     const { data: testimonials, error: testimonialsError } = await supabase
       .from("kennel_website_testimonials")
       .select("*")
-      .eq("kennel_website_id", websiteData?.id || "none")
+      .eq("website_id", websiteData?.id || "none")
       .order("sort_order");
 
     // Check FAQs
     const { data: faqs, error: faqsError } = await supabase
       .from("kennel_website_faqs")
       .select("*")
-      .eq("kennel_website_id", websiteData?.id || "none")
+      .eq("website_id", websiteData?.id || "none")
       .order("sort_order");
 
     return NextResponse.json({
