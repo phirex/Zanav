@@ -5,8 +5,8 @@ export async function listTenantsWithOwner(client: SupabaseClient<Database>) {
   // 1. tenants
   const { data: tenants, error: tenantErr } = await client
     .from("Tenant")
-    .select("id, name, createdAt")
-    .order("createdAt", { ascending: false });
+    .select("id, name, createdat")
+    .order("createdat", { ascending: false });
   if (tenantErr) throw new Error(tenantErr.message);
   if (!tenants || tenants.length === 0) return [];
 
@@ -39,7 +39,7 @@ export async function listTenantsWithOwner(client: SupabaseClient<Database>) {
     return {
       id: t.id,
       name: t.name,
-      createdAt: t.createdAt,
+      createdAt: t.createdat,
       ownerEmail: ownerLink ? ownerEmails[ownerLink.user_id] || null : null,
     };
   });
