@@ -70,28 +70,28 @@ export async function GET(request: NextRequest) {
       const { data: images } = await supabase
         .from("kennel_website_images")
         .select("*")
-        .eq("website_id", websiteData.id)
+        .eq("kennel_website_id", websiteData.id)
         .order("sort_order");
 
       // Fetch videos
       const { data: videoData } = await supabase
         .from("kennel_website_videos")
         .select("*")
-        .eq("website_id", websiteData.id)
+        .eq("kennel_website_id", websiteData.id)
         .order("sort_order");
 
       // Fetch testimonials
       const { data: testimonialData } = await supabase
         .from("kennel_website_testimonials")
         .select("*")
-        .eq("website_id", websiteData.id)
+        .eq("kennel_website_id", websiteData.id)
         .order("sort_order");
 
       // Fetch FAQs
       const { data: faqData } = await supabase
         .from("kennel_website_faqs")
         .select("*")
-        .eq("website_id", websiteData.id)
+        .eq("kennel_website_id", websiteData.id)
         .order("sort_order");
 
       galleryImages = images || [];
@@ -225,11 +225,11 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_images")
         .delete()
-        .eq("website_id", websiteId);
+        .eq("kennel_website_id", websiteId);
 
       // Insert new images
       const imagesToInsert = galleryImages.map((img: any, index: number) => ({
-        website_id: websiteId,
+        kennel_website_id: websiteId,
         image_url: img.image_url,
         caption: img.caption || null,
         sort_order: index,
@@ -251,11 +251,11 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_videos")
         .delete()
-        .eq("website_id", websiteId);
+        .eq("kennel_website_id", websiteId);
 
       // Insert new videos
       const videosToInsert = videos.map((video: any, index: number) => ({
-        website_id: websiteId,
+        kennel_website_id: websiteId,
         video_url: video.video_url,
         caption: video.title || null,
         sort_order: index,
@@ -277,15 +277,16 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_testimonials")
         .delete()
-        .eq("website_id", websiteId);
+        .eq("kennel_website_id", websiteId);
 
       // Insert new testimonials
       const testimonialsToInsert = testimonials.map(
         (testimonial: any, index: number) => ({
-          website_id: websiteId,
-          author_name: testimonial.customer_name,
-          author_photo: testimonial.customer_photo_url || null,
-          text: testimonial.testimonial_text,
+          kennel_website_id: websiteId,
+          customer_name: testimonial.customer_name,
+          customer_photo_url: testimonial.customer_photo_url || null,
+          testimonial_text: testimonial.testimonial_text,
+          rating: testimonial.rating || 5,
           sort_order: index,
           created_at: new Date().toISOString(),
         }),
@@ -306,11 +307,11 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_faqs")
         .delete()
-        .eq("website_id", websiteId);
+        .eq("kennel_website_id", websiteId);
 
       // Insert new FAQs
       const faqsToInsert = faqs.map((faq: any, index: number) => ({
-        website_id: websiteId,
+        kennel_website_id: websiteId,
         question: faq.question,
         answer: faq.answer,
         sort_order: index,
