@@ -86,7 +86,7 @@ export default function KennelWebsitePage({
 
       // Fetch the website data using the public API
       const response = await fetch(
-        `/api/kennel-website/public/${params.subdomain}`,
+        `${window.location.origin}/api/kennel-website/public/${params.subdomain}`,
       );
 
       if (!response.ok) {
