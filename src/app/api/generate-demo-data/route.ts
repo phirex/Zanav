@@ -429,7 +429,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
         {
           website_id: websiteId,
           author_name: "Sarah Cohen",
-          author_photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+          author_photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
           text: "Amazing care for my Golden Retriever! The staff is so loving and professional. I can relax knowing my dog is in good hands.",
           sort_order: 1,
         },
