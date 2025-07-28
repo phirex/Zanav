@@ -1,5 +1,7 @@
 import { supabaseServer } from "../src/lib/supabase";
-import { TriggerType } from "../src/lib/supabase/types";
+import type { Database } from "../src/lib/database.types";
+
+type TriggerType = Database["public"]["Enums"]["TriggerType"];
 
 async function main() {
   try {
@@ -12,7 +14,7 @@ async function main() {
         description: "Sent when a booking is confirmed",
         subject: "Booking Confirmation",
         body: "Hello {firstName}, your booking for {petName} from {checkInDate} to {checkOutDate} has been confirmed. Thank you for choosing our pension!",
-        trigger: TriggerType.BOOKING_CONFIRMATION,
+        trigger: "BOOKING_CONFIRMATION" as TriggerType,
         delayHours: 0,
         active: true,
       })
