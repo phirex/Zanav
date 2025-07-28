@@ -11,6 +11,8 @@ import {
   Phone,
   Mail,
   MessageCircle,
+  User,
+  Upload,
 } from "lucide-react";
 import ClientLayout from "@/app/components/ClientLayout";
 
@@ -477,6 +479,75 @@ export default function WebsiteSettingsPage() {
     setTestimonials(updated);
   };
 
+  const handleTestimonialPhotoUpload = async (file: File, index: number) => {
+    try {
+      console.log("Handling testimonial photo upload:", file.name);
+
+      // Validate file
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast({
+          title: "Upload Error",
+          description: "File size must be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Upload Error",
+          description: "Only JPEG, PNG, and WebP files are allowed",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Upload file
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Generate unique filename for testimonial photos
+      const fileExt = file.name.split(".").pop();
+      const fileName = `testimonials/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      formData.append("path", fileName);
+
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast({
+          title: "Upload Error",
+          description: error.error || "Failed to upload image",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const result = await response.json();
+      console.log("Testimonial photo uploaded:", result.url);
+
+      // Update the testimonial with the new photo URL
+      updateTestimonial(index, "customer_photo_url", result.url);
+
+      toast({
+        title: "Success",
+        description: "Photo uploaded successfully",
+      });
+    } catch (error) {
+      console.error("Error uploading testimonial photo:", error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload photo",
+        variant: "destructive",
+      });
+    }
+  };
+
   // FAQ Functions
   const addFAQ = () => {
     const newFAQ: FAQ = {
@@ -849,6 +920,59 @@ export default function WebsiteSettingsPage() {
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+
+                    {/* Customer Photo Upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Customer Photo
+                      </label>
+                      <div className="flex items-center space-x-4">
+                        {testimonial.customer_photo_url ? (
+                          <div className="relative">
+                            <img
+                              src={testimonial.customer_photo_url}
+                              alt="Customer photo"
+                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                            />
+                            <button
+                              onClick={() => updateTestimonial(index, "customer_photo_url", "")}
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                            <User className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                        
+                        <div className="flex-1">
+                          <label
+                            htmlFor={`testimonial-photo-upload-${index}`}
+                            className="cursor-pointer inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            {testimonial.customer_photo_url ? "Change Photo" : "Upload Photo"}
+                          </label>
+                          <input
+                            id={`testimonial-photo-upload-${index}`}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleTestimonialPhotoUpload(file, index);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            PNG, JPG, WEBP up to 5MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
