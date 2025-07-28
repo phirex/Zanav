@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
       .eq("id", tenantId)
       .single();
 
+    console.log("Fetched tenant data:", { tenantId, tenantData, tenantError });
+
     if (tenantError) {
       console.error("Error fetching tenant data:", tenantError);
       return NextResponse.json(

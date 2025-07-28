@@ -46,11 +46,14 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    console.log("Updating tenant subdomain:", { tenantId, subdomain });
+    
     // Update the tenant's subdomain
-    const { error: updateError } = await supabase
+    const { data: updateResult, error: updateError } = await supabase
       .from("Tenant")
       .update({ subdomain })
-      .eq("id", tenantId);
+      .eq("id", tenantId)
+      .select();
 
     if (updateError) {
       console.error("Error updating tenant subdomain:", updateError);
@@ -59,6 +62,8 @@ export async function PATCH(request: NextRequest) {
         { status: 500 },
       );
     }
+
+    console.log("Tenant update result:", updateResult);
 
     // Also update the kennel_websites table if it exists
     const { error: websiteError } = await supabase
