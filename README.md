@@ -1,6 +1,8 @@
-# 🐕 Zanav - Professional Kennel Management System
+# Zanav - Kennel Management System
 
-A comprehensive, multi-tenant kennel management system built with Next.js, Supabase, and modern web technologies. Perfect for kennel owners who want to manage their business efficiently and provide beautiful public websites for their customers.
+<!-- Latest deployment: 2024-12-19 -->
+
+A comprehensive kennel management system built with Next.js, Supabase, and TypeScript.
 
 ## ✨ Features
 
