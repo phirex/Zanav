@@ -133,6 +133,7 @@ export default function WebsiteSettingsPage() {
 
         if (result.data) {
           console.log("Setting website data:", result.data);
+          console.log("Subdomain from API:", result.data.subdomain);
           setWebsiteData(result.data);
         } else {
           console.log("No website data found");
@@ -335,6 +336,11 @@ export default function WebsiteSettingsPage() {
           title: "Success",
           description: "Subdomain updated successfully",
         });
+        
+        // Refresh the website data to ensure we have the latest from the database
+        setTimeout(() => {
+          fetchWebsiteData();
+        }, 500);
       }
     } catch (error) {
       console.error("Error updating subdomain:", error);
