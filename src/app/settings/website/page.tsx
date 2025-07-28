@@ -329,6 +329,8 @@ export default function WebsiteSettingsPage() {
         // Revert the change
         setWebsiteData((prev) => ({ ...prev, subdomain: prev.subdomain }));
       } else {
+        // Update the local state to reflect the change
+        setWebsiteData((prev) => ({ ...prev, subdomain: newSubdomain }));
         toast({
           title: "Success",
           description: "Subdomain updated successfully",
