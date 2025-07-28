@@ -64,6 +64,8 @@ export default function DebugWebsitePage() {
         return;
       }
 
+      console.log("Generating demo data for tenant:", tenantId);
+
       const response = await fetch("/api/generate-demo-data", {
         method: "POST",
         headers: {
@@ -72,17 +74,20 @@ export default function DebugWebsitePage() {
         },
       });
 
+      console.log("Demo data response status:", response.status);
+
       if (response.ok) {
         const result = await response.json();
+        console.log("Demo data result:", result);
         toast({
           title: "Success",
           description: "Demo data generated successfully",
         });
-        console.log("Demo data result:", result);
         // Refresh the debug data
         await checkWebsiteData();
       } else {
         const error = await response.json();
+        console.error("Demo data error:", error);
         toast({
           title: "Error",
           description: error.error || "Failed to generate demo data",
