@@ -7,7 +7,7 @@ export async function listTemplates(
 ) {
   if (tenantId) {
     try {
-      await client.rpc("set_tenant_context", { tenant_id: tenantId });
+      await client.rpc("set_tenant", { _tenant_id: tenantId });
     } catch {}
   }
   const { data, error } = await client
@@ -40,7 +40,7 @@ export async function createTemplate(
   }
   if (tenantId) {
     try {
-      await client.rpc("set_tenant_context", { tenant_id: tenantId });
+      await client.rpc("set_tenant", { _tenant_id: tenantId });
     } catch {}
   }
   const { data, error } = await client
@@ -68,7 +68,7 @@ export async function getTemplate(
 ) {
   if (tenantId) {
     try {
-      await client.rpc("set_tenant_context", { tenant_id: tenantId });
+      await client.rpc("set_tenant", { _tenant_id: tenantId });
     } catch {}
   }
   const { data, error } = await client
@@ -89,7 +89,7 @@ export async function updateTemplate(
 ) {
   if (tenantId) {
     try {
-      await client.rpc("set_tenant_context", { tenant_id: tenantId });
+      await client.rpc("set_tenant", { _tenant_id: tenantId });
     } catch {}
   }
   const { data, error } = await client
@@ -113,7 +113,7 @@ export async function deleteTemplate(
 ) {
   if (tenantId) {
     try {
-      await client.rpc("set_tenant_context", { tenant_id: tenantId });
+      await client.rpc("set_tenant", { _tenant_id: tenantId });
     } catch {}
   }
   // delete scheduled notifications first
