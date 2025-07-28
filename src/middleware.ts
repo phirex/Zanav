@@ -33,6 +33,12 @@ export async function middleware(request: NextRequest) {
     
     // If this is a subdomain (not www, not the main domain), route to kennel page
     if (subdomain && subdomain !== "www" && subdomain !== "zanav" && !hostname.includes("localhost")) {
+      // Don't rewrite API routes - let them pass through normally
+      if (currentPath.startsWith("/api/")) {
+        console.log("[Middleware] API route detected, skipping rewrite");
+        return response;
+      }
+      
       // Check if the path is not already a kennel path
       if (!currentPath.startsWith("/kennel/")) {
         const kennelUrl = new URL(`/kennel/${subdomain}${currentPath}`, request.url);
