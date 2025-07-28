@@ -307,6 +307,36 @@ export default function WebsiteSettingsPage() {
         return;
       }
 
+      // Validate subdomain format
+      if (!newSubdomain || newSubdomain.trim() === "") {
+        toast({
+          title: "Error",
+          description: "Subdomain cannot be empty",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check for valid characters (letters, numbers, hyphens only)
+      if (!/^[a-z0-9-]+$/.test(newSubdomain)) {
+        toast({
+          title: "Error",
+          description: "Subdomain can only contain lowercase letters, numbers, and hyphens",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check length
+      if (newSubdomain.length < 3 || newSubdomain.length > 63) {
+        toast({
+          title: "Error",
+          description: "Subdomain must be between 3 and 63 characters",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch("/api/tenants/update-subdomain", {
         method: "PATCH",
         headers: {
@@ -332,6 +362,8 @@ export default function WebsiteSettingsPage() {
           title: "Success",
           description: "Subdomain updated successfully",
         });
+        // Refresh the website data to ensure consistency
+        fetchWebsiteData();
       }
     } catch (error) {
       console.error("Error updating subdomain:", error);
@@ -619,7 +651,7 @@ export default function WebsiteSettingsPage() {
                   </span>
                 </p>
                 {websiteData.subdomain && (
-                  <div className="mt-2 space-x-2">
+                  <div className="mt-2">
                     <a
                       href={`https://${websiteData.subdomain}.zanav.io`}
                       target="_blank"
@@ -628,89 +660,6 @@ export default function WebsiteSettingsPage() {
                     >
                       🌐 View Your Website
                     </a>
-                    <button
-                      onClick={async () => {
-                        const tenantId = localStorage.getItem("tenantId");
-                        if (tenantId) {
-                          const response = await fetch("/api/debug-subdomain", {
-                            headers: { "x-tenant-id": tenantId }
-                          });
-                          const data = await response.json();
-                          console.log("Debug subdomain data:", data);
-                          alert(`Tenant subdomain: ${data.tenant?.subdomain}\nWebsite subdomain: ${data.website?.subdomain}`);
-                        }
-                      }}
-                      className="inline-flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                      🔍 Debug
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const tenantId = localStorage.getItem("tenantId");
-                        if (tenantId) {
-                          const response = await fetch("/api/sync-subdomains", {
-                            method: "POST",
-                            headers: { "x-tenant-id": tenantId }
-                          });
-                          const data = await response.json();
-                          console.log("Sync subdomains result:", data);
-                          if (data.success) {
-                            toast({
-                              title: "Success",
-                              description: "Subdomains synced successfully",
-                            });
-                            // Refresh the page data
-                            fetchWebsiteData();
-                          } else {
-                            toast({
-                              title: "Error",
-                              description: data.error || "Failed to sync subdomains",
-                              variant: "destructive",
-                            });
-                          }
-                        }
-                      }}
-                      className="inline-flex items-center px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
-                    >
-                      🔄 Sync
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const tenantId = localStorage.getItem("tenantId");
-                        if (tenantId) {
-                          const response = await fetch("/api/test-subdomain-update", {
-                            method: "POST",
-                            headers: { 
-                              "Content-Type": "application/json",
-                              "x-tenant-id": tenantId 
-                            },
-                            body: JSON.stringify({ subdomain: "test123" })
-                          });
-                          const data = await response.json();
-                          console.log("Test update result:", data);
-                          alert(`Before: ${data.before?.subdomain}\nAfter: ${data.after?.subdomain}\nErrors: ${JSON.stringify(data.errors)}`);
-                        }
-                      }}
-                      className="inline-flex items-center px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-                    >
-                      🧪 Test
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const tenantId = localStorage.getItem("tenantId");
-                        if (tenantId) {
-                          const response = await fetch("/api/debug-database", {
-                            headers: { "x-tenant-id": tenantId }
-                          });
-                          const data = await response.json();
-                          console.log("Debug database result:", data);
-                          alert(`User: ${data.user}\nTenant: ${JSON.stringify(data.tenant)}\nWebsite: ${JSON.stringify(data.website)}\nAll Tenants: ${JSON.stringify(data.allTenants?.map((t: any) => ({id: t.id, name: t.name, subdomain: t.subdomain})))}`);
-                        }
-                      }}
-                      className="inline-flex items-center px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
-                    >
-                      🗄️ DB
-                    </button>
                   </div>
                 )}
               </div>
