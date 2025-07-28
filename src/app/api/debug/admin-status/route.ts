@@ -42,14 +42,6 @@ export async function GET(request: NextRequest) {
     const userId = session.user.id;
     const email = session.user.email;
 
-    // Check GlobalAdmin table directly
-    const { data: globalAdminPascal, error: adminPascalError } =
-      await serverClient
-        .from("GlobalAdmin")
-        .select("*")
-        .eq("supabaseUserId", userId)
-        .maybeSingle();
-
     // Use the isGlobalAdmin helper
     const isAdmin = await isGlobalAdmin();
 
@@ -57,11 +49,6 @@ export async function GET(request: NextRequest) {
       loggedIn: true,
       userId,
       email,
-      directCheckResult: {
-        isAdmin: !!globalAdminPascal,
-        adminData: globalAdminPascal,
-        pascalError: adminPascalError ? adminPascalError.message : null,
-      },
       helperCheckResult: {
         isAdmin,
       },
