@@ -1,14 +1,14 @@
 import { supabaseServer } from "./server";
-import {
-  Booking,
-  Dog,
-  NotificationTemplate,
-  Owner,
-  Payment,
-  Room,
-  ScheduledNotification,
-  Setting,
-} from "./types";
+import type { Database } from "@/lib/database.types";
+
+type Booking = Database["public"]["Tables"]["Booking"]["Row"];
+type Dog = Database["public"]["Tables"]["Dog"]["Row"];
+type NotificationTemplate = Database["public"]["Tables"]["NotificationTemplate"]["Row"];
+type Owner = Database["public"]["Tables"]["Owner"]["Row"];
+type Payment = Database["public"]["Tables"]["Payment"]["Row"];
+type Room = Database["public"]["Tables"]["Room"]["Row"];
+type ScheduledNotification = Database["public"]["Tables"]["ScheduledNotification"]["Row"];
+type Setting = Database["public"]["Tables"]["Setting"]["Row"];
 import { getTenantId } from "../tenant";
 
 /**
@@ -276,7 +276,7 @@ export async function getNotificationTemplates(
   // Handle new filter parameters
   if (typeof params === "object" && params !== null) {
     if (params.trigger) {
-      query = query.eq("trigger", params.trigger);
+      query = query.eq("trigger", params.trigger as any);
     }
 
     if (params.active !== undefined) {
