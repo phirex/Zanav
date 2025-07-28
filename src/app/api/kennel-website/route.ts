@@ -38,10 +38,10 @@ export async function GET(request: NextRequest) {
     }
 
     // If website exists, fetch related data
-    let galleryImages = [];
-    let videos = [];
-    let testimonials = [];
-    let faqs = [];
+    let galleryImages: any[] = [];
+    let videos: any[] = [];
+    let testimonials: any[] = [];
+    let faqs: any[] = [];
 
     if (websiteData) {
       // Fetch gallery images
