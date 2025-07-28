@@ -72,6 +72,7 @@ export default function DebugWebsitePage() {
           "Content-Type": "application/json",
           "x-tenant-id": tenantId,
         },
+        body: JSON.stringify({}), // Send empty JSON body
       });
 
       console.log("Demo data response status:", response.status);
