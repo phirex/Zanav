@@ -75,7 +75,6 @@ export default function WebsiteSettingsPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isEditingSubdomain, setIsEditingSubdomain] = useState(false);
   const { toast } = useToast();
 
   // Fetch current website data
@@ -135,18 +134,7 @@ export default function WebsiteSettingsPage() {
         if (result.data) {
           console.log("Setting website data:", result.data);
           console.log("Subdomain from API:", result.data.subdomain);
-          
-          // Don't overwrite subdomain if user is actively editing it
-          if (isEditingSubdomain) {
-            const currentSubdomain = websiteData.subdomain;
-            setWebsiteData({
-              ...result.data,
-              subdomain: currentSubdomain
-            });
-            console.log("Preserving user's subdomain input:", currentSubdomain);
-          } else {
-            setWebsiteData(result.data);
-          }
+          setWebsiteData(result.data);
         } else {
           console.log("No website data found");
         }
@@ -305,7 +293,6 @@ export default function WebsiteSettingsPage() {
     
     // If subdomain is being changed, update it immediately
     if (field === "subdomain") {
-      setIsEditingSubdomain(true);
       updateSubdomain(value);
     }
     // Don't auto-save on every field change - only on manual save button
@@ -349,14 +336,6 @@ export default function WebsiteSettingsPage() {
           title: "Success",
           description: "Subdomain updated successfully",
         });
-        
-        // Reset editing state after successful update
-        setIsEditingSubdomain(false);
-        
-        // Refresh the website data to ensure we have the latest from the database
-        setTimeout(() => {
-          fetchWebsiteData();
-        }, 500);
       }
     } catch (error) {
       console.error("Error updating subdomain:", error);
