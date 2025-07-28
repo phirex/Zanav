@@ -15,24 +15,8 @@ export async function promoteUserToGlobalAdmin(
   client: SupabaseClient<Database>,
   { userId, email, name }: PromoteInput,
 ) {
-  if (!userId || !email) throw new Error("userId & email required");
-
-  // 1. Check existing in PascalCase
-  const { data: existingPascal } = await client
-    .from("GlobalAdmin")
-    .select("id")
-    .eq("supabaseUserId", userId)
-    .maybeSingle();
-  if (existingPascal) return { alreadyAdmin: true };
-
-  // 2. Insert in PascalCase only
-  const { data: insertedPascal, error: insertPascalErr } = await client
-    .from("GlobalAdmin")
-    .insert({ supabaseUserId: userId, email, name })
-    .select()
-    .single();
-  if (insertPascalErr) throw new Error(insertPascalErr.message);
-  return { adminRecord: insertedPascal };
+  // GlobalAdmin functionality temporarily disabled
+  throw new Error("Global admin promotion temporarily disabled - GlobalAdmin table not in current schema");
 }
 
 /**
