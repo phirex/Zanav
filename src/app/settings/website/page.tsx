@@ -638,7 +638,7 @@ export default function WebsiteSettingsPage() {
                   </span>
                 </p>
                 {websiteData.subdomain && (
-                  <div className="mt-2">
+                  <div className="mt-2 space-x-2">
                     <a
                       href={`https://${websiteData.subdomain}.zanav.io`}
                       target="_blank"
@@ -647,6 +647,22 @@ export default function WebsiteSettingsPage() {
                     >
                       🌐 View Your Website
                     </a>
+                    <button
+                      onClick={async () => {
+                        const tenantId = localStorage.getItem("tenantId");
+                        if (tenantId) {
+                          const response = await fetch("/api/debug-subdomain", {
+                            headers: { "x-tenant-id": tenantId }
+                          });
+                          const data = await response.json();
+                          console.log("Debug subdomain data:", data);
+                          alert(`Tenant subdomain: ${data.tenant?.subdomain}\nWebsite subdomain: ${data.website?.subdomain}`);
+                        }
+                      }}
+                      className="inline-flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      🔍 Debug
+                    </button>
                   </div>
                 )}
               </div>
