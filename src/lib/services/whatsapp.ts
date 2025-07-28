@@ -2,7 +2,9 @@ import {
   getSetting,
   getNotificationTemplateByName,
 } from "@/lib/supabase/helpers";
-import { TriggerType } from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
+
+type TriggerType = Database["public"]["Enums"]["TriggerType"];
 
 interface SendMessageOptions {
   to: string;

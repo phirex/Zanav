@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/lib/supabase/types";
+import { Database } from "@/lib/database.types";
 
 interface ConnectInput {
   supabaseUserId: string;

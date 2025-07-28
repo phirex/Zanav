@@ -1,4 +1,7 @@
-import { Payment, PaymentMethod } from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
+
+type Payment = Database["public"]["Tables"]["Payment"]["Row"];
+type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { Pencil } from "lucide-react";

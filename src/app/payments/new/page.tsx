@@ -2,7 +2,9 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PaymentMethod } from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
+
+type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 import { formatCurrency, formatDateLocale } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -44,7 +46,7 @@ function NewPaymentForm() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [amount, setAmount] = useState<number>(0);
-  const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
+  const [method, setMethod] = useState<PaymentMethod>("CASH");
   const { t, i18n } = useTranslation();
 
   useEffect(() => {

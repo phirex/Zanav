@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import PaymentHistory from "@/app/components/PaymentHistory";
 import NotificationsHistory from "@/components/booking/NotificationsHistory";
 import Link from "next/link";
-import { PaymentMethod } from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
+
+type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 import { formatDateLocale } from "@/lib/utils";
 
 interface Booking {

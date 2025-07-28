@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
 
 type SupabaseContextType = {
   supabase: SupabaseClient<Database>;

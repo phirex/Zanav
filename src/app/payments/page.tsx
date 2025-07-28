@@ -7,10 +7,9 @@ import PaymentHistory from "@/app/components/PaymentHistory";
 import { UnpaidBookings } from "@/app/components/UnpaidBookings";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  PaymentMethod,
-  Payment as SupabasePayment,
-} from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
+
+type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 import { useTranslation } from "react-i18next";
 import { formatCurrency } from "@/lib/utils";
 
@@ -34,17 +33,8 @@ interface Booking {
   priceType: "DAILY" | "FIXED";
   pricePerDay: number | null;
   totalPrice: number | null;
-  payments: Payment[];
+  payments: Database["public"]["Tables"]["Payment"]["Row"][];
   exemptLastDay?: boolean;
-}
-
-interface Payment {
-  id: number;
-  bookingId: number;
-  amount: number;
-  method: PaymentMethod;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface BookingWithAmounts extends Booking {

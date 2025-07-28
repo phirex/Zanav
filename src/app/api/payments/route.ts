@@ -1,7 +1,9 @@
 import { createHandler } from "@/lib/apiHandler";
 import { createPayment } from "@/services/payments";
 export { dynamic } from "@/lib/forceDynamic";
-import { PaymentMethod } from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
+
+type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 
 // POST /api/payments - Create a payment
 export const POST = createHandler(async ({ client, body }) => {

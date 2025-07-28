@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "@/lib/supabase/types";
+import type { Database } from "@/lib/database.types";
 import { DEFAULT_TENANT_ID, getTenantId } from "./lib/tenant";
 
 export async function middleware(request: NextRequest) {

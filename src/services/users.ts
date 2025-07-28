@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/lib/supabase/types";
+import { Database } from "@/lib/database.types";
 import { Role } from "@/lib/auth";
 
 interface ListUsersInput {
