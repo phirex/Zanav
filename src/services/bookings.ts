@@ -504,7 +504,7 @@ export async function resetExemptLastDayPrices(
           ).getTime()) /
           (1000 * 60 * 60 * 24),
       ) + 1; // inclusive
-    const newTotal = booking.pricePerDay * days;
+    const newTotal = (booking.pricePerDay || 0) * days;
     if (booking.totalPrice !== newTotal) {
       const { error: updErr } = await client
         .from("Booking")
