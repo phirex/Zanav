@@ -106,30 +106,7 @@ export async function getCurrentUser() {
  * @returns {Promise<boolean>} true if the user is a global admin
  */
 export async function isGlobalAdmin(): Promise<boolean> {
-  const supabase = await createServerSupabaseClient();
-
-  // Get the current user
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    console.error("Error getting user:", error);
-    return false;
-  }
-
-  // Check only PascalCase table - GlobalAdmin
-  const { data: globalAdminPascal, error: adminPascalError } = await supabase
-    .from("GlobalAdmin")
-    .select("id")
-    .eq("supabaseUserId", user.id)
-    .maybeSingle();
-
-  if (!adminPascalError && globalAdminPascal) {
-    return true;
-  }
-
+  // GlobalAdmin functionality temporarily disabled
   return false;
 }
 
