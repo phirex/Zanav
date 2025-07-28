@@ -283,10 +283,9 @@ export async function POST(request: NextRequest) {
       const testimonialsToInsert = testimonials.map(
         (testimonial: any, index: number) => ({
           website_id: websiteId,
-          customer_name: testimonial.customer_name,
-          customer_photo_url: testimonial.customer_photo_url || null,
-          rating: testimonial.rating || 5,
-          testimonial_text: testimonial.testimonial_text,
+          author_name: testimonial.customer_name,
+          author_photo: testimonial.customer_photo_url || null,
+          text: testimonial.testimonial_text,
           sort_order: index,
           created_at: new Date().toISOString(),
         }),
