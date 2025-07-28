@@ -287,7 +287,49 @@ export default function WebsiteSettingsPage() {
   const handleFieldChange = (field: keyof KennelWebsite, value: any) => {
     const updatedData = { ...websiteData, [field]: value };
     setWebsiteData(updatedData);
+    
+    // If subdomain is being changed, update it immediately
+    if (field === "subdomain") {
+      updateSubdomain(value);
+    }
     // Don't auto-save on every field change - only on manual save button
+  };
+
+  const updateSubdomain = async (newSubdomain: string) => {
+    try {
+      const response = await fetch("/api/tenants/update-subdomain", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ subdomain: newSubdomain }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.error || "Failed to update subdomain",
+          variant: "destructive",
+        });
+        // Revert the change
+        setWebsiteData((prev) => ({ ...prev, subdomain: prev.subdomain }));
+      } else {
+        toast({
+          title: "Success",
+          description: "Subdomain updated successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating subdomain:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update subdomain",
+        variant: "destructive",
+      });
+      // Revert the change
+      setWebsiteData((prev) => ({ ...prev, subdomain: prev.subdomain }));
+    }
   };
 
   // Gallery Functions
@@ -531,6 +573,41 @@ export default function WebsiteSettingsPage() {
                 <p className="text-sm text-gray-500 mt-1">
                   A short, catchy description that appears below the title.
                 </p>
+              </div>
+
+              {/* Subdomain Display */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Website URL
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={websiteData.subdomain || ""}
+                    onChange={(e) => handleFieldChange("subdomain", e.target.value)}
+                    placeholder="your-kennel-name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <span className="text-gray-500">.zanav.io</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  This is your unique subdomain. Your website will be available at{" "}
+                  <span className="font-mono text-blue-600">
+                    {websiteData.subdomain || "your-subdomain"}.zanav.io
+                  </span>
+                </p>
+                {websiteData.subdomain && (
+                  <div className="mt-2">
+                    <a
+                      href={`https://${websiteData.subdomain}.zanav.io`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                    >
+                      🌐 View Your Website
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </section>
