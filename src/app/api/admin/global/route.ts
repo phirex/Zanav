@@ -23,12 +23,17 @@ export const POST = createAdminHandler(async ({ client }) => {
 
   if (!session) throw new Error("You must be logged in");
 
-  const result = await promoteSelfToGlobalAdmin(client, session as any);
-  return {
-    message: result.alreadyAdmin
-      ? "User is already a global admin"
-      : "Successfully promoted to global admin",
-    ...result,
-    isGlobalAdmin: true,
-  };
+  try {
+    await promoteSelfToGlobalAdmin(client, session as any);
+    return {
+      message: "Successfully promoted to global admin",
+      isGlobalAdmin: true,
+    };
+  } catch (error: any) {
+    return {
+      message: error.message || "Global admin promotion failed",
+      isGlobalAdmin: false,
+      error: true,
+    };
+  }
 });
