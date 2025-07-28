@@ -27,7 +27,7 @@ export async function financialReport(
 
   if (tenantId) {
     try {
-      await client.rpc("set_tenant_context", { tenant_id: tenantId });
+      await client.rpc("set_tenant", { _tenant_id: tenantId });
     } catch {}
   }
 
