@@ -1,5 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/database.types";
+
+type TriggerType = Database["public"]["Enums"]["TriggerType"];
 
 export async function listTemplates(
   client: SupabaseClient<Database>,
@@ -22,7 +24,7 @@ export interface TemplateDTO {
   name: string;
   subject: string;
   body: string;
-  trigger: string;
+  trigger: TriggerType;
   description?: string;
   delayHours?: number;
   active?: boolean;
