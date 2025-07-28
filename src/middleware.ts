@@ -25,6 +25,19 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Handle subdomain routing for kennel websites
+    const hostname = request.headers.get("host") || "";
+    const subdomain = hostname.split(".")[0];
+    
+    // If this is a subdomain (not www, not the main domain), route to kennel page
+    if (subdomain && subdomain !== "www" && subdomain !== "zanav" && !hostname.includes("localhost")) {
+      // Check if the path is not already a kennel path
+      if (!currentPath.startsWith("/kennel/")) {
+        const kennelUrl = new URL(`/kennel/${subdomain}${currentPath}`, request.url);
+        return NextResponse.rewrite(kennelUrl);
+      }
+    }
+
     // Create supabase client configured for middleware
     let supabase;
     try {
@@ -90,6 +103,11 @@ export async function middleware(request: NextRequest) {
       "/images",
       "/api/webhooks",
     ];
+
+    // If this is a subdomain request, treat it as a public path
+    if (subdomain && subdomain !== "www" && subdomain !== "zanav" && !hostname.includes("localhost")) {
+      return response;
+    }
 
     // Check if the current path is a public path that doesn't require authentication
     const isPublicPath = publicPaths.some((path) =>
