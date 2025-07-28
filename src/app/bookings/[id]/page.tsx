@@ -36,6 +36,7 @@ interface Payment {
   bookingId: number;
   amount: number;
   method: PaymentMethod;
+  tenantId: string | null;
   createdAt: string;
   updatedAt: string;
 }
