@@ -15,14 +15,11 @@ export async function debugInfo(
   if (session?.user) {
     const uid = session.user.id;
 
-    const { data: adminPascal } = await client
-      .from("GlobalAdmin")
-      .select("*")
-      .eq("supabaseUserId", uid)
-      .maybeSingle();
+    // GlobalAdmin table not available in current schema
+    const adminPascal = null;
 
     directAdminCheck = { pascal: adminPascal, snake: null };
-    adminStatus = { isAdmin: !!adminPascal, details: adminPascal };
+    adminStatus = { isAdmin: false, details: null };
   }
 
   return {
