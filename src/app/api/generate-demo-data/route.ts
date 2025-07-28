@@ -415,7 +415,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       await adminSupabase.from("kennel_website_images").delete().eq("kennel_website_id", websiteId);
       const { data: images, error: imagesError } = await adminSupabase
         .from("kennel_website_images")
-        .insert(galleryImages)
+        .insert(galleryImages as any)
         .select();
 
       if (imagesError) {
@@ -430,24 +430,24 @@ export const POST = createHandler(async ({ client, tenantId }) => {
           kennel_website_id: websiteId,
           customer_name: "Sarah Cohen",
           customer_photo_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-          testimonial_text: "Amazing care for my Golden Retriever! The staff is so loving and professional. I can relax knowing my dog is in good hands.",
           rating: 5,
+          testimonial_text: "Amazing care for my Golden Retriever! The staff is so loving and professional. I can relax knowing my dog is in good hands.",
           sort_order: 1,
         },
         {
           kennel_website_id: websiteId,
           customer_name: "David Levi",
           customer_photo_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-          testimonial_text: "Best kennel in Tel Aviv! My dog comes back happy and tired from all the playtime. Highly recommended!",
           rating: 5,
+          testimonial_text: "Best kennel in Tel Aviv! My dog comes back happy and tired from all the playtime. Highly recommended!",
           sort_order: 2,
         },
         {
           kennel_website_id: websiteId,
           customer_name: "Rachel Goldberg",
           customer_photo_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-          testimonial_text: "The facilities are clean, the staff is caring, and my dog loves it here. Perfect for our family vacations.",
           rating: 5,
+          testimonial_text: "The facilities are clean, the staff is caring, and my dog loves it here. Perfect for our family vacations.",
           sort_order: 3,
         },
       ];
@@ -455,7 +455,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       await adminSupabase.from("kennel_website_testimonials").delete().eq("kennel_website_id", websiteId);
       const { data: testimonialData, error: testimonialsError } = await adminSupabase
         .from("kennel_website_testimonials")
-        .insert(testimonials)
+        .insert(testimonials as any)
         .select();
 
       if (testimonialsError) {
@@ -495,7 +495,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       await adminSupabase.from("kennel_website_faqs").delete().eq("kennel_website_id", websiteId);
       const { data: faqData, error: faqsError } = await adminSupabase
         .from("kennel_website_faqs")
-        .insert(faqs)
+        .insert(faqs as any)
         .select();
 
       if (faqsError) {

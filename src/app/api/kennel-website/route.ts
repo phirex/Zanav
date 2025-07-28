@@ -225,11 +225,11 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_images")
         .delete()
-        .eq("kennel_website_id", websiteId);
+        .eq("website_id", websiteId);
 
       // Insert new images
       const imagesToInsert = galleryImages.map((img: any, index: number) => ({
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         image_url: img.image_url,
         caption: img.caption || null,
         sort_order: index,
@@ -251,11 +251,11 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_videos")
         .delete()
-        .eq("kennel_website_id", websiteId);
+        .eq("website_id", websiteId);
 
       // Insert new videos
       const videosToInsert = videos.map((video: any, index: number) => ({
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         video_url: video.video_url,
         caption: video.title || null,
         sort_order: index,
@@ -277,16 +277,15 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_testimonials")
         .delete()
-        .eq("kennel_website_id", websiteId);
+        .eq("website_id", websiteId);
 
       // Insert new testimonials
       const testimonialsToInsert = testimonials.map(
         (testimonial: any, index: number) => ({
-          kennel_website_id: websiteId,
-          customer_name: testimonial.customer_name,
-          customer_photo_url: testimonial.customer_photo_url || null,
-          testimonial_text: testimonial.testimonial_text,
-          rating: testimonial.rating || 5,
+          website_id: websiteId,
+          author_name: testimonial.customer_name,
+          author_photo: testimonial.customer_photo_url || null,
+          text: testimonial.testimonial_text,
           sort_order: index,
           created_at: new Date().toISOString(),
         }),
@@ -307,11 +306,11 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("kennel_website_faqs")
         .delete()
-        .eq("kennel_website_id", websiteId);
+        .eq("website_id", websiteId);
 
       // Insert new FAQs
       const faqsToInsert = faqs.map((faq: any, index: number) => ({
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         question: faq.question,
         answer: faq.answer,
         sort_order: index,
