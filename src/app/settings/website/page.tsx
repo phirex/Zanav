@@ -291,10 +291,6 @@ export default function WebsiteSettingsPage() {
     const updatedData = { ...websiteData, [field]: value };
     setWebsiteData(updatedData);
     
-    // If subdomain is being changed, update it immediately
-    if (field === "subdomain") {
-      updateSubdomain(value);
-    }
     // Don't auto-save on every field change - only on manual save button
   };
 
@@ -609,6 +605,12 @@ export default function WebsiteSettingsPage() {
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <span className="text-gray-500">.zanav.io</span>
+                  <button
+                    onClick={() => updateSubdomain(websiteData.subdomain || "")}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Save
+                  </button>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">
                   This is your unique subdomain. Your website will be available at{" "}
@@ -671,6 +673,27 @@ export default function WebsiteSettingsPage() {
                       className="inline-flex items-center px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
                     >
                       🔄 Sync
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const tenantId = localStorage.getItem("tenantId");
+                        if (tenantId) {
+                          const response = await fetch("/api/test-subdomain-update", {
+                            method: "POST",
+                            headers: { 
+                              "Content-Type": "application/json",
+                              "x-tenant-id": tenantId 
+                            },
+                            body: JSON.stringify({ subdomain: "test123" })
+                          });
+                          const data = await response.json();
+                          console.log("Test update result:", data);
+                          alert(`Before: ${data.before?.subdomain}\nAfter: ${data.after?.subdomain}\nErrors: ${JSON.stringify(data.errors)}`);
+                        }
+                      }}
+                      className="inline-flex items-center px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    >
+                      🧪 Test
                     </button>
                   </div>
                 )}
