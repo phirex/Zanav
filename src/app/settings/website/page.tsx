@@ -695,6 +695,22 @@ export default function WebsiteSettingsPage() {
                     >
                       🧪 Test
                     </button>
+                    <button
+                      onClick={async () => {
+                        const tenantId = localStorage.getItem("tenantId");
+                        if (tenantId) {
+                          const response = await fetch("/api/debug-database", {
+                            headers: { "x-tenant-id": tenantId }
+                          });
+                          const data = await response.json();
+                          console.log("Debug database result:", data);
+                          alert(`User: ${data.user}\nTenant: ${JSON.stringify(data.tenant)}\nWebsite: ${JSON.stringify(data.website)}\nAll Tenants: ${JSON.stringify(data.allTenants?.map((t: any) => ({id: t.id, name: t.name, subdomain: t.subdomain})))}`);
+                        }
+                      }}
+                      className="inline-flex items-center px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
+                    >
+                      🗄️ DB
+                    </button>
                   </div>
                 )}
               </div>
