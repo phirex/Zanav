@@ -4,6 +4,9 @@ import { createServerSupabaseClient } from "@/lib/auth";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 
+// Force all API routes using this handler to be dynamic
+export const dynamic = 'force-dynamic';
+
 interface HandlerContext {
   req: Request;
   client: SupabaseClient<Database>;
