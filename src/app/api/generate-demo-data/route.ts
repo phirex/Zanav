@@ -319,6 +319,193 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     );
   }
 
+  // Create kennel website data
+  console.log("[GENERATE_DEMO_DATA] Creating kennel website data...");
+  
+  // Get tenant subdomain
+  const { data: tenantData, error: tenantError } = await adminSupabase
+    .from("Tenant")
+    .select("subdomain")
+    .eq("id", tenantId)
+    .single();
+
+  if (tenantError || !tenantData.subdomain) {
+    console.error("[GENERATE_DEMO_DATA] Error fetching tenant subdomain:", tenantError);
+  } else {
+    // Create main website data
+    const websiteData = {
+      subdomain: tenantData.subdomain,
+      hero_title: "Welcome to Happy Paws Kennel",
+      hero_tagline: "Where every dog feels like family",
+      allow_direct_booking: true,
+      theme_color: "#3B82F6",
+      seo_title: "Happy Paws Kennel - Premium Dog Boarding & Care",
+      seo_description: "Professional dog boarding services with 24/7 care, spacious rooms, and loving attention. Book your dog's stay today!",
+      address: "123 Dog Street, Tel Aviv, Israel",
+      contact_phone: "+972-52-123-4567",
+      contact_email: "info@happypaws.co.il",
+      contact_whatsapp: "+972-52-123-4567",
+      special_restrictions: "All dogs must be up to date on vaccinations. Aggressive dogs may require special arrangements.",
+      tenant_id: tenantId,
+    };
+
+    // Check if website already exists
+    const { data: existingWebsite } = await adminSupabase
+      .from("kennel_websites")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .single();
+
+    let websiteId: string | undefined;
+
+    if (existingWebsite) {
+      // Update existing website
+      const { data: updatedWebsite, error: updateError } = await adminSupabase
+        .from("kennel_websites")
+        .update(websiteData)
+        .eq("tenant_id", tenantId)
+        .select("id")
+        .single();
+
+      if (updateError) {
+        console.error("[GENERATE_DEMO_DATA] Error updating website:", updateError);
+      } else {
+        websiteId = updatedWebsite.id;
+        console.log("[GENERATE_DEMO_DATA] Updated existing website");
+      }
+    } else {
+      // Create new website
+      const { data: newWebsite, error: createError } = await adminSupabase
+        .from("kennel_websites")
+        .insert(websiteData)
+        .select("id")
+        .single();
+
+      if (createError) {
+        console.error("[GENERATE_DEMO_DATA] Error creating website:", createError);
+      } else {
+        websiteId = newWebsite.id;
+        console.log("[GENERATE_DEMO_DATA] Created new website");
+      }
+    }
+
+    if (websiteId) {
+      // Create gallery images
+      const galleryImages = [
+        {
+          kennel_website_id: websiteId,
+          image_url: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&h=600&fit=crop",
+          caption: "Spacious indoor play area",
+          sort_order: 1,
+        },
+        {
+          kennel_website_id: websiteId,
+          image_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&h=600&fit=crop",
+          caption: "Comfortable sleeping quarters",
+          sort_order: 2,
+        },
+        {
+          kennel_website_id: websiteId,
+          image_url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=600&fit=crop",
+          caption: "Outdoor exercise yard",
+          sort_order: 3,
+        },
+      ];
+
+      await adminSupabase.from("kennel_website_images").delete().eq("kennel_website_id", websiteId);
+      const { data: images, error: imagesError } = await adminSupabase
+        .from("kennel_website_images")
+        .insert(galleryImages)
+        .select();
+
+      if (imagesError) {
+        console.error("[GENERATE_DEMO_DATA] Error creating gallery images:", imagesError);
+      } else {
+        console.log(`[GENERATE_DEMO_DATA] Created ${images.length} gallery images`);
+      }
+
+      // Create testimonials
+      const testimonials = [
+        {
+          kennel_website_id: websiteId,
+          customer_name: "Sarah Cohen",
+          customer_photo_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+          testimonial_text: "Amazing care for my Golden Retriever! The staff is so loving and professional. I can relax knowing my dog is in good hands.",
+          rating: 5,
+          sort_order: 1,
+        },
+        {
+          kennel_website_id: websiteId,
+          customer_name: "David Levi",
+          customer_photo_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+          testimonial_text: "Best kennel in Tel Aviv! My dog comes back happy and tired from all the playtime. Highly recommended!",
+          rating: 5,
+          sort_order: 2,
+        },
+        {
+          kennel_website_id: websiteId,
+          customer_name: "Rachel Goldberg",
+          customer_photo_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+          testimonial_text: "The facilities are clean, the staff is caring, and my dog loves it here. Perfect for our family vacations.",
+          rating: 5,
+          sort_order: 3,
+        },
+      ];
+
+      await adminSupabase.from("kennel_website_testimonials").delete().eq("kennel_website_id", websiteId);
+      const { data: testimonialData, error: testimonialsError } = await adminSupabase
+        .from("kennel_website_testimonials")
+        .insert(testimonials)
+        .select();
+
+      if (testimonialsError) {
+        console.error("[GENERATE_DEMO_DATA] Error creating testimonials:", testimonialsError);
+      } else {
+        console.log(`[GENERATE_DEMO_DATA] Created ${testimonialData.length} testimonials`);
+      }
+
+      // Create FAQs
+      const faqs = [
+        {
+          kennel_website_id: websiteId,
+          question: "What vaccinations does my dog need?",
+          answer: "All dogs must be up to date on rabies, DHPP, and bordetella vaccinations. Please bring vaccination records.",
+          sort_order: 1,
+        },
+        {
+          kennel_website_id: websiteId,
+          question: "Can I bring my dog's own food?",
+          answer: "Yes! We encourage you to bring your dog's regular food to maintain their diet and avoid stomach upset.",
+          sort_order: 2,
+        },
+        {
+          kennel_website_id: websiteId,
+          question: "Do you offer pick-up and drop-off services?",
+          answer: "Yes, we offer convenient pick-up and drop-off services within Tel Aviv for an additional fee.",
+          sort_order: 3,
+        },
+        {
+          kennel_website_id: websiteId,
+          question: "What if my dog has special needs?",
+          answer: "We accommodate dogs with special needs, medications, and dietary requirements. Please discuss with us in advance.",
+          sort_order: 4,
+        },
+      ];
+
+      await adminSupabase.from("kennel_website_faqs").delete().eq("kennel_website_id", websiteId);
+      const { data: faqData, error: faqsError } = await adminSupabase
+        .from("kennel_website_faqs")
+        .insert(faqs)
+        .select();
+
+      if (faqsError) {
+        console.error("[GENERATE_DEMO_DATA] Error creating FAQs:", faqsError);
+      } else {
+        console.log(`[GENERATE_DEMO_DATA] Created ${faqData.length} FAQs`);
+      }
+    }
+  }
+
   const summary = {
     tenant: tenantId,
     rooms: rooms.length,
@@ -327,6 +514,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     bookings: bookings.length,
     payments: payments.length,
     templates: templates ? templates.length : 0,
+    website: "created",
   };
 
   console.log(
