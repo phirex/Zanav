@@ -40,7 +40,7 @@ function FinancialReportContent() {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState<MonthlyData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(2025); // Default to 2025 for demo data
 
   useEffect(() => {
     const fetchData = async () => {
@@ -189,14 +189,11 @@ function FinancialReportContent() {
           className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           aria-label={t("selectionYear")}
         >
-          {[...Array(5)].map((_, i) => {
-            const year = new Date().getFullYear() - i;
-            return (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            );
-          })}
+          {[2025, 2024, 2023, 2022, 2021].map((year) => (
+            <option key={year} value={year}>
+              {year} {year === 2025 ? "(Demo Data)" : ""}
+            </option>
+          ))}
         </select>
       </div>
 
