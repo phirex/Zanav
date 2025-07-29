@@ -2,7 +2,7 @@ import { createHandler } from "@/lib/apiHandler";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const POST = createHandler(async ({ client, tenantId }) => {
-  console.log("[GENERATE_DEMO_DATA] Starting demo data generation...");
+  console.log("[GENERATE_DEMO_DATA] Starting comprehensive demo data generation...");
 
   if (!tenantId) {
     throw new Error("No tenant found. Please complete tenant setup first.");
@@ -20,10 +20,17 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   await adminSupabase.from("Dog").delete().eq("tenantId", tenantId);
   await adminSupabase.from("Owner").delete().eq("tenantId", tenantId);
   await adminSupabase.from("Room").delete().eq("tenantId", tenantId);
-  await adminSupabase
-    .from("NotificationTemplate")
-    .delete()
-    .eq("tenantId", tenantId);
+  await adminSupabase.from("NotificationTemplate").delete().eq("tenantId", tenantId);
+  
+  // Clear website data
+  const { data: websiteData } = await adminSupabase.from("kennel_websites").select("id").eq("tenant_id", tenantId).single();
+  if (websiteData?.id) {
+    await adminSupabase.from("kennel_website_faqs").delete().eq("website_id", websiteData.id);
+    await adminSupabase.from("kennel_website_testimonials").delete().eq("website_id", websiteData.id);
+    await adminSupabase.from("kennel_website_videos").delete().eq("website_id", websiteData.id);
+    await adminSupabase.from("kennel_website_images").delete().eq("website_id", websiteData.id);
+  }
+  
   console.log("[GENERATE_DEMO_DATA] Cleared existing data");
 
   // Create rooms
@@ -70,63 +77,91 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   if (roomsError) throw roomsError;
   console.log(`[GENERATE_DEMO_DATA] Created ${rooms.length} rooms`);
 
-  // Create owners
+  // Create owners with international names
   console.log("[GENERATE_DEMO_DATA] Creating owners...");
   const ownersData = [
     {
-      name: "Sarah Cohen",
-      email: "sarah.cohen@gmail.com",
-      phone: "052-123-4567",
-      address: "Tel Aviv",
+      name: "Sarah Johnson",
+      email: "sarah.johnson@gmail.com",
+      phone: "+1-555-0123",
+      address: "New York, NY",
       tenantId: tenantId,
     },
     {
-      name: "David Levi",
-      email: "david.levi@walla.co.il",
-      phone: "054-234-5678",
-      address: "Jerusalem",
+      name: "Michael Chen",
+      email: "michael.chen@outlook.com",
+      phone: "+1-555-0124",
+      address: "San Francisco, CA",
       tenantId: tenantId,
     },
     {
-      name: "Rachel Goldberg",
-      email: "rachel.g@hotmail.com",
-      phone: "050-345-6789",
-      address: "Haifa",
+      name: "Emma Rodriguez",
+      email: "emma.rodriguez@yahoo.com",
+      phone: "+1-555-0125",
+      address: "Miami, FL",
       tenantId: tenantId,
     },
     {
-      name: "Michael Brown",
-      email: "mike.brown@yahoo.com",
-      phone: "053-456-7890",
-      address: "Herzliya",
+      name: "David Thompson",
+      email: "david.thompson@hotmail.com",
+      phone: "+1-555-0126",
+      address: "Chicago, IL",
       tenantId: tenantId,
     },
     {
-      name: "Emma Wilson",
-      email: "emma.wilson@gmail.com",
-      phone: "052-567-8901",
-      address: "Netanya",
+      name: "Lisa Anderson",
+      email: "lisa.anderson@gmail.com",
+      phone: "+1-555-0127",
+      address: "Seattle, WA",
       tenantId: tenantId,
     },
     {
-      name: "Yoni Dahan",
-      email: "yoni.dahan@gmail.com",
-      phone: "054-678-9012",
-      address: "Beer Sheva",
+      name: "James Wilson",
+      email: "james.wilson@outlook.com",
+      phone: "+1-555-0128",
+      address: "Austin, TX",
       tenantId: tenantId,
     },
     {
-      name: "Lisa Martinez",
-      email: "lisa.martinez@outlook.com",
-      phone: "050-789-0123",
-      address: "Eilat",
+      name: "Maria Garcia",
+      email: "maria.garcia@yahoo.com",
+      phone: "+1-555-0129",
+      address: "Los Angeles, CA",
       tenantId: tenantId,
     },
     {
-      name: "Amit Rosenberg",
-      email: "amit.r@walla.co.il",
-      phone: "053-890-1234",
-      address: "Ramat Gan",
+      name: "Robert Brown",
+      email: "robert.brown@gmail.com",
+      phone: "+1-555-0130",
+      address: "Denver, CO",
+      tenantId: tenantId,
+    },
+    {
+      name: "Jennifer Davis",
+      email: "jennifer.davis@hotmail.com",
+      phone: "+1-555-0131",
+      address: "Boston, MA",
+      tenantId: tenantId,
+    },
+    {
+      name: "Christopher Lee",
+      email: "christopher.lee@outlook.com",
+      phone: "+1-555-0132",
+      address: "Portland, OR",
+      tenantId: tenantId,
+    },
+    {
+      name: "Amanda Taylor",
+      email: "amanda.taylor@gmail.com",
+      phone: "+1-555-0133",
+      address: "Nashville, TN",
+      tenantId: tenantId,
+    },
+    {
+      name: "Daniel Martinez",
+      email: "daniel.martinez@yahoo.com",
+      phone: "+1-555-0134",
+      address: "Phoenix, AZ",
       tenantId: tenantId,
     },
   ];
@@ -144,37 +179,36 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   const dogBreeds = [
     "Golden Retriever",
     "German Shepherd",
-    "Labrador",
+    "Labrador Retriever",
     "Poodle",
     "Bulldog",
     "Husky",
     "Border Collie",
     "Beagle",
+    "Rottweiler",
+    "Dachshund",
+    "Yorkshire Terrier",
+    "Boxer",
+    "Great Dane",
+    "Chihuahua",
+    "Siberian Husky",
+    "Bernese Mountain Dog",
   ];
+  
   const dogNames = [
-    "Buddy",
-    "Bella",
-    "Max",
-    "Luna",
-    "Charlie",
-    "Lucy",
-    "Cooper",
-    "Daisy",
-    "Rocky",
-    "Sadie",
-    "Duke",
-    "Molly",
-    "Bear",
-    "Stella",
+    "Buddy", "Bella", "Max", "Luna", "Charlie", "Lucy", "Cooper", "Daisy",
+    "Rocky", "Sadie", "Duke", "Molly", "Bear", "Stella", "Jack", "Sophie",
+    "Toby", "Chloe", "Buster", "Lola", "Rex", "Zoe", "Oscar", "Ruby",
+    "Bailey", "Penny", "Finn", "Gracie", "Murphy", "Rosie", "Jake", "Maggie",
   ];
 
   const dogsData = [];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 32; i++) {
     const owner = owners[i % owners.length];
     dogsData.push({
       name: dogNames[i],
       breed: dogBreeds[i % dogBreeds.length],
-      specialNeeds: Math.random() < 0.3 ? "Needs medication twice daily" : null,
+      specialNeeds: Math.random() < 0.2 ? "Needs medication twice daily" : null,
       ownerId: owner.id,
       tenantId: tenantId,
     });
@@ -188,44 +222,98 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   if (dogsError) throw dogsError;
   console.log(`[GENERATE_DEMO_DATA] Created ${dogs.length} dogs`);
 
-  // Create bookings (spanning 3 months past to 3 months future)
-  console.log("[GENERATE_DEMO_DATA] Creating bookings...");
+  // Create comprehensive bookings for full year 2025
+  console.log("[GENERATE_DEMO_DATA] Creating comprehensive bookings for 2025...");
   const bookingsData = [];
-  const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - 3);
+  
+  // Generate bookings for the entire year 2025
+  const startDate = new Date('2025-01-01');
+  const endDate = new Date('2025-12-31');
+  
+  // Revenue target: $230,000 for the year
+  const targetRevenue = 230000;
+  let totalGeneratedRevenue = 0;
+  
+  // Seasonal multipliers (summer and holidays are busier)
+  const seasonalMultipliers = {
+    1: 0.7,   // January - slower
+    2: 0.8,   // February - slow
+    3: 0.9,   // March - picking up
+    4: 1.0,   // April - normal
+    5: 1.1,   // May - busy
+    6: 1.3,   // June - summer starts
+    7: 1.5,   // July - peak summer
+    8: 1.4,   // August - summer
+    9: 1.0,   // September - back to normal
+    10: 1.2,  // October - fall busy
+    11: 1.1,  // November - normal
+    12: 1.3,  // December - holidays
+  };
 
-  for (let i = 0; i < 50; i++) {
-    const dog = dogs[Math.floor(Math.random() * dogs.length)];
-    const room = rooms[Math.floor(Math.random() * rooms.length)];
-    const owner = owners.find((o) => o.id === dog.ownerId);
+  // Generate bookings with realistic patterns
+  for (let month = 1; month <= 12; month++) {
+    const monthMultiplier = seasonalMultipliers[month as keyof typeof seasonalMultipliers];
+    const bookingsThisMonth = Math.floor(80 * monthMultiplier); // Base 80 bookings per month
+    
+    for (let i = 0; i < bookingsThisMonth; i++) {
+      const dog = dogs[Math.floor(Math.random() * dogs.length)];
+      const room = rooms[Math.floor(Math.random() * rooms.length)];
+      const owner = owners.find((o) => o.id === dog.ownerId);
 
-    const bookingStart = new Date(
-      startDate.getTime() + Math.random() * (6 * 30 * 24 * 60 * 60 * 1000),
-    );
-    const duration = Math.floor(Math.random() * 14) + 1;
-    const bookingEnd = new Date(
-      bookingStart.getTime() + duration * 24 * 60 * 60 * 1000,
-    );
+      // Generate date within the month
+      const monthStart = new Date(2025, month - 1, 1);
+      const monthEnd = new Date(2025, month, 0);
+      const bookingStart = new Date(
+        monthStart.getTime() + Math.random() * (monthEnd.getTime() - monthStart.getTime())
+      );
+      
+      // Duration: 1-21 days, with weekends being more popular
+      const duration = Math.floor(Math.random() * 21) + 1;
+      const bookingEnd = new Date(
+        bookingStart.getTime() + duration * 24 * 60 * 60 * 1000
+      );
 
-    const pricePerDay = Math.floor(Math.random() * 100) + 80; // 80-180 ILS
-    const statuses = ["PENDING", "CONFIRMED", "CANCELLED"];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
+      // Price varies by room type and season
+      let basePrice = 120; // Base price per day
+      if (room.name === 'vip') basePrice = 200;
+      else if (room.name === 'large') basePrice = 150;
+      else if (room.name === 'medium') basePrice = 130;
+      else if (room.name === 'small-suite-a' || room.name === 'small-suite-b') basePrice = 140;
+      else if (room.name === 'outdoor') basePrice = 100;
 
-    bookingsData.push({
-      dogId: dog.id,
-      roomId: room.id,
-      ownerId: owner!.id,
-      startDate: bookingStart.toISOString(),
-      endDate: bookingEnd.toISOString(),
-      priceType: "DAILY" as const,
-      pricePerDay,
-      totalPrice: pricePerDay * duration,
-      paymentMethod: (["CASH", "CREDIT_CARD", "BANK_TRANSFER", "BIT"] as const)[
-        Math.floor(Math.random() * 4)
-      ],
-      status: status as "PENDING" | "CONFIRMED" | "CANCELLED",
-      tenantId: tenantId,
-    });
+      // Apply seasonal pricing
+      const pricePerDay = Math.floor(basePrice * monthMultiplier);
+      const totalPrice = pricePerDay * duration;
+
+      // Status distribution: 70% confirmed, 20% pending, 10% cancelled
+      const statusRoll = Math.random();
+      let status: "PENDING" | "CONFIRMED" | "CANCELLED";
+      if (statusRoll < 0.7) status = "CONFIRMED";
+      else if (statusRoll < 0.9) status = "PENDING";
+      else status = "CANCELLED";
+
+      // Payment method distribution
+      const paymentMethods = ["CASH", "CREDIT_CARD", "BANK_TRANSFER", "BIT"] as const;
+      const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+
+      bookingsData.push({
+        dogId: dog.id,
+        roomId: room.id,
+        ownerId: owner!.id,
+        startDate: bookingStart.toISOString(),
+        endDate: bookingEnd.toISOString(),
+        priceType: "DAILY" as const,
+        pricePerDay,
+        totalPrice,
+        paymentMethod,
+        status,
+        tenantId: tenantId,
+      });
+
+      if (status === "CONFIRMED") {
+        totalGeneratedRevenue += totalPrice;
+      }
+    }
   }
 
   const { data: bookings, error: bookingsError } = await adminSupabase
@@ -234,21 +322,31 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     .select();
 
   if (bookingsError) throw bookingsError;
-  console.log(`[GENERATE_DEMO_DATA] Created ${bookings.length} bookings`);
+  console.log(`[GENERATE_DEMO_DATA] Created ${bookings.length} bookings with projected revenue: $${totalGeneratedRevenue.toLocaleString()}`);
 
-  // Create payments (about 74% of bookings should have payments)
+  // Create payments with realistic patterns
   console.log("[GENERATE_DEMO_DATA] Creating payments...");
   const paymentsData = [];
-  const bookingsWithPayments = bookings.filter(() => Math.random() < 0.74);
-
-  for (const booking of bookingsWithPayments) {
-    if (booking.status !== "CANCELLED") {
-      paymentsData.push({
-        bookingId: booking.id,
-        amount: (booking.totalPrice || 0) * (Math.random() * 0.5 + 0.5), // 50-100% of total
-        method: booking.paymentMethod,
-        tenantId: tenantId,
-      });
+  
+  for (const booking of bookings) {
+    if (booking.status === "CONFIRMED") {
+      // 85% of confirmed bookings have payments
+      if (Math.random() < 0.85) {
+        // Payment amount: 60-100% of total (some partial payments)
+        const paymentAmount = (booking.totalPrice || 0) * (Math.random() * 0.4 + 0.6);
+        
+        // Payment date: usually within 30 days of booking start
+        const paymentDate = new Date(booking.startDate);
+        paymentDate.setDate(paymentDate.getDate() - Math.floor(Math.random() * 30));
+        
+        paymentsData.push({
+          bookingId: booking.id,
+          amount: paymentAmount,
+          method: booking.paymentMethod,
+          paymentDate: paymentDate.toISOString(),
+          tenantId: tenantId,
+        });
+      }
     }
   }
 
@@ -262,26 +360,19 @@ export const POST = createHandler(async ({ client, tenantId }) => {
 
   // Create notification templates
   console.log("[GENERATE_DEMO_DATA] Creating notification templates...");
-
-  // First, try to delete any existing templates for this tenant to avoid conflicts
-  await adminSupabase
-    .from("NotificationTemplate")
-    .delete()
-    .eq("tenantId", tenantId);
-
   const templatesData = [
     {
-      name: `Booking Confirmation - ${tenantId.slice(0, 8)}`,
+      name: "Booking Confirmation",
       description: "Sent immediately when booking is confirmed",
-      subject: "Booking Confirmed - Welcome to Our Kennel!",
-      body: "Hello {ownerName}, your booking for {dogName} from {startDate} to {endDate} has been confirmed. Room: {roomName}. Total: {totalPrice} ILS. Thank you!",
+      subject: "Booking Confirmed - Welcome to Happy Paws Kennel!",
+      body: "Hello {ownerName}, your booking for {dogName} from {startDate} to {endDate} has been confirmed. Room: {roomName}. Total: ${totalPrice}. Thank you for choosing us!",
       trigger: "BOOKING_CONFIRMATION" as const,
       delayHours: 0,
       active: true,
       tenantId: tenantId,
     },
     {
-      name: `Check-in Reminder - ${tenantId.slice(0, 8)}`,
+      name: "Check-in Reminder",
       description: "Sent 24 hours before check-in",
       subject: "Check-in Reminder - {dogName} Tomorrow",
       body: "Hi {ownerName}, this is a reminder that {dogName} is scheduled to check in tomorrow at {startDate}. Please bring vaccination records and any special items.",
@@ -291,12 +382,22 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       tenantId: tenantId,
     },
     {
-      name: `Payment Reminder - ${tenantId.slice(0, 8)}`,
+      name: "Payment Reminder",
       description: "Sent for unpaid bookings",
       subject: "Payment Reminder - {dogName} Booking",
-      body: "Hello {ownerName}, this is a friendly reminder about the outstanding payment for {dogName}'s stay. Amount due: {remainingAmount} ILS.",
+      body: "Hello {ownerName}, this is a friendly reminder about the outstanding payment for {dogName}'s stay. Amount due: ${remainingAmount}.",
       trigger: "PAYMENT_REMINDER" as const,
       delayHours: 0,
+      active: true,
+      tenantId: tenantId,
+    },
+    {
+      name: "Check-out Reminder",
+      description: "Sent 2 hours before check-out",
+      subject: "Check-out Reminder - {dogName} Today",
+      body: "Hi {ownerName}, {dogName} is scheduled to check out today at {endDate}. Please pick up your furry friend!",
+      trigger: "CHECK_OUT_REMINDER" as const,
+      delayHours: 2,
       active: true,
       tenantId: tenantId,
     },
@@ -307,221 +408,168 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     .insert(templatesData)
     .select();
 
-  if (templatesError) {
-    console.error("[GENERATE_DEMO_DATA] Templates error:", templatesError);
-    // Don't throw, just log and continue
-    console.log(
-      "[GENERATE_DEMO_DATA] Skipping notification templates due to error",
-    );
-  } else {
-    console.log(
-      `[GENERATE_DEMO_DATA] Created ${templates.length} notification templates`,
-    );
-  }
+  if (templatesError) throw templatesError;
+  console.log(`[GENERATE_DEMO_DATA] Created ${templates.length} notification templates`);
 
-  // Create kennel website data
-  console.log("[GENERATE_DEMO_DATA] Creating kennel website data...");
+  // Generate comprehensive website content
+  console.log("[GENERATE_DEMO_DATA] Generating website content...");
   
-  // Get tenant subdomain
-  const { data: tenantData, error: tenantError } = await adminSupabase
-    .from("Tenant")
-    .select("subdomain")
-    .eq("id", tenantId)
+  // Get or create kennel_websites record
+  let { data: websiteRecord } = await adminSupabase
+    .from("kennel_websites")
+    .select("id")
+    .eq("tenant_id", tenantId)
     .single();
 
-  if (tenantError || !tenantData.subdomain) {
-    console.error("[GENERATE_DEMO_DATA] Error fetching tenant subdomain:", tenantError);
-  } else {
-    // Create main website data
-    const websiteData = {
-      subdomain: tenantData.subdomain,
-      hero_title: "Welcome to Happy Paws Kennel",
-      hero_tagline: "Where every dog feels like family",
-      allow_direct_booking: true,
-      theme_color: "#3B82F6",
-      seo_title: "Happy Paws Kennel - Premium Dog Boarding & Care",
-      seo_description: "Professional dog boarding services with 24/7 care, spacious rooms, and loving attention. Book your dog's stay today!",
-      address: "123 Dog Street, Tel Aviv, Israel",
-      contact_phone: "+972-52-123-4567",
-      contact_email: "info@happypaws.co.il",
-      contact_whatsapp: "+972-52-123-4567",
-      special_restrictions: "All dogs must be up to date on vaccinations. Aggressive dogs may require special arrangements.",
-      tenant_id: tenantId,
-    };
-
-    // Check if website already exists
-    const { data: existingWebsite } = await adminSupabase
+  if (!websiteRecord) {
+    const { data: newWebsite } = await adminSupabase
       .from("kennel_websites")
-      .select("id")
-      .eq("tenant_id", tenantId)
+      .insert({
+        tenant_id: tenantId,
+        subdomain: "demo",
+        hero_title: "Welcome to Happy Paws Kennel",
+        hero_tagline: "Where every dog feels like family",
+        allow_direct_booking: true,
+        theme_color: "#3B82F6",
+        seo_title: "Happy Paws Kennel - Premium Dog Boarding & Care",
+        seo_description: "Professional dog boarding services with 24/7 care, spacious rooms, and loving attention. Book your dog's stay today!",
+        address: "123 Dog Street, Tel Aviv, Israel",
+        contact_phone: "+972-52-123-4567",
+        contact_email: "info@happypaws.co.il",
+        contact_whatsapp: "+972-52-123-4567",
+        special_restrictions: "All dogs must be up to date on vaccinations. Aggressive dogs may require special arrangements."
+      })
+      .select()
       .single();
-
-    let websiteId: string | undefined;
-
-    if (existingWebsite) {
-      // Update existing website
-      const { data: updatedWebsite, error: updateError } = await adminSupabase
-        .from("kennel_websites")
-        .update(websiteData)
-        .eq("tenant_id", tenantId)
-        .select("id")
-        .single();
-
-      if (updateError) {
-        console.error("[GENERATE_DEMO_DATA] Error updating website:", updateError);
-      } else {
-        websiteId = updatedWebsite.id;
-        console.log("[GENERATE_DEMO_DATA] Updated existing website");
-      }
-    } else {
-      // Create new website
-      const { data: newWebsite, error: createError } = await adminSupabase
-        .from("kennel_websites")
-        .insert(websiteData)
-        .select("id")
-        .single();
-
-      if (createError) {
-        console.error("[GENERATE_DEMO_DATA] Error creating website:", createError);
-      } else {
-        websiteId = newWebsite.id;
-        console.log("[GENERATE_DEMO_DATA] Created new website");
-      }
-    }
-
-    if (websiteId) {
-      // Create gallery images
-      const galleryImages = [
-        {
-          website_id: websiteId,
-          image_url: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&h=600&fit=crop",
-          caption: "Spacious indoor play area",
-          sort_order: 1,
-        },
-        {
-          website_id: websiteId,
-          image_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&h=600&fit=crop",
-          caption: "Comfortable sleeping quarters",
-          sort_order: 2,
-        },
-        {
-          website_id: websiteId,
-          image_url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=600&fit=crop",
-          caption: "Outdoor exercise yard",
-          sort_order: 3,
-        },
-      ];
-
-      await adminSupabase.from("kennel_website_images").delete().eq("website_id", websiteId);
-      const { data: images, error: imagesError } = await adminSupabase
-        .from("kennel_website_images")
-        .insert(galleryImages as any)
-        .select();
-
-      if (imagesError) {
-        console.error("[GENERATE_DEMO_DATA] Error creating gallery images:", imagesError);
-      } else {
-        console.log(`[GENERATE_DEMO_DATA] Created ${images.length} gallery images`);
-      }
-
-      // Create testimonials
-      const testimonials = [
-        {
-          website_id: websiteId,
-          author_name: "Sarah Cohen",
-          author_photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-          text: "Amazing care for my Golden Retriever! The staff is so loving and professional. I can relax knowing my dog is in good hands.",
-          sort_order: 1,
-        },
-        {
-          website_id: websiteId,
-          author_name: "David Levi",
-          author_photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-          text: "Best kennel in Tel Aviv! My dog comes back happy and tired from all the playtime. Highly recommended!",
-          sort_order: 2,
-        },
-        {
-          website_id: websiteId,
-          author_name: "Rachel Goldberg",
-          author_photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-          text: "The facilities are clean, the staff is caring, and my dog loves it here. Perfect for our family vacations.",
-          sort_order: 3,
-        },
-      ];
-
-      await adminSupabase.from("kennel_website_testimonials").delete().eq("website_id", websiteId);
-      const { data: testimonialData, error: testimonialsError } = await adminSupabase
-        .from("kennel_website_testimonials")
-        .insert(testimonials as any)
-        .select();
-
-      if (testimonialsError) {
-        console.error("[GENERATE_DEMO_DATA] Error creating testimonials:", testimonialsError);
-      } else {
-        console.log(`[GENERATE_DEMO_DATA] Created ${testimonialData.length} testimonials`);
-      }
-
-      // Create FAQs
-      const faqs = [
-        {
-          website_id: websiteId,
-          question: "What vaccinations does my dog need?",
-          answer: "All dogs must be up to date on rabies, DHPP, and bordetella vaccinations. Please bring vaccination records.",
-          sort_order: 1,
-        },
-        {
-          website_id: websiteId,
-          question: "Can I bring my dog's own food?",
-          answer: "Yes! We encourage you to bring your dog's regular food to maintain their diet and avoid stomach upset.",
-          sort_order: 2,
-        },
-        {
-          website_id: websiteId,
-          question: "Do you offer pick-up and drop-off services?",
-          answer: "Yes, we offer convenient pick-up and drop-off services within Tel Aviv for an additional fee.",
-          sort_order: 3,
-        },
-        {
-          website_id: websiteId,
-          question: "What if my dog has special needs?",
-          answer: "We accommodate dogs with special needs, medications, and dietary requirements. Please discuss with us in advance.",
-          sort_order: 4,
-        },
-      ];
-
-      await adminSupabase.from("kennel_website_faqs").delete().eq("website_id", websiteId);
-      const { data: faqData, error: faqsError } = await adminSupabase
-        .from("kennel_website_faqs")
-        .insert(faqs as any)
-        .select();
-
-      if (faqsError) {
-        console.error("[GENERATE_DEMO_DATA] Error creating FAQs:", faqsError);
-      } else {
-        console.log(`[GENERATE_DEMO_DATA] Created ${faqData.length} FAQs`);
-      }
-    }
+    websiteRecord = newWebsite;
   }
 
-  const summary = {
-    tenant: tenantId,
-    rooms: rooms.length,
-    owners: owners.length,
-    dogs: dogs.length,
-    bookings: bookings.length,
-    payments: payments.length,
-    templates: templates ? templates.length : 0,
-    website: "created",
-  };
+  // Create gallery images
+  const galleryImages = [
+    {
+      kennel_website_id: websiteRecord!.id,
+      image_url: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&h=600&fit=crop",
+      caption: "Spacious outdoor play area",
+      sort_order: 0
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      image_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&h=600&fit=crop",
+      caption: "Comfortable indoor suites",
+      sort_order: 1
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      image_url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=600&fit=crop",
+      caption: "Happy dogs enjoying their stay",
+      sort_order: 2
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      image_url: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&h=600&fit=crop",
+      caption: "Professional grooming services",
+      sort_order: 3
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      image_url: "https://images.unsplash.com/photo-1558788353-f76d92427f16?w=800&h=600&fit=crop",
+      caption: "24/7 monitoring and care",
+      sort_order: 4
+    }
+  ];
 
-  console.log(
-    "[GENERATE_DEMO_DATA] Demo data generation completed successfully!",
-    summary,
-  );
+  await adminSupabase.from("kennel_website_images").insert(galleryImages);
+
+  // Create testimonials
+  const testimonials = [
+    {
+      kennel_website_id: websiteRecord!.id,
+      customer_name: "Sarah Johnson",
+      customer_photo_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      testimonial_text: "Amazing care for our Golden Retriever! The staff is incredibly attentive and our dog came home happy and healthy.",
+      rating: 5,
+      sort_order: 0
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      customer_name: "Michael Chen",
+      customer_photo_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      testimonial_text: "Best kennel we've ever used. Our German Shepherd was treated like royalty. Highly recommend!",
+      rating: 5,
+      sort_order: 1
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      customer_name: "Emma Rodriguez",
+      customer_photo_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+      testimonial_text: "Professional, clean, and caring. Our Labrador had a wonderful time and we felt completely at ease.",
+      rating: 5,
+      sort_order: 2
+    }
+  ];
+
+  await adminSupabase.from("kennel_website_testimonials").insert(testimonials);
+
+  // Create FAQs
+  const faqs = [
+    {
+      kennel_website_id: websiteRecord!.id,
+      question: "What vaccinations does my dog need?",
+      answer: "All dogs must be up to date on rabies, DHPP, and bordetella vaccinations. Please bring vaccination records.",
+      sort_order: 0
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      question: "Can I bring my dog's own food?",
+      answer: "Absolutely! We encourage bringing your dog's regular food to maintain their diet and avoid stomach upset.",
+      sort_order: 1
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      question: "Do you offer grooming services?",
+      answer: "Yes, we offer professional grooming services including baths, haircuts, and nail trimming.",
+      sort_order: 2
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      question: "What are your check-in and check-out times?",
+      answer: "Check-in is available from 7 AM to 7 PM daily. Check-out is until 11 AM on departure day.",
+      sort_order: 3
+    },
+    {
+      kennel_website_id: websiteRecord!.id,
+      question: "Do you have 24/7 staff?",
+      answer: "Yes, we have staff on-site 24/7 to ensure your dog receives constant care and attention.",
+      sort_order: 4
+    }
+  ];
+
+  await adminSupabase.from("kennel_website_faqs").insert(faqs);
+
+  // Create videos
+  const videos = [
+    {
+      kennel_website_id: websiteRecord!.id,
+      video_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      title: "Tour Our Facility",
+      description: "Take a virtual tour of our state-of-the-art kennel facilities",
+      sort_order: 0
+    }
+  ];
+
+  await adminSupabase.from("kennel_website_videos").insert(videos);
+
+  console.log("[GENERATE_DEMO_DATA] Generated comprehensive website content");
 
   return {
     success: true,
-    message: "Demo data generated successfully!",
-    summary,
+    message: `Demo data generated successfully! Created ${owners.length} owners, ${dogs.length} dogs, ${bookings.length} bookings, ${payments.length} payments, and comprehensive website content. Projected annual revenue: $${totalGeneratedRevenue.toLocaleString()}`,
+    stats: {
+      owners: owners.length,
+      dogs: dogs.length,
+      bookings: bookings.length,
+      payments: payments.length,
+      projectedRevenue: totalGeneratedRevenue
+    }
   };
 });
