@@ -68,6 +68,8 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       { name: "Zoe", breed: "Siberian Husky", ownerId: owners[5].id, tenantId },
     ];
 
+    console.log("[REGENERATE_DEMO_DATA] Creating dogs with owner IDs:", dogsData.map(d => ({ name: d.name, ownerId: d.ownerId })));
+
     const { data: dogs, error: dogsError } = await adminSupabase
       .from("Dog")
       .insert(dogsData)
