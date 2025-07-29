@@ -173,6 +173,52 @@ function Home() {
     }
   };
 
+  // Function to regenerate demo data (clears existing data first)
+  const regenerateDemoData = async () => {
+    if (generatingDemo) return;
+
+    if (!confirm("This will clear all existing data and create new demo data. Are you sure?")) {
+      return;
+    }
+
+    setGeneratingDemo(true);
+    try {
+      const response = await fetchWithTenant<{
+        success: boolean;
+        message: string;
+        summary: {
+          bookings: number;
+          owners: number;
+          rooms: number;
+          dogs: number;
+          payments: number;
+          templates: number;
+        };
+        error?: string;
+      }>("/api/regenerate-demo-data", {
+        method: "POST",
+      });
+
+      if (response.success) {
+        console.log(
+          "[HOME] Demo data regenerated successfully:",
+          response.summary,
+        );
+        alert(
+          `Demo data regenerated successfully! Created ${response.summary.bookings} bookings, ${response.summary.owners} clients, and more.`,
+        );
+        window.location.reload();
+      } else {
+        throw new Error(response.error || "Failed to regenerate demo data");
+      }
+    } catch (error: any) {
+      console.error("[HOME] Error regenerating demo data:", error);
+      alert(`Error regenerating demo data: ${error.message}`);
+    } finally {
+      setGeneratingDemo(false);
+    }
+  };
+
   // Function to fetch dashboard data
   const fetchData = async () => {
     try {
@@ -469,14 +515,24 @@ function Home() {
               </p>
             </div>
           </div>
-          <button
-            onClick={generateDemoData}
-            disabled={generatingDemo}
-            className="text-sm px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-blue-700 disabled:text-gray-500 border border-blue-200 hover:border-blue-300 transition-all duration-200"
-            title="Generate demo data"
-          >
-            {generatingDemo ? "⏳ Generating..." : "🎭 Demo Data"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={generateDemoData}
+              disabled={generatingDemo}
+              className="text-sm px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-blue-700 disabled:text-gray-500 border border-blue-200 hover:border-blue-300 transition-all duration-200"
+              title="Generate demo data"
+            >
+              {generatingDemo ? "⏳ Generating..." : "🎭 Demo Data"}
+            </button>
+            <button
+              onClick={regenerateDemoData}
+              disabled={generatingDemo}
+              className="text-sm px-3 py-2 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-orange-700 disabled:text-gray-500 border border-orange-200 hover:border-orange-300 transition-all duration-200"
+              title="Regenerate demo data (clears existing data)"
+            >
+              {generatingDemo ? "⏳ Regenerating..." : "🔄 Regenerate"}
+            </button>
+          </div>
         </div>
         <Link
           href="/bookings/new"
