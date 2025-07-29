@@ -21,6 +21,8 @@ export async function financialReport(
   year: number,
   tenantId?: string | null,
 ) {
+  console.log("[FINANCIAL_REPORT] Starting with year:", year, "tenantId:", tenantId);
+  
   const startDate = startOfYear(new Date(year, 0));
   const endDate = endOfYear(new Date(year, 0));
   const months = eachMonthOfInterval({ start: startDate, end: endDate });
@@ -28,7 +30,12 @@ export async function financialReport(
   if (tenantId) {
     try {
       await client.rpc("set_tenant", { _tenant_id: tenantId });
-    } catch {}
+      console.log("[FINANCIAL_REPORT] Set tenant context to:", tenantId);
+    } catch (error) {
+      console.error("[FINANCIAL_REPORT] Error setting tenant:", error);
+    }
+  } else {
+    console.log("[FINANCIAL_REPORT] No tenantId provided");
   }
 
   const { data: bookings, error } = await client
@@ -44,6 +51,18 @@ export async function financialReport(
       ].join(","),
     );
   if (error) throw new Error(error.message);
+  
+  console.log("[FINANCIAL_REPORT] Found bookings:", bookings?.length || 0);
+  if (bookings && bookings.length > 0) {
+    console.log("[FINANCIAL_REPORT] Sample booking:", {
+      id: bookings[0].id,
+      startDate: bookings[0].startDate,
+      endDate: bookings[0].endDate,
+      totalPrice: bookings[0].totalPrice,
+      pricePerDay: bookings[0].pricePerDay,
+      payments: bookings[0].payments?.length || 0
+    });
+  }
 
   const monthlyData = months.map((monthDate) => {
     let projectedTotal = 0;
