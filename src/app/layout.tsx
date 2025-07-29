@@ -10,6 +10,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Zanav.io - Pet Boarding Management",
   description: "Pet boarding management system",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export const dynamic = "force-dynamic";
