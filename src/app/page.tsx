@@ -312,7 +312,13 @@ function Home() {
         currentMonth,
         demoYear,
         monthlyBookings: monthlyBookings.length,
-        monthlyTotal
+        monthlyTotal,
+        bookingsSample: monthlyBookings.slice(0, 2).map(b => ({
+          id: b.id,
+          startDate: b.startDate,
+          endDate: b.endDate,
+          totalPrice: b.totalPrice
+        }))
       });
       setActualIncome(monthlyTotal);
 
