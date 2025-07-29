@@ -2,7 +2,7 @@ import { createHandler } from "@/lib/apiHandler";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const POST = createHandler(async ({ client, tenantId }) => {
-  console.log("[GENERATE_DEMO_DATA] Starting comprehensive demo data generation...");
+  console.log("[GENERATE_DEMO_DATA] Starting simple demo data generation...");
 
   if (!tenantId) {
     throw new Error("No tenant found. Please complete tenant setup first.");
@@ -22,24 +22,6 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   await adminSupabase.from("Room").delete().eq("tenantId", tenantId);
   await adminSupabase.from("NotificationTemplate").delete().eq("tenantId", tenantId);
   
-  // Clear website data
-  try {
-    const { data: websiteData, error: websiteError } = await adminSupabase
-      .from("kennel_websites")
-      .select("id")
-      .eq("tenant_id", tenantId)
-      .single();
-    
-    if (websiteData?.id) {
-      await adminSupabase.from("kennel_website_faqs").delete().eq("website_id", websiteData.id);
-      await adminSupabase.from("kennel_website_testimonials").delete().eq("website_id", websiteData.id);
-      await adminSupabase.from("kennel_website_videos").delete().eq("website_id", websiteData.id);
-      await adminSupabase.from("kennel_website_images").delete().eq("website_id", websiteData.id);
-    }
-  } catch (error) {
-    console.log("[GENERATE_DEMO_DATA] No existing website data to clear, continuing...");
-  }
-  
   console.log("[GENERATE_DEMO_DATA] Cleared existing data");
 
   // Create rooms
@@ -52,28 +34,15 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       tenantId: tenantId,
     },
     {
-      name: "small-suite-b",
-      displayName: "Small Suite B",
-      capacity: 5,
-      tenantId: tenantId,
-    },
-    {
       name: "medium",
       displayName: "Medium Room",
       capacity: 10,
       tenantId: tenantId,
     },
     {
-      name: "large",
-      displayName: "Large Room",
-      capacity: 15,
-      tenantId: tenantId,
-    },
-    { name: "vip", displayName: "VIP Suite", capacity: 8, tenantId: tenantId },
-    {
-      name: "outdoor",
-      displayName: "Outdoor Play Area",
-      capacity: 25,
+      name: "vip",
+      displayName: "VIP Suite",
+      capacity: 8,
       tenantId: tenantId,
     },
   ];
@@ -86,7 +55,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   if (roomsError) throw roomsError;
   console.log(`[GENERATE_DEMO_DATA] Created ${rooms.length} rooms`);
 
-  // Create owners with international names
+  // Create owners
   console.log("[GENERATE_DEMO_DATA] Creating owners...");
   const ownersData = [
     {
@@ -110,69 +79,6 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       address: "Miami, FL",
       tenantId: tenantId,
     },
-    {
-      name: "David Thompson",
-      email: "david.thompson@hotmail.com",
-      phone: "+1-555-0126",
-      address: "Chicago, IL",
-      tenantId: tenantId,
-    },
-    {
-      name: "Lisa Anderson",
-      email: "lisa.anderson@gmail.com",
-      phone: "+1-555-0127",
-      address: "Seattle, WA",
-      tenantId: tenantId,
-    },
-    {
-      name: "James Wilson",
-      email: "james.wilson@outlook.com",
-      phone: "+1-555-0128",
-      address: "Austin, TX",
-      tenantId: tenantId,
-    },
-    {
-      name: "Maria Garcia",
-      email: "maria.garcia@yahoo.com",
-      phone: "+1-555-0129",
-      address: "Los Angeles, CA",
-      tenantId: tenantId,
-    },
-    {
-      name: "Robert Brown",
-      email: "robert.brown@gmail.com",
-      phone: "+1-555-0130",
-      address: "Denver, CO",
-      tenantId: tenantId,
-    },
-    {
-      name: "Jennifer Davis",
-      email: "jennifer.davis@hotmail.com",
-      phone: "+1-555-0131",
-      address: "Boston, MA",
-      tenantId: tenantId,
-    },
-    {
-      name: "Christopher Lee",
-      email: "christopher.lee@outlook.com",
-      phone: "+1-555-0132",
-      address: "Portland, OR",
-      tenantId: tenantId,
-    },
-    {
-      name: "Amanda Taylor",
-      email: "amanda.taylor@gmail.com",
-      phone: "+1-555-0133",
-      address: "Nashville, TN",
-      tenantId: tenantId,
-    },
-    {
-      name: "Daniel Martinez",
-      email: "daniel.martinez@yahoo.com",
-      phone: "+1-555-0134",
-      address: "Phoenix, AZ",
-      tenantId: tenantId,
-    },
   ];
 
   const { data: owners, error: ownersError } = await adminSupabase
@@ -185,43 +91,29 @@ export const POST = createHandler(async ({ client, tenantId }) => {
 
   // Create dogs
   console.log("[GENERATE_DEMO_DATA] Creating dogs...");
-  const dogBreeds = [
-    "Golden Retriever",
-    "German Shepherd",
-    "Labrador Retriever",
-    "Poodle",
-    "Bulldog",
-    "Husky",
-    "Border Collie",
-    "Beagle",
-    "Rottweiler",
-    "Dachshund",
-    "Yorkshire Terrier",
-    "Boxer",
-    "Great Dane",
-    "Chihuahua",
-    "Siberian Husky",
-    "Bernese Mountain Dog",
-  ];
-  
-  const dogNames = [
-    "Buddy", "Bella", "Max", "Luna", "Charlie", "Lucy", "Cooper", "Daisy",
-    "Rocky", "Sadie", "Duke", "Molly", "Bear", "Stella", "Jack", "Sophie",
-    "Toby", "Chloe", "Buster", "Lola", "Rex", "Zoe", "Oscar", "Ruby",
-    "Bailey", "Penny", "Finn", "Gracie", "Murphy", "Rosie", "Jake", "Maggie",
-  ];
-
-  const dogsData = [];
-  for (let i = 0; i < 32; i++) {
-    const owner = owners[i % owners.length];
-    dogsData.push({
-      name: dogNames[i],
-      breed: dogBreeds[i % dogBreeds.length],
-      specialNeeds: Math.random() < 0.2 ? "Needs medication twice daily" : null,
-      ownerId: owner.id,
+  const dogsData = [
+    {
+      name: "Buddy",
+      breed: "Golden Retriever",
+      specialNeeds: null,
+      ownerId: owners[0].id,
       tenantId: tenantId,
-    });
-  }
+    },
+    {
+      name: "Bella",
+      breed: "German Shepherd",
+      specialNeeds: null,
+      ownerId: owners[1].id,
+      tenantId: tenantId,
+    },
+    {
+      name: "Max",
+      breed: "Labrador Retriever",
+      specialNeeds: null,
+      ownerId: owners[2].id,
+      tenantId: tenantId,
+    },
+  ];
 
   const { data: dogs, error: dogsError } = await adminSupabase
     .from("Dog")
@@ -231,98 +123,39 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   if (dogsError) throw dogsError;
   console.log(`[GENERATE_DEMO_DATA] Created ${dogs.length} dogs`);
 
-  // Create comprehensive bookings for full year 2025
-  console.log("[GENERATE_DEMO_DATA] Creating comprehensive bookings for 2025...");
+  // Create simple bookings
+  console.log("[GENERATE_DEMO_DATA] Creating bookings...");
   const bookingsData = [];
   
-  // Generate bookings for the entire year 2025
-  const startDate = new Date('2025-01-01');
-  const endDate = new Date('2025-12-31');
-  
-  // Revenue target: $230,000 for the year
-  const targetRevenue = 230000;
-  let totalGeneratedRevenue = 0;
-  
-  // Seasonal multipliers (summer and holidays are busier)
-  const seasonalMultipliers = {
-    1: 0.7,   // January - slower
-    2: 0.8,   // February - slow
-    3: 0.9,   // March - picking up
-    4: 1.0,   // April - normal
-    5: 1.1,   // May - busy
-    6: 1.3,   // June - summer starts
-    7: 1.5,   // July - peak summer
-    8: 1.4,   // August - summer
-    9: 1.0,   // September - back to normal
-    10: 1.2,  // October - fall busy
-    11: 1.1,  // November - normal
-    12: 1.3,  // December - holidays
-  };
+  // Create 20 simple bookings
+  for (let i = 0; i < 20; i++) {
+    const dog = dogs[i % dogs.length];
+    const room = rooms[i % rooms.length];
+    const owner = owners.find((o) => o.id === dog.ownerId);
 
-  // Generate bookings with realistic patterns
-  for (let month = 1; month <= 12; month++) {
-    const monthMultiplier = seasonalMultipliers[month as keyof typeof seasonalMultipliers];
-    const bookingsThisMonth = Math.floor(80 * monthMultiplier); // Base 80 bookings per month
-    
-    for (let i = 0; i < bookingsThisMonth; i++) {
-      const dog = dogs[Math.floor(Math.random() * dogs.length)];
-      const room = rooms[Math.floor(Math.random() * rooms.length)];
-      const owner = owners.find((o) => o.id === dog.ownerId);
+    // Simple date generation - spread across next 3 months
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + Math.floor(Math.random() * 90));
+    const duration = Math.floor(Math.random() * 7) + 1;
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + duration);
 
-      // Generate date within the month
-      const monthStart = new Date(2025, month - 1, 1);
-      const monthEnd = new Date(2025, month, 0);
-      const bookingStart = new Date(
-        monthStart.getTime() + Math.random() * (monthEnd.getTime() - monthStart.getTime())
-      );
-      
-      // Duration: 1-21 days, with weekends being more popular
-      const duration = Math.floor(Math.random() * 21) + 1;
-      const bookingEnd = new Date(
-        bookingStart.getTime() + duration * 24 * 60 * 60 * 1000
-      );
+    const pricePerDay = 120 + (i * 10); // Varying prices
+    const totalPrice = pricePerDay * duration;
 
-      // Price varies by room type and season
-      let basePrice = 120; // Base price per day
-      if (room.name === 'vip') basePrice = 200;
-      else if (room.name === 'large') basePrice = 150;
-      else if (room.name === 'medium') basePrice = 130;
-      else if (room.name === 'small-suite-a' || room.name === 'small-suite-b') basePrice = 140;
-      else if (room.name === 'outdoor') basePrice = 100;
-
-      // Apply seasonal pricing
-      const pricePerDay = Math.floor(basePrice * monthMultiplier);
-      const totalPrice = pricePerDay * duration;
-
-      // Status distribution: 70% confirmed, 20% pending, 10% cancelled
-      const statusRoll = Math.random();
-      let status: "PENDING" | "CONFIRMED" | "CANCELLED";
-      if (statusRoll < 0.7) status = "CONFIRMED";
-      else if (statusRoll < 0.9) status = "PENDING";
-      else status = "CANCELLED";
-
-      // Payment method distribution
-      const paymentMethods = ["CASH", "CREDIT_CARD", "BANK_TRANSFER", "BIT"] as const;
-      const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-
-      bookingsData.push({
-        dogId: dog.id,
-        roomId: room.id,
-        ownerId: owner!.id,
-        startDate: bookingStart.toISOString(),
-        endDate: bookingEnd.toISOString(),
-        priceType: "DAILY" as const,
-        pricePerDay,
-        totalPrice,
-        paymentMethod,
-        status,
-        tenantId: tenantId,
-      });
-
-      if (status === "CONFIRMED") {
-        totalGeneratedRevenue += totalPrice;
-      }
-    }
+    bookingsData.push({
+      dogId: dog.id,
+      roomId: room.id,
+      ownerId: owner!.id,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      priceType: "DAILY" as const,
+      pricePerDay,
+      totalPrice,
+      paymentMethod: "CREDIT_CARD" as const,
+      status: "CONFIRMED" as const,
+      tenantId: tenantId,
+    });
   }
 
   const { data: bookings, error: bookingsError } = await adminSupabase
@@ -331,31 +164,20 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     .select();
 
   if (bookingsError) throw bookingsError;
-  console.log(`[GENERATE_DEMO_DATA] Created ${bookings.length} bookings with projected revenue: $${totalGeneratedRevenue.toLocaleString()}`);
+  console.log(`[GENERATE_DEMO_DATA] Created ${bookings.length} bookings`);
 
-  // Create payments with realistic patterns
+  // Create simple payments
   console.log("[GENERATE_DEMO_DATA] Creating payments...");
   const paymentsData = [];
   
   for (const booking of bookings) {
-    if (booking.status === "CONFIRMED") {
-      // 85% of confirmed bookings have payments
-      if (Math.random() < 0.85) {
-        // Payment amount: 60-100% of total (some partial payments)
-        const paymentAmount = (booking.totalPrice || 0) * (Math.random() * 0.4 + 0.6);
-        
-        // Payment date: usually within 30 days of booking start
-        const paymentDate = new Date(booking.startDate);
-        paymentDate.setDate(paymentDate.getDate() - Math.floor(Math.random() * 30));
-        
-        paymentsData.push({
-          bookingId: booking.id,
-          amount: paymentAmount,
-          method: booking.paymentMethod,
-          paymentDate: paymentDate.toISOString(),
-          tenantId: tenantId,
-        });
-      }
+    if (Math.random() < 0.7) { // 70% of bookings have payments
+      paymentsData.push({
+        bookingId: booking.id,
+        amount: booking.totalPrice || 0,
+        method: booking.paymentMethod,
+        tenantId: tenantId,
+      });
     }
   }
 
@@ -373,40 +195,10 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     {
       name: "Booking Confirmation",
       description: "Sent immediately when booking is confirmed",
-      subject: "Booking Confirmed - Welcome to Happy Paws Kennel!",
-      body: "Hello {ownerName}, your booking for {dogName} from {startDate} to {endDate} has been confirmed. Room: {roomName}. Total: ${totalPrice}. Thank you for choosing us!",
+      subject: "Booking Confirmed - Welcome to Our Kennel!",
+      body: "Hello {ownerName}, your booking for {dogName} from {startDate} to {endDate} has been confirmed. Room: {roomName}. Total: ${totalPrice}. Thank you!",
       trigger: "BOOKING_CONFIRMATION" as const,
       delayHours: 0,
-      active: true,
-      tenantId: tenantId,
-    },
-    {
-      name: "Check-in Reminder",
-      description: "Sent 24 hours before check-in",
-      subject: "Check-in Reminder - {dogName} Tomorrow",
-      body: "Hi {ownerName}, this is a reminder that {dogName} is scheduled to check in tomorrow at {startDate}. Please bring vaccination records and any special items.",
-      trigger: "CHECK_IN_REMINDER" as const,
-      delayHours: 24,
-      active: true,
-      tenantId: tenantId,
-    },
-    {
-      name: "Payment Reminder",
-      description: "Sent for unpaid bookings",
-      subject: "Payment Reminder - {dogName} Booking",
-      body: "Hello {ownerName}, this is a friendly reminder about the outstanding payment for {dogName}'s stay. Amount due: ${remainingAmount}.",
-      trigger: "PAYMENT_REMINDER" as const,
-      delayHours: 0,
-      active: true,
-      tenantId: tenantId,
-    },
-    {
-      name: "Check-out Reminder",
-      description: "Sent 2 hours before check-out",
-      subject: "Check-out Reminder - {dogName} Today",
-      body: "Hi {ownerName}, {dogName} is scheduled to check out today at {endDate}. Please pick up your furry friend!",
-      trigger: "CHECK_OUT_REMINDER" as const,
-      delayHours: 2,
       active: true,
       tenantId: tenantId,
     },
@@ -424,13 +216,12 @@ export const POST = createHandler(async ({ client, tenantId }) => {
 
   return {
     success: true,
-    message: `Demo data generated successfully! Created ${owners.length} owners, ${dogs.length} dogs, ${bookings.length} bookings, ${payments.length} payments, and comprehensive website content. Projected annual revenue: $${totalGeneratedRevenue.toLocaleString()}`,
+    message: `Demo data generated successfully! Created ${owners.length} owners, ${dogs.length} dogs, ${bookings.length} bookings, and ${payments.length} payments.`,
     stats: {
       owners: owners.length,
       dogs: dogs.length,
       bookings: bookings.length,
       payments: payments.length,
-      projectedRevenue: totalGeneratedRevenue
     }
   };
 });
