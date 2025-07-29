@@ -228,7 +228,7 @@ function FinancialReportContent() {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50">
-              <th className="text-right py-4 px-6 text-sm font-semibold text-gray-700 border-b border-gray-200">
+              <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 border-b border-gray-200">
                 {t("month")}
               </th>
               <th className="text-right py-4 px-6 text-sm font-semibold text-gray-700 border-b border-gray-200">
