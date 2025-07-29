@@ -270,20 +270,21 @@ function Home() {
       setUpcomingDogs(sortedUpcoming.slice(0, 5));
 
       // Calculate monthly income - bookings that occur in current month (any year)
+      // For demo data, look at July 2025 (where we have data)
       const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-      const monthStart = new Date(currentYear, currentMonth, 1);
-      const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+      const demoYear = 2025; // Use 2025 for demo data
+      const monthStart = new Date(demoYear, currentMonth, 1);
+      const monthEnd = new Date(demoYear, currentMonth + 1, 0);
 
       const monthlyBookings = bookings.filter((booking: Booking) => {
         if (!booking.startDate || !booking.endDate) return false;
         const bookingStart = new Date(booking.startDate);
         const bookingEnd = new Date(booking.endDate);
         
-        // Check if booking overlaps with current month
+        // Check if booking overlaps with current month in demo year
         return (
-          (bookingStart.getMonth() === currentMonth && bookingStart.getFullYear() === currentYear) ||
-          (bookingEnd.getMonth() === currentMonth && bookingEnd.getFullYear() === currentYear) ||
+          (bookingStart.getMonth() === currentMonth && bookingStart.getFullYear() === demoYear) ||
+          (bookingEnd.getMonth() === currentMonth && bookingEnd.getFullYear() === demoYear) ||
           (bookingStart <= monthStart && bookingEnd >= monthEnd)
         );
       });
