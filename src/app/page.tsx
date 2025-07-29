@@ -269,22 +269,40 @@ function Home() {
       );
       setUpcomingDogs(sortedUpcoming.slice(0, 5));
 
-      // Calculate monthly income
+      // Calculate monthly income - bookings that occur in current month
       const currentMonth = today.getMonth();
       const currentYear = today.getFullYear();
+      const monthStart = new Date(currentYear, currentMonth, 1);
+      const monthEnd = new Date(currentYear, currentMonth + 1, 0);
 
       const monthlyBookings = bookings.filter((booking: Booking) => {
-        if (!booking.startDate) return false;
-        const bookingDate = new Date(booking.startDate);
-        return (
-          bookingDate.getMonth() === currentMonth &&
-          bookingDate.getFullYear() === currentYear
-        );
+        if (!booking.startDate || !booking.endDate) return false;
+        const bookingStart = new Date(booking.startDate);
+        const bookingEnd = new Date(booking.endDate);
+        
+        // Check if booking overlaps with current month
+        return bookingStart <= monthEnd && bookingEnd >= monthStart;
       });
 
       const monthlyTotal = monthlyBookings.reduce((total, booking) => {
-        return total + (booking.totalPrice || 0);
+        // Calculate the portion of the booking that falls in current month
+        const bookingStart = new Date(booking.startDate);
+        const bookingEnd = new Date(booking.endDate);
+        
+        const overlapStart = new Date(Math.max(bookingStart.getTime(), monthStart.getTime()));
+        const overlapEnd = new Date(Math.min(bookingEnd.getTime(), monthEnd.getTime()));
+        
+        const daysInMonth = Math.ceil((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        if (booking.totalPrice) {
+          const totalDays = Math.ceil((bookingEnd.getTime() - bookingStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          return total + (booking.totalPrice / totalDays) * daysInMonth;
+        } else if (booking.pricePerDay) {
+          return total + (booking.pricePerDay * daysInMonth);
+        }
+        return total;
       }, 0);
+      
       setActualIncome(monthlyTotal);
 
       // Sort bookings by date for recent bookings
