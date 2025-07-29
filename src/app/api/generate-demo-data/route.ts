@@ -23,12 +23,21 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   await adminSupabase.from("NotificationTemplate").delete().eq("tenantId", tenantId);
   
   // Clear website data
-  const { data: websiteData } = await adminSupabase.from("kennel_websites").select("id").eq("tenant_id", tenantId).single();
-  if (websiteData?.id) {
-    await adminSupabase.from("kennel_website_faqs").delete().eq("website_id", websiteData.id);
-    await adminSupabase.from("kennel_website_testimonials").delete().eq("website_id", websiteData.id);
-    await adminSupabase.from("kennel_website_videos").delete().eq("website_id", websiteData.id);
-    await adminSupabase.from("kennel_website_images").delete().eq("website_id", websiteData.id);
+  try {
+    const { data: websiteData, error: websiteError } = await adminSupabase
+      .from("kennel_websites")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .single();
+    
+    if (websiteData?.id) {
+      await adminSupabase.from("kennel_website_faqs").delete().eq("website_id", websiteData.id);
+      await adminSupabase.from("kennel_website_testimonials").delete().eq("website_id", websiteData.id);
+      await adminSupabase.from("kennel_website_videos").delete().eq("website_id", websiteData.id);
+      await adminSupabase.from("kennel_website_images").delete().eq("website_id", websiteData.id);
+    }
+  } catch (error) {
+    console.log("[GENERATE_DEMO_DATA] No existing website data to clear, continuing...");
   }
   
   console.log("[GENERATE_DEMO_DATA] Cleared existing data");
@@ -411,155 +420,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   if (templatesError) throw templatesError;
   console.log(`[GENERATE_DEMO_DATA] Created ${templates.length} notification templates`);
 
-  // Generate comprehensive website content
-  console.log("[GENERATE_DEMO_DATA] Generating website content...");
-  
-  // Get or create kennel_websites record
-  let { data: websiteRecord } = await adminSupabase
-    .from("kennel_websites")
-    .select("id")
-    .eq("tenant_id", tenantId)
-    .single();
-
-  if (!websiteRecord) {
-    const { data: newWebsite } = await adminSupabase
-      .from("kennel_websites")
-      .insert({
-        tenant_id: tenantId,
-        subdomain: "demo",
-        hero_title: "Welcome to Happy Paws Kennel",
-        hero_tagline: "Where every dog feels like family",
-        allow_direct_booking: true,
-        theme_color: "#3B82F6",
-        seo_title: "Happy Paws Kennel - Premium Dog Boarding & Care",
-        seo_description: "Professional dog boarding services with 24/7 care, spacious rooms, and loving attention. Book your dog's stay today!",
-        address: "123 Dog Street, Tel Aviv, Israel",
-        contact_phone: "+972-52-123-4567",
-        contact_email: "info@happypaws.co.il",
-        contact_whatsapp: "+972-52-123-4567",
-        special_restrictions: "All dogs must be up to date on vaccinations. Aggressive dogs may require special arrangements."
-      })
-      .select()
-      .single();
-    websiteRecord = newWebsite;
-  }
-
-  // Create gallery images
-  const galleryImages = [
-    {
-      kennel_website_id: websiteRecord!.id,
-      image_url: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&h=600&fit=crop",
-      caption: "Spacious outdoor play area",
-      sort_order: 0
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      image_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&h=600&fit=crop",
-      caption: "Comfortable indoor suites",
-      sort_order: 1
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      image_url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=600&fit=crop",
-      caption: "Happy dogs enjoying their stay",
-      sort_order: 2
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      image_url: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&h=600&fit=crop",
-      caption: "Professional grooming services",
-      sort_order: 3
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      image_url: "https://images.unsplash.com/photo-1558788353-f76d92427f16?w=800&h=600&fit=crop",
-      caption: "24/7 monitoring and care",
-      sort_order: 4
-    }
-  ];
-
-  await adminSupabase.from("kennel_website_images").insert(galleryImages);
-
-  // Create testimonials
-  const testimonials = [
-    {
-      kennel_website_id: websiteRecord!.id,
-      customer_name: "Sarah Johnson",
-      customer_photo_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      testimonial_text: "Amazing care for our Golden Retriever! The staff is incredibly attentive and our dog came home happy and healthy.",
-      rating: 5,
-      sort_order: 0
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      customer_name: "Michael Chen",
-      customer_photo_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      testimonial_text: "Best kennel we've ever used. Our German Shepherd was treated like royalty. Highly recommend!",
-      rating: 5,
-      sort_order: 1
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      customer_name: "Emma Rodriguez",
-      customer_photo_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-      testimonial_text: "Professional, clean, and caring. Our Labrador had a wonderful time and we felt completely at ease.",
-      rating: 5,
-      sort_order: 2
-    }
-  ];
-
-  await adminSupabase.from("kennel_website_testimonials").insert(testimonials);
-
-  // Create FAQs
-  const faqs = [
-    {
-      kennel_website_id: websiteRecord!.id,
-      question: "What vaccinations does my dog need?",
-      answer: "All dogs must be up to date on rabies, DHPP, and bordetella vaccinations. Please bring vaccination records.",
-      sort_order: 0
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      question: "Can I bring my dog's own food?",
-      answer: "Absolutely! We encourage bringing your dog's regular food to maintain their diet and avoid stomach upset.",
-      sort_order: 1
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      question: "Do you offer grooming services?",
-      answer: "Yes, we offer professional grooming services including baths, haircuts, and nail trimming.",
-      sort_order: 2
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      question: "What are your check-in and check-out times?",
-      answer: "Check-in is available from 7 AM to 7 PM daily. Check-out is until 11 AM on departure day.",
-      sort_order: 3
-    },
-    {
-      kennel_website_id: websiteRecord!.id,
-      question: "Do you have 24/7 staff?",
-      answer: "Yes, we have staff on-site 24/7 to ensure your dog receives constant care and attention.",
-      sort_order: 4
-    }
-  ];
-
-  await adminSupabase.from("kennel_website_faqs").insert(faqs);
-
-  // Create videos
-  const videos = [
-    {
-      kennel_website_id: websiteRecord!.id,
-      video_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      title: "Tour Our Facility",
-      description: "Take a virtual tour of our state-of-the-art kennel facilities",
-      sort_order: 0
-    }
-  ];
-
-  await adminSupabase.from("kennel_website_videos").insert(videos);
-
-  console.log("[GENERATE_DEMO_DATA] Generated comprehensive website content");
+  console.log("[GENERATE_DEMO_DATA] Demo data generation completed successfully!");
 
   return {
     success: true,
