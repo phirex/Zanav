@@ -217,11 +217,13 @@ export const POST = createHandler(async ({ client, tenantId }) => {
   return {
     success: true,
     message: `Demo data generated successfully! Created ${owners.length} owners, ${dogs.length} dogs, ${bookings.length} bookings, and ${payments.length} payments.`,
-    stats: {
+    summary: {
       owners: owners.length,
       dogs: dogs.length,
       bookings: bookings.length,
       payments: payments.length,
+      rooms: rooms.length,
+      templates: templates.length,
     }
   };
 });
