@@ -11,12 +11,9 @@ export const metadata: Metadata = {
   title: "Zanav.io - Pet Boarding Management",
   description: "Pet boarding management system",
   icons: {
-    icon: [
-      { url: '/favicon.ico?v=2', sizes: 'any' },
-      { url: '/favicon.png?v=2', sizes: '32x32', type: 'image/png' },
-    ],
-    shortcut: '/favicon.ico?v=2',
-    apple: '/favicon.png?v=2',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.png',
   },
 };
 

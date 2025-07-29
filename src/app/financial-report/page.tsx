@@ -191,7 +191,7 @@ function FinancialReportContent() {
         >
           {[2025, 2024, 2023, 2022, 2021].map((year) => (
             <option key={year} value={year}>
-              {year} {year === 2025 ? "(Demo Data)" : ""}
+              {year}
             </option>
           ))}
         </select>
