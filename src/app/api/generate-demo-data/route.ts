@@ -222,11 +222,18 @@ export const POST = createHandler(async ({ client, tenantId }) => {
       if (booking.status === "CONFIRMED" && Math.random() < 0.85) {
         const paymentAmount = (booking.totalPrice || 0) * (Math.random() * 0.4 + 0.6);
         
+        // Create payment date around the booking start date
+        const bookingStartDate = new Date(booking.startDate);
+        const daysBeforeBooking = Math.floor(Math.random() * 14) + 1; // 1-14 days before
+        const paymentDate = new Date(bookingStartDate);
+        paymentDate.setDate(paymentDate.getDate() - daysBeforeBooking);
+        
         paymentsData.push({
           bookingId: booking.id,
           amount: paymentAmount,
           method: booking.paymentMethod,
           tenantId: tenantId,
+          createdAt: paymentDate.toISOString(),
         });
       }
     }
