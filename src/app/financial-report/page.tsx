@@ -245,20 +245,20 @@ function FinancialReportContent() {
           <tbody>
             {data.map((month) => (
               <tr key={month.month} className="border-t border-gray-200 hover:bg-gray-50 transition-colors">
-                <td className="py-4 px-6 font-medium text-gray-900">
+                <td className="py-4 px-6 font-medium text-gray-900 text-left">
                   {month.rawDate
                     ? getLocalizedMonthName(month.rawDate)
                     : month.month}
                 </td>
-                <td className="py-4 px-6 text-gray-700">
+                <td className="py-4 px-6 text-gray-700 text-right font-mono">
                   {formatCurrency(month.projectedTotal, i18n.language)}
                 </td>
-                <td className="py-4 px-6 text-gray-700">
+                <td className="py-4 px-6 text-gray-700 text-right font-mono">
                   {formatCurrency(month.actualTotal, i18n.language)}
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 text-right">
                   <span
-                    className={`font-semibold ${
+                    className={`font-semibold font-mono ${
                       month.projectedTotal > month.actualTotal
                         ? "text-red-600"
                         : "text-green-600"
@@ -275,20 +275,20 @@ function FinancialReportContent() {
           </tbody>
           <tfoot>
             <tr className="border-t border-gray-200 bg-gray-50 font-medium">
-              <td className="py-4 px-4">{t("total")}</td>
-              <td className="py-4 px-4">
+              <td className="py-4 px-6 text-left">{t("total")}</td>
+              <td className="py-4 px-6 text-right font-mono">
                 {formatCurrency(yearTotal.projected, i18n.language)}
               </td>
-              <td className="py-4 px-4">
+              <td className="py-4 px-6 text-right font-mono">
                 {formatCurrency(yearTotal.actual, i18n.language)}
               </td>
-              <td className="py-4 px-4">
+              <td className="py-4 px-6 text-right">
                 <span
-                  className={
+                  className={`font-mono ${
                     yearTotal.projected > yearTotal.actual
                       ? "text-red-600"
                       : "text-green-600"
-                  }
+                  }`}
                 >
                   {formatCurrency(
                     Math.abs(yearTotal.projected - yearTotal.actual),

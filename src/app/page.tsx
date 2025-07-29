@@ -308,6 +308,12 @@ function Home() {
         return total;
       }, 0);
       
+      console.log("[DASHBOARD] Monthly calculation:", {
+        currentMonth,
+        demoYear,
+        monthlyBookings: monthlyBookings.length,
+        monthlyTotal
+      });
       setActualIncome(monthlyTotal);
 
       // Sort bookings by date for recent bookings
