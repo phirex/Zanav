@@ -109,7 +109,8 @@ export async function financialReport(
 
       if (booking.payments) {
         booking.payments.forEach((p: any) => {
-          const paymentDate = new Date(p.createdAt);
+          // Use payment date if available, otherwise use booking start date
+          const paymentDate = p.createdAt ? new Date(p.createdAt) : new Date(booking.startDate);
           if (
             paymentDate.getMonth() === monthDate.getMonth() &&
             paymentDate.getFullYear() === monthDate.getFullYear()

@@ -269,19 +269,18 @@ function Home() {
       );
       setUpcomingDogs(sortedUpcoming.slice(0, 5));
 
-      // Calculate monthly income - bookings that occur in current month
+      // Calculate monthly income - bookings that occur in current month (any year)
       const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-      const monthStart = new Date(currentYear, currentMonth, 1);
-      const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+      const monthStart = new Date(2025, currentMonth, 1); // Use 2025 for demo data
+      const monthEnd = new Date(2025, currentMonth + 1, 0);
 
       const monthlyBookings = bookings.filter((booking: Booking) => {
         if (!booking.startDate || !booking.endDate) return false;
         const bookingStart = new Date(booking.startDate);
         const bookingEnd = new Date(booking.endDate);
         
-        // Check if booking overlaps with current month
-        return bookingStart <= monthEnd && bookingEnd >= monthStart;
+        // Check if booking overlaps with current month (any year)
+        return bookingStart.getMonth() === currentMonth && bookingEnd.getMonth() === currentMonth;
       });
 
       const monthlyTotal = monthlyBookings.reduce((total, booking) => {
