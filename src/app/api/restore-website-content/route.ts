@@ -59,25 +59,22 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     console.log("[RESTORE_WEBSITE_CONTENT] Creating testimonials...");
     const testimonialsData = [
       {
-        kennel_website_id: websiteId,
-        customer_name: "Sarah Johnson",
-        testimonial_text: "Amazing service! My dog Max had the best time. The staff is incredibly caring and professional.",
-        rating: 5,
-        customer_photo_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+        website_id: websiteId,
+        author_name: "Sarah Johnson",
+        text: "Amazing service! My dog Max had the best time. The staff is incredibly caring and professional.",
+        author_photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
       },
       {
-        kennel_website_id: websiteId,
-        customer_name: "Michael Chen",
-        testimonial_text: "We've been bringing our cats here for years. The facilities are clean and the care is exceptional.",
-        rating: 5,
-        customer_photo_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+        website_id: websiteId,
+        author_name: "Michael Chen",
+        text: "We've been bringing our cats here for years. The facilities are clean and the care is exceptional.",
+        author_photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
       },
       {
-        kennel_website_id: websiteId,
-        customer_name: "Emma Rodriguez",
-        testimonial_text: "The best pet boarding service in town! My dog Bella was so happy when I picked her up.",
-        rating: 5,
-        customer_photo_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+        website_id: websiteId,
+        author_name: "Emma Rodriguez",
+        text: "The best pet boarding service in town! My dog Bella was so happy when I picked her up.",
+        author_photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
       }
     ];
     
@@ -97,22 +94,22 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     console.log("[RESTORE_WEBSITE_CONTENT] Creating FAQ...");
     const faqData = [
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         question: "What vaccinations are required?",
         answer: "All pets must be up to date on rabies, distemper, and bordetella vaccinations. Please bring vaccination records."
       },
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         question: "Can I bring my pet's own food?",
         answer: "Yes, absolutely! We encourage bringing your pet's regular food to maintain their diet and avoid stomach upset."
       },
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         question: "Do you provide 24/7 care?",
         answer: "Yes, we have staff on-site 24/7 to ensure your pets are never alone and receive constant care and attention."
       },
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         question: "What if my pet has special needs?",
         answer: "We can accommodate pets with special needs, including medication administration, special diets, and mobility assistance."
       }
@@ -134,22 +131,22 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     console.log("[RESTORE_WEBSITE_CONTENT] Creating gallery images...");
     const galleryData = [
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         image_url: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=800&h=600&fit=crop",
         caption: "Comfortable Kennels - Spacious and clean kennels for your pets"
       },
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         image_url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=600&fit=crop",
         caption: "Play Area - Large outdoor play area for exercise and fun"
       },
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         image_url: "https://images.unsplash.com/photo-1587764379873-97837921fd44?w=800&h=600&fit=crop",
         caption: "Professional Staff - Our caring and experienced team"
       },
       {
-        kennel_website_id: websiteId,
+        website_id: websiteId,
         image_url: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&h=600&fit=crop",
         caption: "Clean Facilities - Hygienic and well-maintained facilities"
       }
