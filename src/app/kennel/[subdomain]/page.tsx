@@ -281,15 +281,42 @@ export default function KennelWebsitePage({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {videos.map((video, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-6">
-                  <div className="aspect-video bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                    <Play className="h-16 w-16 text-gray-400" />
+                  <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
+                    {video.video_url.includes('youtube.com') || video.video_url.includes('youtu.be') ? (
+                      <iframe
+                        src={video.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                        title={video.caption || `Video ${index + 1}`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : video.video_url.includes('vimeo.com') ? (
+                      <iframe
+                        src={video.video_url.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                        title={video.caption || `Video ${index + 1}`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        src={video.video_url}
+                        controls
+                        className="w-full h-full object-cover"
+                        poster={video.caption ? undefined : undefined}
+                      >
+                        <source src={video.video_url} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
                   </div>
                   {video.caption && (
                     <h3 className="text-xl font-semibold mb-2">
                       {video.caption}
                     </h3>
                   )}
-                  <p className="text-gray-600">Video content</p>
                 </div>
               ))}
             </div>
