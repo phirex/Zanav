@@ -17,6 +17,7 @@ async function main() {
         trigger: "BOOKING_CONFIRMATION" as TriggerType,
         delayHours: 0,
         active: true,
+        tenantId: "demo-tenant-id", // Add required tenantId
       })
       .select()
       .single();
