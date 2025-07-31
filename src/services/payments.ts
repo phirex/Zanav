@@ -79,6 +79,7 @@ export async function createPayment(
       bookingId,
       amount: parseFloat(amount.toString()),
       method: paymentMethod,
+      tenantId: existingBooking.tenantId,
     })
     .select("*")
     .single();

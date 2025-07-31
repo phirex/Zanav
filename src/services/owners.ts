@@ -70,6 +70,10 @@ export async function createOwner(
   tenantId: string | null,
   body: any,
 ) {
+  if (!tenantId) {
+    throw new Error("Tenant ID is required for owner creation");
+  }
+
   const { name, email, phone, address, dogs } = body;
   if (!name || !phone) throw new Error("Missing owner name or phone");
 
@@ -100,6 +104,10 @@ export async function updateOwner(
   tenantId: string | null,
   body: any,
 ) {
+  if (!tenantId) {
+    throw new Error("Tenant ID is required for owner update");
+  }
+
   const { id, name, email, phone, address, dogs } = body;
   if (!id) throw new Error("Owner id is required");
 

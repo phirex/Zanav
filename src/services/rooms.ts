@@ -22,6 +22,10 @@ export async function createRoom(
   tenantId: string | null,
   body: any,
 ) {
+  if (!tenantId) {
+    throw new Error("Tenant ID is required for room creation");
+  }
+
   const { name, displayName, maxCapacity } = body;
   if (!name || !displayName || maxCapacity === undefined) {
     throw new Error("Missing required fields: name, displayName, maxCapacity");
