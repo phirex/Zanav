@@ -219,6 +219,43 @@ function Home() {
     }
   };
 
+  const restoreWebsiteContent = async () => {
+    if (generatingDemo) return;
+
+    setGeneratingDemo(true);
+    try {
+      const response = await fetchWithTenant<{
+        success: boolean;
+        message: string;
+        summary: {
+          testimonials: number;
+          faqs: number;
+          gallery: number;
+        };
+        error?: string;
+      }>("/api/restore-website-content", {
+        method: "POST",
+      });
+
+      if (response.success) {
+        console.log(
+          "[HOME] Website content restored successfully:",
+          response.summary,
+        );
+        alert(
+          `Website content restored successfully! Created ${response.summary.testimonials} testimonials, ${response.summary.faqs} FAQ items, and ${response.summary.gallery} gallery images.`,
+        );
+      } else {
+        throw new Error(response.error || "Failed to restore website content");
+      }
+    } catch (error: any) {
+      console.error("[HOME] Error restoring website content:", error);
+      alert(`Error restoring website content: ${error.message}`);
+    } finally {
+      setGeneratingDemo(false);
+    }
+  };
+
   // Function to fetch dashboard data
   const fetchData = async () => {
     try {
@@ -531,6 +568,14 @@ function Home() {
               title="Regenerate demo data (clears existing data)"
             >
               {generatingDemo ? "⏳ Regenerating..." : "🔄 Regenerate"}
+            </button>
+            <button
+              onClick={restoreWebsiteContent}
+              disabled={generatingDemo}
+              className="text-sm px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-green-700 disabled:text-gray-500 border border-green-200 hover:border-green-300 transition-all duration-200"
+              title="Restore website content (testimonials, FAQ, gallery)"
+            >
+              {generatingDemo ? "⏳ Restoring..." : "🌐 Restore Website"}
             </button>
           </div>
         </div>
