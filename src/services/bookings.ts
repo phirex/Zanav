@@ -134,6 +134,13 @@ export async function createBooking(
   tenantId: string | null,
   data: any,
 ) {
+  if (!tenantId) {
+    throw new Error("Tenant ID is required for booking creation");
+  }
+
+  // tenantId is now guaranteed to be string
+  const safeTenantId = tenantId;
+
   // Validate basic fields
   const startDate = new Date(data.startDate);
   const endDate = new Date(data.endDate);
@@ -162,7 +169,7 @@ export async function createBooking(
       phone: data.ownerPhone,
       address: data.ownerAddress || null,
     };
-    if (tenantId) ownerData.tenantId = tenantId;
+    ownerData.tenantId = safeTenantId;
 
     const { data: ownerRow, error: ownerErr } = await client
       .from("Owner")
@@ -182,7 +189,7 @@ export async function createBooking(
       breed: dog.breed,
       specialNeeds: dog.specialNeeds ?? "",
       ownerId,
-      tenantId,
+      tenantId: safeTenantId,
     }));
     const { data: insertedDogs, error: dogErr } = await client
       .from("Dog")
@@ -234,7 +241,7 @@ export async function createBooking(
     totalPrice: pricePerDog,
     paymentMethod,
     status,
-    tenantId,
+    tenantId: safeTenantId,
   }));
 
   const { data: createdBookings, error: bookErr } = await client
@@ -253,7 +260,7 @@ export async function createBooking(
     const { NotificationScheduler } = await import(
       "@/lib/services/notification-scheduler"
     );
-    const scheduler = new NotificationScheduler(tenantId);
+    const scheduler = new NotificationScheduler(safeTenantId);
     for (const b of createdBookings ?? []) {
       await scheduler.scheduleBookingNotifications(b.id);
     }
