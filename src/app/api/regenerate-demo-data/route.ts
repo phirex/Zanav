@@ -4,17 +4,21 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 export const POST = createHandler(async ({ client, tenantId }) => {
   console.log("[REGENERATE_DEMO_DATA] Starting complete demo data regeneration...");
   
+  if (!tenantId) {
+    throw new Error("Tenant ID is required for demo data generation");
+  }
+  
   const adminSupabase = supabaseAdmin();
   
   try {
     // Clear all existing data
     console.log("[REGENERATE_DEMO_DATA] Clearing existing data...");
     
-    await adminSupabase.from("Payment").delete().eq("tenantId", tenantId || "");
-    await adminSupabase.from("Booking").delete().eq("tenantId", tenantId || "");
-    await adminSupabase.from("Dog").delete().eq("tenantId", tenantId || "");
-    await adminSupabase.from("Owner").delete().eq("tenantId", tenantId || "");
-    await adminSupabase.from("Room").delete().eq("tenantId", tenantId || "");
+    await adminSupabase.from("Payment").delete().eq("tenantId", tenantId);
+    await adminSupabase.from("Booking").delete().eq("tenantId", tenantId);
+    await adminSupabase.from("Dog").delete().eq("tenantId", tenantId);
+    await adminSupabase.from("Owner").delete().eq("tenantId", tenantId);
+    await adminSupabase.from("Room").delete().eq("tenantId", tenantId);
     
     console.log("[REGENERATE_DEMO_DATA] Existing data cleared");
 
