@@ -151,15 +151,8 @@ export function createAdminHandler(handler: ApiHandler) {
     try {
       const client = supabaseAdmin();
 
-      // (Optional) tenant context — rarely needed in admin context but kept for consistency
+      // Get tenant ID from headers
       const tenantId = req.headers.get("x-tenant-id") || null;
-      if (tenantId) {
-        try {
-          await client.rpc("set_tenant", { _tenant_id: tenantId });
-        } catch (e) {
-          console.error("[createAdminHandler] failed to set tenant context", e);
-        }
-      }
 
       // Parse JSON body for non-GET / non-HEAD
       let body: any = undefined;

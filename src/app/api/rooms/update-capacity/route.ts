@@ -17,17 +17,18 @@ export async function POST(request: Request) {
   // Determine tenant ID
   const tenantId = await currentTenant();
 
-  // Set tenant context for RLS
-  if (tenantId) {
-    await supabase.rpc("set_tenant", { _tenant_id: tenantId });
-  }
-
   // Use a transaction via RPC or run sequentially; simplest: sequential updates
   for (const room of rooms) {
-    const { error } = await supabase
+    let query = supabase
       .from("Room")
       .update({ maxCapacity: room.maxCapacity })
       .eq("id", room.id);
+    
+    if (tenantId) {
+      query = query.eq("tenantId", tenantId);
+    }
+    
+    const { error } = await query;
 
     if (error) {
       console.error("Error updating room", room.id, error);

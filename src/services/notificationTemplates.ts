@@ -7,15 +7,16 @@ export async function listTemplates(
   client: SupabaseClient<Database>,
   tenantId: string,
 ) {
-  if (tenantId) {
-    try {
-      await client.rpc("set_tenant", { _tenant_id: tenantId });
-    } catch {}
-  }
-  const { data, error } = await client
+  let query = client
     .from("NotificationTemplate")
     .select("*")
     .order("name");
+  
+  if (tenantId) {
+    query = query.eq("tenantId", tenantId);
+  }
+  
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data;
 }
@@ -40,11 +41,6 @@ export async function createTemplate(
     // @ts-ignore dynamic
     if (!dto[key]) throw new Error(`Missing required field: ${key}`);
   }
-  if (tenantId) {
-    try {
-      await client.rpc("set_tenant", { _tenant_id: tenantId });
-    } catch {}
-  }
   const { data, error } = await client
     .from("NotificationTemplate")
     .insert({
@@ -68,16 +64,16 @@ export async function getTemplate(
   tenantId: string,
   id: string,
 ) {
-  if (tenantId) {
-    try {
-      await client.rpc("set_tenant", { _tenant_id: tenantId });
-    } catch {}
-  }
-  const { data, error } = await client
+  let query = client
     .from("NotificationTemplate")
     .select("*")
-    .eq("id", id)
-    .maybeSingle();
+    .eq("id", id);
+  
+  if (tenantId) {
+    query = query.eq("tenantId", tenantId);
+  }
+  
+  const { data, error } = await query.maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Template not found");
   return data;
@@ -89,17 +85,16 @@ export async function updateTemplate(
   id: string,
   dto: Partial<TemplateDTO>,
 ) {
-  if (tenantId) {
-    try {
-      await client.rpc("set_tenant", { _tenant_id: tenantId });
-    } catch {}
-  }
-  const { data, error } = await client
+  let query = client
     .from("NotificationTemplate")
     .update(dto)
-    .eq("id", id)
-    .select()
-    .single();
+    .eq("id", id);
+  
+  if (tenantId) {
+    query = query.eq("tenantId", tenantId);
+  }
+  
+  const { data, error } = await query.select().single();
   if (error) {
     if (error.code === "23505")
       throw new Error("Template with this name exists");
@@ -113,17 +108,23 @@ export async function deleteTemplate(
   tenantId: string,
   id: string,
 ) {
-  if (tenantId) {
-    try {
-      await client.rpc("set_tenant", { _tenant_id: tenantId });
-    } catch {}
-  }
   // delete scheduled notifications first
-  await client.from("ScheduledNotification").delete().eq("templateId", id);
-  const { error } = await client
+  let scheduledQuery = client.from("ScheduledNotification").delete().eq("templateId", id);
+  if (tenantId) {
+    scheduledQuery = scheduledQuery.eq("tenantId", tenantId);
+  }
+  await scheduledQuery;
+  
+  let templateQuery = client
     .from("NotificationTemplate")
     .delete()
     .eq("id", id);
+  
+  if (tenantId) {
+    templateQuery = templateQuery.eq("tenantId", tenantId);
+  }
+  
+  const { error } = await templateQuery;
   if (error) throw new Error(error.message);
   return { success: true };
 }

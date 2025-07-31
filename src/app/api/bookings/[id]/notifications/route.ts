@@ -109,16 +109,17 @@ export async function POST(
     // Get tenant ID from request headers
     const tenantId = request.headers.get("x-tenant-id");
 
-    // Set tenant context for RLS
-    if (tenantId) {
-      await supabase.rpc("set_tenant", { _tenant_id: tenantId });
-    }
-
-    const { data: booking, error: fetchError } = await supabase
+    // Get booking with tenant filtering
+    let query = supabase
       .from("Booking")
       .select("*")
-      .eq("id", bookingId)
-      .single();
+      .eq("id", bookingId);
+    
+    if (tenantId) {
+      query = query.eq("tenantId", tenantId);
+    }
+    
+    const { data: booking, error: fetchError } = await query.single();
 
     if (fetchError || !booking) {
       console.error(`Booking ${bookingId} not found:`, fetchError);

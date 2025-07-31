@@ -25,13 +25,7 @@ export async function financialReport(
   const endDate = endOfYear(new Date(year, 0));
   const months = eachMonthOfInterval({ start: startDate, end: endDate });
 
-  if (tenantId) {
-    try {
-      await client.rpc("set_tenant", { _tenant_id: tenantId });
-    } catch {}
-  }
-
-  const { data: bookings, error } = await client
+  let query = client
     .from("Booking")
     .select("*, payments:Payment(*)")
     .or(
@@ -43,6 +37,12 @@ export async function financialReport(
         `and(startDate.lte.${startDate.toISOString()},endDate.gte.${endDate.toISOString()})`,
       ].join(","),
     );
+  
+  if (tenantId) {
+    query = query.eq("tenantId", tenantId);
+  }
+  
+  const { data: bookings, error } = await query;
   if (error) throw new Error(error.message);
 
   const monthlyData = months.map((monthDate) => {
