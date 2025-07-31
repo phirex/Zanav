@@ -1,61 +1,64 @@
-# Zanav.io Scripts
+# Database Connection Scripts
 
-This directory contains various utility scripts for managing the Zanav.io application.
+## Remote Supabase Database Connection
 
-## Demo Data Generation
+Your project is now connected to the remote Supabase database. This prevents accidentally working with local data when you want to work with production data.
 
-To generate realistic demo data for the Demo Pension tenant:
+### Quick Commands
 
-1. Run the setup script to configure your environment:
+```bash
+# Check connection status
+./scripts/connect-remote-db.sh status
 
-   ```bash
-   npm run demo:setup
-   ```
+# Pull latest schema from remote
+./scripts/connect-remote-db.sh pull
 
-   This will guide you through creating or updating your `.env.local` file with the necessary Supabase credentials.
+# Push migrations to remote
+./scripts/connect-remote-db.sh push
 
-   > Note: Next.js projects use `.env.local` for local environment variables, which is why the setup creates this file instead of a regular `.env` file.
+# View remote logs
+./scripts/connect-remote-db.sh logs
 
-2. The script will verify the default Demo Pension tenant ID (`1fb2c6bd-2640-47ae-8d1d-c9b872d804e3`). If you need to use a different tenant ID, you can edit it in the `generate-demo-data.ts` file:
+# Open remote Supabase Studio
+./scripts/connect-remote-db.sh studio
+```
 
-   ```typescript
-   const DEMO_TENANT_ID = "1fb2c6bd-2640-47ae-8d1d-c9b872d804e3";
-   ```
+### Project Details
 
-3. Run the data generation script:
-   ```bash
-   npm run demo:generate
-   ```
+- **Project Reference**: `nlpsmauwwlnblgwtawbs`
+- **Project Name**: New Zanav
+- **Region**: eu-north-1
+- **Organization**: obwfejsslwpmjndsxrei
 
-The script will:
+### Important Notes
 
-- Verify the Demo Pension tenant exists (and create it if needed)
-- Create default rooms if none exist
-- Generate 10 pet owners with contact information
-- Create 1-3 dogs for each owner
-- Create 1-3 bookings for each dog (mix of past, current, and future)
-- Generate payments for most confirmed bookings
+1. **Always check which database you're working with** before running commands
+2. **Local development** uses `supabase start` and `supabase stop`
+3. **Remote development** uses the connection script
+4. **Migrations** should be pushed to remote after testing locally
 
-The generated data includes a realistic mix of:
+### Switching Between Local and Remote
 
-- Past, current, and upcoming bookings
-- Different pricing models (daily and fixed)
-- Various payment methods
-- Different booking statuses (confirmed, pending, cancelled)
+```bash
+# For local development
+supabase start
+supabase stop
 
-## Troubleshooting
+# For remote development
+./scripts/connect-remote-db.sh pull
+./scripts/connect-remote-db.sh push
+```
 
-If you encounter errors:
+### Environment Variables
 
-1. Make sure your `.env.local` file contains the correct Supabase URL and service role key
-2. Check that the Demo Pension tenant ID is correct
-3. Ensure you have the necessary permissions in your Supabase instance
-4. If you've manually created an `.env` file, consider moving the credentials to `.env.local` or run the setup script to create it automatically
+Make sure your `.env.local` file points to the correct Supabase URL:
 
-## Other Scripts
+```bash
+# For local development
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
 
-- `npm run db:seed` - Initialize the database with essential data
-- `npm run notifications` - Set up the notification cron jobs
-- `npm run send-notifications` - Manually trigger sending of notifications
-- `npm run whatsapp` - Send WhatsApp messages directly
-- `npm run create-test` - Create a test notification
+# For remote development
+NEXT_PUBLIC_SUPABASE_URL=https://nlpsmauwwlnblgwtawbs.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_remote_anon_key
+```
