@@ -11,7 +11,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
     const { data: existingWebsite, error: websiteError } = await adminSupabase
       .from("kennel_websites")
       .select("*")
-      .eq("tenantId", tenantId || "")
+      .eq("tenant_id", tenantId || "")
       .single();
     
     if (websiteError && websiteError.code !== 'PGRST116') {
