@@ -70,15 +70,15 @@ export default function Login() {
       setGoogleLoading(true);
       setError(null);
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // The redirect will happen automatically
+      // Use direct OAuth URL instead of Supabase's signInWithOAuth
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      
+      const oauthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
+      
+      // Redirect directly to OAuth
+      window.location.href = oauthUrl;
+      
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       setError("Failed to sign in with Google. Please try again.");
