@@ -36,13 +36,35 @@ export async function GET(request: NextRequest) {
     );
 
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error) {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!error && data.user) {
+        // Check if this is an OAuth user (Google, etc.)
+        if (data.user.app_metadata?.provider === 'google') {
+          console.log("[Auth Callback] Processing OAuth user:", data.user.email);
+          
+          // Call our OAuth callback API to ensure user record exists
+          try {
+            const oauthResponse = await fetch(`${origin}/api/auth/oauth-callback`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ user: data.user }),
+            });
+
+            if (!oauthResponse.ok) {
+              console.error("[Auth Callback] OAuth callback failed:", await oauthResponse.text());
+            }
+          } catch (oauthError) {
+            console.error("[Auth Callback] Error calling OAuth callback:", oauthError);
+          }
+        }
+
         // Successful exchange, return the redirect response
         // which now includes the set-cookie headers from supabase
         return response;
       }
-      console.error("[Auth Callback] Error exchanging code:", error.message);
+      console.error("[Auth Callback] Error exchanging code:", error?.message);
     } catch (e) {
       console.error("[Auth Callback] Exception during code exchange:", e);
       // Fall through to the error redirect below
