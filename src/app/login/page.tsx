@@ -70,14 +70,25 @@ export default function Login() {
       setGoogleLoading(true);
       setError(null);
 
-      // Use direct OAuth URL instead of Supabase's signInWithOAuth
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      // Use Google OAuth directly instead of Supabase's wrapper
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        throw new Error("Google OAuth client ID not configured");
+      }
       
-      const oauthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
+      const redirectUri = `${window.location.origin}/api/auth/google-callback`;
+      const scope = 'email profile';
       
-      // Redirect directly to OAuth
-      window.location.href = oauthUrl;
+      const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+      
+      // Redirect to Google OAuth
+      window.location.href = googleOAuthUrl;
       
     } catch (err: any) {
       console.error("Google sign-in error:", err);
