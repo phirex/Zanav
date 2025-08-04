@@ -42,22 +42,9 @@ export async function GET(request: NextRequest) {
         if (data.user.app_metadata?.provider === 'google') {
           console.log("[Auth Callback] Processing OAuth user:", data.user.email);
           
-          // Call our OAuth callback API to ensure user record exists
-          try {
-            const oauthResponse = await fetch(`${origin}/api/auth/oauth-callback`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ user: data.user }),
-            });
-
-            if (!oauthResponse.ok) {
-              console.error("[Auth Callback] OAuth callback failed:", await oauthResponse.text());
-            }
-          } catch (oauthError) {
-            console.error("[Auth Callback] Error calling OAuth callback:", oauthError);
-          }
+          // Handle OAuth user creation in a separate process
+          // We'll let the user creation happen naturally through Supabase Auth hooks
+          // or handle it in the frontend after successful authentication
         }
 
         // Successful exchange, return the redirect response
