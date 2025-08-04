@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
         code: code,
         grant_type: 'authorization_code',
-        redirect_uri: `${origin}/api/auth/google-callback`,
+        redirect_uri: 'https://zanav.io/api/auth/google-callback',
       }),
     });
 

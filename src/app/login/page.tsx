@@ -76,7 +76,8 @@ export default function Login() {
         throw new Error("Google OAuth client ID not configured");
       }
       
-      const redirectUri = `${window.location.origin}/api/auth/google-callback`;
+      // Use the exact domain that matches Google Cloud Console
+      const redirectUri = `https://zanav.io/api/auth/google-callback`;
       const scope = 'email profile';
       
       const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
