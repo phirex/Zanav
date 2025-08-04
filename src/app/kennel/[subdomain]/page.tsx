@@ -17,6 +17,7 @@ interface KennelWebsite {
   cover_photo_url?: string | null;
   hero_title?: string | null;
   hero_tagline?: string | null;
+  about_story?: string | null;
   subdomain?: string;
   allow_direct_booking?: boolean;
   theme_color?: string | null;
@@ -242,6 +243,22 @@ export default function KennelWebsitePage({
           </div>
         </div>
       </section>
+
+      {/* About Our Kennel Section */}
+      {websiteData.about_story && (
+        <section className="py-16 bg-white">
+          <div className="max-w-4xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">
+              About Our Kennel
+            </h2>
+            <div className="prose prose-lg mx-auto text-gray-700 leading-relaxed">
+              <div className="whitespace-pre-wrap text-center">
+                {websiteData.about_story}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Gallery Section */}
       {galleryImages.length > 0 && (

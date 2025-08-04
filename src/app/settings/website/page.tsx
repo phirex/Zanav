@@ -21,6 +21,7 @@ interface KennelWebsite {
   cover_photo_url?: string | null;
   hero_title?: string | null;
   hero_tagline?: string | null;
+  about_story?: string | null;
   subdomain?: string;
   allow_direct_booking?: boolean;
   theme_color?: string | null;
@@ -733,6 +734,35 @@ export default function WebsiteSettingsPage() {
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   A short, catchy description that appears below the title.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Kennel Story Section */}
+          <section className="bg-white rounded-lg border p-6">
+            <h2 className="text-xl font-semibold mb-4">About Our Kennel</h2>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Tell your kennel's story and introduce yourself to potential customers. This will appear right after the main image on your website.
+              </p>
+              <div>
+                <label
+                  htmlFor="about_story"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Kennel Story & Introduction
+                </label>
+                <textarea
+                  id="about_story"
+                  value={websiteData.about_story || ""}
+                  onChange={(e) => handleFieldChange("about_story", e.target.value)}
+                  placeholder="Share your kennel's story, your experience, what makes you special, and why pet owners should trust you with their beloved pets..."
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  This is your chance to build trust and connect with potential customers. Share your passion, experience, and what makes your kennel unique.
                 </p>
               </div>
             </div>

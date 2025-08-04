@@ -30,6 +30,7 @@ export const POST = createHandler(async ({ client, tenantId }) => {
           cover_photo_url: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=800&h=600&fit=crop",
           hero_title: "Happy Paws Kennel",
           hero_tagline: "Professional Pet Boarding Services",
+          about_story: "Welcome to Happy Paws Kennel, where we've been providing loving care for pets since 2010. Our family-owned kennel is built on the foundation of treating every pet as if they were our own.\n\nWith over 13 years of experience in pet care, our certified staff ensures that your beloved companions receive the highest quality attention, exercise, and care during their stay. We understand that leaving your pet can be stressful, which is why we provide regular updates and photos so you can see how much fun they're having.\n\nOur state-of-the-art facilities include spacious indoor and outdoor play areas, climate-controlled accommodations, and 24/7 monitoring. We're proud to maintain a 5-star rating from hundreds of satisfied pet parents who trust us with their furry family members.",
           contact_email: "info@happypawskennel.com",
           contact_phone: "+1-555-0123",
           address: "123 Pet Street, Happy City, HC 12345",
