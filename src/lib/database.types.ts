@@ -356,6 +356,7 @@ export type Database = {
       }
       kennel_websites: {
         Row: {
+          about_story: string | null
           address: string | null
           allow_direct_booking: boolean | null
           contact_email: string | null
@@ -378,6 +379,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          about_story?: string | null
           address?: string | null
           allow_direct_booking?: boolean | null
           contact_email?: string | null
@@ -400,6 +402,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          about_story?: string | null
           address?: string | null
           allow_direct_booking?: boolean | null
           contact_email?: string | null
