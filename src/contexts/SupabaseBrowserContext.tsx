@@ -66,11 +66,6 @@ export default function SupabaseProvider({
           setError(error);
         } else {
           setUser(session?.user ?? null);
-          
-          // If this is an OAuth user, ensure they have a User record
-          if (session?.user && session.user.app_metadata?.provider === 'google') {
-            await handleOAuthUser(session.user);
-          }
         }
       } catch (err) {
         console.error("Error in getInitialSession:", err);
@@ -87,40 +82,11 @@ export default function SupabaseProvider({
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
         setUser(session?.user ?? null);
-        
-        // Handle OAuth user creation for new sign-ins
-        if (event === 'SIGNED_IN' && session?.user && session.user.app_metadata?.provider === 'google') {
-          await handleOAuthUser(session.user);
-        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, [supabase]);
-
-  // Handle OAuth user creation
-  const handleOAuthUser = async (user: User) => {
-    try {
-      console.log("Handling OAuth user:", user.email);
-      
-      // Call our API to ensure user record exists
-      const response = await fetch('/api/auth/oauth-callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user }),
-      });
-
-      if (!response.ok) {
-        console.error("Failed to create OAuth user record:", await response.text());
-      } else {
-        console.log("OAuth user record created/verified successfully");
-      }
-    } catch (err) {
-      console.error("Error handling OAuth user:", err);
-    }
-  };
 
   // Show error state only
   if (error) {
