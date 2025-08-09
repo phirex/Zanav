@@ -70,27 +70,18 @@ export default function Login() {
       setGoogleLoading(true);
       setError(null);
 
-      // Use Google OAuth directly instead of Supabase's wrapper
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-      if (!clientId) {
-        throw new Error("Google OAuth client ID not configured");
+      const redirectTo = new URL('/auth/callback', window.location.origin).toString();
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      });
+
+      if (error) {
+        throw error;
       }
-      
-      // Use the exact domain that matches Google Cloud Console
-      const redirectUri = `https://zanav.io/api/auth/google-callback`;
-      const scope = 'email profile';
-      
-      const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${clientId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `response_type=code&` +
-        `scope=${encodeURIComponent(scope)}&` +
-        `access_type=offline&` +
-        `prompt=consent`;
-      
-      // Redirect to Google OAuth
-      window.location.href = googleOAuthUrl;
-      
+
+      // Supabase will redirect automatically
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       setError("Failed to sign in with Google. Please try again.");
