@@ -66,7 +66,6 @@ export const GET = createHandler(async ({ req, client }) => {
       userTenants: userTenants || [],
       allTenantsCount: allTenants?.length || 0,
       errors: {
-        userError: userError?.message || null,
         userTenantError: userTenantError?.message || null,
         tenantsError: tenantsError?.message || null
       }
