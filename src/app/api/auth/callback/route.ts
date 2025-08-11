@@ -61,22 +61,50 @@ export async function GET(request: NextRequest) {
       if (data.user) {
         console.log("[Auth Callback] User authenticated:", data.user.email);
 
-                  // Check if user exists in our User table
-          const { data: existingUser, error: userCheckError } = await supabase
-            .from('User')
-            .select('id, tenantId')
-            .eq('supabaseUserId', data.user.id)
-            .single();
+        // Check if user exists in our User table
+        let existingUser = null;
+        const { data: existingUserBySupabaseId, error: userCheckError } = await supabase
+          .from('User')
+          .select('id, tenantId, supabaseUserId')
+          .eq('supabaseUserId', data.user.id)
+          .single();
 
         if (userCheckError && userCheckError.code !== 'PGRST116') { // PGRST116 means no rows found
           console.error("[Auth Callback] Error checking user:", userCheckError);
+          throw userCheckError;
         }
+
+        // Also check if user exists by email (in case they signed up before with different method)
+        let existingUserByEmail = null;
+        if (!existingUserBySupabaseId && data.user.email) {
+          const { data: emailUser, error: emailError } = await supabase
+            .from('User')
+            .select('id, tenantId, supabaseUserId')
+            .eq('email', data.user.email)
+            .maybeSingle();
+
+          if (emailError) {
+            console.error("[Auth Callback] Error checking user by email:", emailError);
+          } else if (emailUser) {
+            existingUserByEmail = emailUser;
+            console.log("[Auth Callback] Found existing user by email:", emailUser.id);
+          }
+        }
+
+        console.log("[Auth Callback] User check result:", {
+          existingUserBySupabaseId: !!existingUserBySupabaseId,
+          userId: existingUserBySupabaseId?.id,
+          tenantId: existingUserBySupabaseId?.tenantId,
+          existingUserByEmail: !!existingUserByEmail,
+          emailUserId: existingUserByEmail?.id,
+          emailUserTenantId: existingUserByEmail?.tenantId
+        });
 
         let isFirstTimeUser = false;
         let redirectPath = next;
 
         // If user doesn't exist in our table, create them
-        if (!existingUser) {
+        if (!existingUserBySupabaseId && !existingUserByEmail) {
           console.log("[Auth Callback] Creating new user record for:", data.user.email);
           isFirstTimeUser = true;
 
@@ -115,10 +143,19 @@ export async function GET(request: NextRequest) {
 
           if (createError) {
             console.error("[Auth Callback] Error creating user:", createError);
+            console.error("[Auth Callback] User insert data:", {
+              supabaseUserId: data.user.id,
+              email: data.user.email,
+              firstName: data.user.user_metadata?.full_name?.split(' ')[0] || '',
+              lastName: data.user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+              tenantId: newTenant.id,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
             throw createError;
           }
 
-          console.log("[Auth Callback] User record created successfully");
+          console.log("[Auth Callback] User record created successfully:", newUser.id);
 
           // Create UserTenant link with admin role
           const { error: userTenantError } = await supabase
@@ -132,19 +169,40 @@ export async function GET(request: NextRequest) {
           if (userTenantError) {
             console.error("[Auth Callback] Error creating user-tenant link:", userTenantError);
             // Don't throw - user is still created
+          } else {
+            console.log("[Auth Callback] UserTenant link created successfully");
           }
 
           // Redirect first-time users to kennel setup
           redirectPath = '/kennel-setup';
         } else {
-          console.log("[Auth Callback] User already exists in our table with tenant:", existingUser.tenantId);
+          console.log("[Auth Callback] User already exists in our table with tenant:", existingUserBySupabaseId?.tenantId || existingUserByEmail?.tenantId);
+          
+          // If we found a user by email but they don't have supabaseUserId set, update it
+          if (existingUserByEmail && !existingUserByEmail.supabaseUserId) {
+            console.log("[Auth Callback] Updating existing user with supabaseUserId:", existingUserByEmail.id);
+            
+            const { error: updateError } = await supabase
+              .from('User')
+              .update({ supabaseUserId: data.user.id })
+              .eq('id', existingUserByEmail.id);
+
+            if (updateError) {
+              console.error("[Auth Callback] Error updating user with supabaseUserId:", updateError);
+            } else {
+              console.log("[Auth Callback] Successfully updated user with supabaseUserId");
+              // Use the existing user for the rest of the logic
+              existingUser = existingUserByEmail;
+            }
+          }
           
           // Check if user has completed kennel setup (has rooms, etc.)
-          if (existingUser.tenantId) {
+          const userToCheck = existingUser || existingUserBySupabaseId || existingUserByEmail;
+          if (userToCheck?.tenantId) {
             const { data: roomCount, error: roomError } = await supabase
               .from('Room')
               .select('id', { count: 'exact' })
-              .eq('tenantId', existingUser.tenantId);
+              .eq('tenantId', userToCheck.tenantId);
 
             if (roomError) {
               console.error("[Auth Callback] Error checking rooms:", roomError);
