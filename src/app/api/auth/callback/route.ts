@@ -189,14 +189,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Now let Supabase handle the session by redirecting to the callback URL
-    // This ensures the session is properly established
-    const callbackUrl = `${origin}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`;
+    // Redirect to the appropriate page
+    console.log("[Auth Callback] Redirecting to:", redirectPath);
     
-    console.log("[Auth Callback] Redirecting to callback URL:", callbackUrl);
-    
-    // Redirect to Supabase's callback handling
-    return NextResponse.redirect(callbackUrl);
+    // Redirect directly to the destination
+    return NextResponse.redirect(`${origin}${redirectPath}`);
 
   } catch (error) {
     console.error("[Auth Callback] Exception during user creation:", error);
