@@ -172,20 +172,34 @@ export async function middleware(request: NextRequest) {
     if (user) {
       try {
         console.log("[Middleware] Checking user's tenant...");
+        console.log("[Middleware] User ID:", user.id);
+        console.log("[Middleware] User email:", user.email);
         
         // Get user record from database
-        const { data: userRecord } = await supabaseClient
+        const { data: userRecord, error: userError } = await supabaseClient
           .from("User")
           .select("id, tenantId")
           .eq("supabaseUserId", user.id)
           .single();
 
+        if (userError) {
+          console.error("[Middleware] Error fetching user record:", userError);
+        }
+
         if (userRecord) {
+          console.log("[Middleware] User record found:", userRecord);
+          
           // Check how many kennels the user has access to
-          const { data: userTenants } = await supabaseClient
+          const { data: userTenants, error: userTenantsError } = await supabaseClient
             .from("UserTenant")
             .select("tenant_id")
             .eq("user_id", userRecord.id);
+
+          if (userTenantsError) {
+            console.error("[Middleware] Error fetching user tenants:", userTenantsError);
+          }
+
+          console.log("[Middleware] UserTenant records found:", userTenants);
 
           if (userTenants && userTenants.length > 0) {
             // User has kennels - auto-assign to the first one
@@ -194,11 +208,16 @@ export async function middleware(request: NextRequest) {
             
             // Update user's tenantId if it's different
             if (userRecord.tenantId !== tenantId) {
-              await supabaseClient
+              const { error: updateError } = await supabaseClient
                 .from("User")
                 .update({ tenantId })
                 .eq("id", userRecord.id);
-              console.log(`[Middleware] Updated user's tenantId to: ${tenantId}`);
+              
+              if (updateError) {
+                console.error("[Middleware] Error updating user tenantId:", updateError);
+              } else {
+                console.log(`[Middleware] Updated user's tenantId to: ${tenantId}`);
+              }
             }
 
             // Set tenant cookie and continue
@@ -214,6 +233,8 @@ export async function middleware(request: NextRequest) {
           } else {
             console.log("[Middleware] User has no kennels");
           }
+        } else {
+          console.log("[Middleware] No user record found in database");
         }
       } catch (error) {
         console.error("[Middleware] Error checking user tenant:", error);
