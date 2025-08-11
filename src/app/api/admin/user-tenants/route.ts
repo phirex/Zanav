@@ -1,18 +1,18 @@
-import { createAdminHandler } from "@/lib/apiHandler";
+import { createHandler } from "@/lib/apiHandler";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
-export const GET = createAdminHandler(async (ctx) => {
+export const GET = createHandler(async ({ req, client, tenantId }) => {
   try {
     const adminSupabase = supabaseAdmin();
 
-    // Get the current user's session to find their user ID
-    const { data: { session } } = await adminSupabase.auth.getSession();
+    // Get the current user's session from the regular client
+    const { data: { user: authUser } } = await client.auth.getUser();
     
-    if (!session?.user) {
+    if (!authUser) {
       return { error: "Not authenticated" };
     }
 
-    const supabaseUserId = session.user.id;
+    const supabaseUserId = authUser.id;
 
     // Find the user record
     const { data: user, error: userError } = await adminSupabase
@@ -52,7 +52,7 @@ export const GET = createAdminHandler(async (ctx) => {
       subdomain: ut.Tenant.subdomain,
       createdAt: ut.Tenant.createdAt,
       role: ut.role,
-      ownerEmail: session.user.email
+      ownerEmail: authUser.email
     })) || [];
 
     return { tenants };
