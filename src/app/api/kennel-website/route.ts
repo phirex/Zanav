@@ -3,15 +3,25 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = 'force-dynamic';
 
+const INVALID_TENANT = "00000000-0000-0000-0000-000000000000";
+
 export async function GET(request: NextRequest) {
   try {
     console.log("GET /api/kennel-website called");
     const supabase = supabaseServer();
 
-    // Get tenant ID from headers
-    const tenantId = request.headers.get("x-tenant-id");
-    console.log("GET - Tenant ID:", tenantId);
-    if (!tenantId) {
+    // Get tenant ID from headers or cookie fallback
+    let tenantId = request.headers.get("x-tenant-id");
+    const cookieTenant = request.cookies.get("tenantId")?.value || null;
+    console.log("GET - Incoming tenantId header:", tenantId, "cookie:", cookieTenant);
+
+    if (!tenantId || tenantId === INVALID_TENANT) {
+      tenantId = cookieTenant || tenantId || null;
+    }
+
+    console.log("GET - Resolved tenantId:", tenantId);
+
+    if (!tenantId || tenantId === INVALID_TENANT) {
       return NextResponse.json(
         { error: "Tenant ID required" },
         { status: 400 },
@@ -127,10 +137,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("Request body:", body);
 
-    // Get tenant ID from headers
-    const tenantId = request.headers.get("x-tenant-id");
+    // Get tenant ID from headers or cookie fallback
+    let tenantId = request.headers.get("x-tenant-id");
+    const cookieTenant = request.cookies.get("tenantId")?.value || null;
+    if (!tenantId || tenantId === INVALID_TENANT) tenantId = cookieTenant || tenantId || null;
+
     console.log("Tenant ID:", tenantId);
-    if (!tenantId) {
+    if (!tenantId || tenantId === INVALID_TENANT) {
       return NextResponse.json(
         { error: "Tenant ID required" },
         { status: 400 },
