@@ -233,6 +233,52 @@ export async function middleware(request: NextRequest) {
       tenantId = DEFAULT_TENANT_ID;
     }
 
+    // NEW: Check if user has multiple kennels and redirect if needed
+    if (user && (currentPath === "/" || currentPath === "/dashboard")) {
+      try {
+        console.log("[Middleware] Checking for multiple kennels...");
+        
+        // Create admin client to check user tenants
+        const { createClient } = await import("@supabase/supabase-js");
+        const adminClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        );
+
+        // Get user's tenants
+        const { data: userRecord } = await adminClient
+          .from("User")
+          .select("id")
+          .eq("supabaseUserId", user.id)
+          .single();
+
+        if (userRecord) {
+          const { data: userTenants } = await adminClient
+            .from("UserTenant")
+            .select("tenant_id")
+            .eq("user_id", userRecord.id);
+
+          if (userTenants && userTenants.length > 1) {
+            console.log(`[Middleware] User has ${userTenants.length} kennels, redirecting to selection`);
+            return NextResponse.redirect(new URL("/select-tenant", request.url));
+          } else if (userTenants && userTenants.length === 1) {
+            // User has exactly one kennel, set the correct tenant ID
+            tenantId = userTenants[0].tenant_id;
+            console.log(`[Middleware] User has 1 kennel, setting tenant ID: ${tenantId}`);
+          }
+        }
+      } catch (error) {
+        console.error("[Middleware] Error checking user tenants:", error);
+        // Continue with default behavior if check fails
+      }
+    }
+
     // --- Set tenant/user headers for server components ---
     const newHeaders = new Headers(request.headers);
     newHeaders.set("x-tenant-id", tenantId);
