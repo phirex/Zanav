@@ -28,16 +28,22 @@ export function SupabaseBrowserProvider({
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     const getUser = async () => {
       try {
         const { data: { user: initialUser } } = await supabase.auth.getUser();
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
-        setUser(initialUser);
-        setSession(initialSession);
-        setLoading(false);
+        if (mounted) {
+          setUser(initialUser);
+          setSession(initialSession);
+          setLoading(false);
+        }
       } catch (error) {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -45,16 +51,17 @@ export function SupabaseBrowserProvider({
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           setSession(session);
           
-          if (session.user.app_metadata?.provider === 'google') {
+          // Only handle Google OAuth for new users
+          if (session.user.app_metadata?.provider === 'google' && !user) {
             try {
-              // Set redirecting state to prevent dashboard rendering
               setIsRedirecting(true);
               
-              // Create user record via our API (it will handle checking if user exists)
               const response = await fetch('/api/auth/create-google-user', {
                 method: 'POST',
                 headers: {
@@ -68,20 +75,17 @@ export function SupabaseBrowserProvider({
               });
 
               if (!response.ok) {
-                const errorData = await response.json();
                 setIsRedirecting(false);
                 return;
               }
 
               const userData = await response.json();
               
-              // Redirect based on API response
               if (userData.redirectTo === '/kennel-setup') {
                 window.location.replace('/kennel-setup');
-                return; // Exit early to prevent further processing
+                return;
               }
               
-              // If we get here, user should stay on current page
               setIsRedirecting(false);
             } catch (error) {
               setIsRedirecting(false);
@@ -96,9 +100,10 @@ export function SupabaseBrowserProvider({
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, user]); // Only re-run if supabase client changes or user state changes
 
   // Show loading or prevent rendering while redirecting
   if (loading || isRedirecting) {
