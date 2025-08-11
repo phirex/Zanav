@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/contexts/SupabaseBrowserContext";
 import LogoutButton from "@/components/LogoutButton";
+import DeleteAccountButton from "@/components/DeleteAccountButton";
 import type { Session } from "@supabase/supabase-js";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import GlobalAdminSidebar from "@/components/GlobalAdminSidebar";
@@ -261,6 +262,7 @@ export default function ClientLayout({
             {/* Sticky Footer Section */}
             <div className="mt-4 space-y-3 pt-4 border-t border-gray-200 bg-white">
               <LanguageSwitcher />
+              <DeleteAccountButton />
               <LogoutButton />
             </div>
           </div>
