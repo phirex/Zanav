@@ -37,7 +37,7 @@ export default function ClientLayout({
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
 
   // Initialize client-side flag first
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function ClientLayout({
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       setSession(session);
       setIsLoading(false);
     });

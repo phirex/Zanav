@@ -17,7 +17,7 @@ type UserProfile = {
 
 function ProfileContent() {
   const { t } = useTranslation();
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

@@ -22,7 +22,7 @@ function UsersContent() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = useSupabase(); // Use context
+  const { supabase } = useSupabase(); // Use context
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteFirstName, setInviteFirstName] = useState("");

@@ -16,7 +16,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = useSupabase(); // Use context
+  const { supabase } = useSupabase(); // Use context
 
   useEffect(() => {
     async function fetchUsers() {
