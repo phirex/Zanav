@@ -34,7 +34,9 @@ export default function AdminLayout({
 
         // Fetch admin status from a dedicated API route instead of direct DB check
         // This keeps sensitive logic server-side
-        const response = await fetch("/api/admin/status");
+        const response = await fetch("/api/admin/status", {
+          credentials: 'include' // This ensures cookies are sent with the request
+        });
         if (response.ok) {
           const { isAdmin: adminStatusResult } = await response.json();
           setIsAdmin(adminStatusResult);
@@ -45,7 +47,9 @@ export default function AdminLayout({
         } else {
           // Try alternative approach: check if user is OWNER of their tenant
           try {
-            const tenantResponse = await fetch("/api/tenants/current");
+            const tenantResponse = await fetch("/api/tenants/current", {
+              credentials: 'include' // This ensures cookies are sent with the request
+            });
             if (tenantResponse.ok) {
               const tenantData = await tenantResponse.json();
               if (tenantData.role === "OWNER") {
