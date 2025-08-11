@@ -1,10 +1,10 @@
-import { createAdminHandler } from "@/lib/apiHandler";
+import { createAdminHandlerWithAuth } from "@/lib/apiHandler";
 import { isGlobalAdmin, createServerSupabaseClient } from "@/lib/auth";
 import { connectTenantAsOwner } from "@/services/adminConnectTenant";
 export { dynamic } from "@/lib/forceDynamic";
 
 // POST /api/admin/connect-tenant - Connect as a tenant owner (global admin only)
-export const POST = createAdminHandler(async ({ client, body }) => {
+export const POST = createAdminHandlerWithAuth(async ({ client, body }) => {
   if (!(await isGlobalAdmin())) throw new Error("Unauthorized");
   const { tenantId } = body;
   if (!tenantId) throw new Error("Tenant ID required");

@@ -1,7 +1,7 @@
-import { createAdminHandler } from "@/lib/apiHandler";
+import { createAdminHandlerWithAuth } from "@/lib/apiHandler";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
-export const POST = createAdminHandler(async (ctx) => {
+export const POST = createAdminHandlerWithAuth(async (ctx) => {
   try {
     const { email, name } = ctx.body || {};
     
