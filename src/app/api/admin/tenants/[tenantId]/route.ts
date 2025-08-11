@@ -1,14 +1,13 @@
-import { createAdminHandler } from "@/lib/apiHandler";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { createAdminHandlerWithAuth } from "@/lib/apiHandler";
 
-export const DELETE = createAdminHandler(async (ctx) => {
+export const DELETE = createAdminHandlerWithAuth(async ({ client, params }) => {
   try {
-    console.log("[DELETE_TENANT] Params received:", ctx.params);
-    console.log("[DELETE_TENANT] tenantId param:", ctx.params?.tenantId);
+    console.log("[DELETE_TENANT] Params received:", params);
+    console.log("[DELETE_TENANT] tenantId param:", params?.tenantId);
     
-    const tenantId = Array.isArray(ctx.params?.tenantId) 
-      ? ctx.params.tenantId[0] 
-      : ctx.params?.tenantId;
+    const tenantId = Array.isArray(params?.tenantId) 
+      ? params.tenantId[0] 
+      : params?.tenantId;
     
     console.log("[DELETE_TENANT] Extracted tenantId:", tenantId);
     
@@ -17,10 +16,8 @@ export const DELETE = createAdminHandler(async (ctx) => {
       return { error: "Tenant ID is required" };
     }
 
-    const adminSupabase = supabaseAdmin();
-
     // First, verify the tenant exists and has no owner
-    const { data: tenant, error: tenantError } = await adminSupabase
+    const { data: tenant, error: tenantError } = await client
       .from("Tenant")
       .select("id, name, subdomain")
       .eq("id", tenantId)
@@ -31,7 +28,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
     }
 
     // Check if tenant has any owners (should not have any for deletion)
-    const { data: owners, error: ownersError } = await adminSupabase
+    const { data: owners, error: ownersError } = await client
       .from("UserTenant")
       .select("user_id")
       .eq("tenant_id", tenantId)
@@ -52,7 +49,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
     // Begin transaction-like deletion in the correct order
     try {
       // 1. Delete all UserTenant relationships for this tenant
-      const { error: userTenantError } = await adminSupabase
+      const { error: userTenantError } = await client
         .from("UserTenant")
         .delete()
         .eq("tenant_id", tenantId);
@@ -63,7 +60,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 2. Delete all bookings for this tenant
-      const { error: bookingsError } = await adminSupabase
+      const { error: bookingsError } = await client
         .from("Booking")
         .delete()
         .eq("tenantId", tenantId);
@@ -74,7 +71,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 3. Delete all dogs for this tenant
-      const { error: dogsError } = await adminSupabase
+      const { error: dogsError } = await client
         .from("Dog")
         .delete()
         .eq("tenantId", tenantId);
@@ -85,7 +82,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 4. Delete all owners for this tenant
-      const { error: ownersError2 } = await adminSupabase
+      const { error: ownersError2 } = await client
         .from("Owner")
         .delete()
         .eq("tenantId", tenantId);
@@ -96,7 +93,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 5. Delete all rooms for this tenant
-      const { error: roomsError } = await adminSupabase
+      const { error: roomsError } = await client
         .from("Room")
         .delete()
         .eq("tenantId", tenantId);
@@ -107,7 +104,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 6. Delete all payments for this tenant
-      const { error: paymentsError } = await adminSupabase
+      const { error: paymentsError } = await client
         .from("Payment")
         .delete()
         .eq("tenantId", tenantId);
@@ -118,7 +115,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 7. Delete all notification templates for this tenant
-      const { error: templatesError } = await adminSupabase
+      const { error: templatesError } = await client
         .from("NotificationTemplate")
         .delete()
         .eq("tenantId", tenantId);
@@ -129,7 +126,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 8. Delete all scheduled notifications for this tenant
-      const { error: scheduledError } = await adminSupabase
+      const { error: scheduledError } = await client
         .from("ScheduledNotification")
         .delete()
         .eq("tenantId", tenantId);
@@ -140,7 +137,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 9. Delete all settings for this tenant
-      const { error: settingsError } = await adminSupabase
+      const { error: settingsError } = await client
         .from("Setting")
         .delete()
         .eq("tenantId", tenantId);
@@ -151,7 +148,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 10. Delete all client sources for this tenant
-      const { error: sourcesError } = await adminSupabase
+      const { error: sourcesError } = await client
         .from("ClientSource")
         .delete()
         .eq("tenantId", tenantId);
@@ -162,7 +159,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 11. Delete all kennel website content for this tenant
-      const { error: websiteError } = await adminSupabase
+      const { error: websiteError } = await client
         .from("kennel_websites")
         .delete()
         .eq("tenant_id", tenantId);
@@ -173,7 +170,7 @@ export const DELETE = createAdminHandler(async (ctx) => {
       }
 
       // 12. Finally, delete the tenant itself
-      const { error: deleteTenantError } = await adminSupabase
+      const { error: deleteTenantError } = await client
         .from("Tenant")
         .delete()
         .eq("id", tenantId);
