@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
           console.log("[Auth Callback] Created new tenant:", newTenant.id);
 
           // Create the user record
-          const { error: createError } = await supabase
+          const { data: newUser, error: createError } = await supabase
             .from('User')
             .insert({
               supabaseUserId: data.user.id,
@@ -109,7 +109,9 @@ export async function GET(request: NextRequest) {
               tenantId: newTenant.id,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString()
-            });
+            })
+            .select()
+            .single();
 
           if (createError) {
             console.error("[Auth Callback] Error creating user:", createError);
@@ -122,7 +124,7 @@ export async function GET(request: NextRequest) {
           const { error: userTenantError } = await supabase
             .from('UserTenant')
             .insert({
-              user_id: data.user.id,
+              user_id: newUser.id, // Use the ID from our User table, not Supabase auth user ID
               tenant_id: newTenant.id,
               role: 'admin'
             });
