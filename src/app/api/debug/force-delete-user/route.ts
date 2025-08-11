@@ -97,6 +97,10 @@ export const POST = createHandler(async ({ client }) => {
       // Don't fail here - user record is already deleted
     }
 
+    // 5. Clear the current session by signing out
+    console.log("[FORCE DELETE] Signing out current session");
+    await client.auth.signOut();
+
     console.log("[FORCE DELETE] Force deletion completed successfully");
 
     return {

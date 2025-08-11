@@ -310,6 +310,31 @@ export default function ClientLayout({
                 </div>
                 <span className="font-medium text-red-700">FORCE DELETE</span>
               </button>
+              <button
+                onClick={async () => {
+                  try {
+                    // Clear all cookies manually
+                    document.cookie.split(";").forEach(function(c) { 
+                      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                    });
+                    // Clear localStorage
+                    localStorage.clear();
+                    // Clear sessionStorage
+                    sessionStorage.clear();
+                    alert('Session cleared! Refreshing page...');
+                    window.location.reload();
+                  } catch (error) {
+                    console.error('Clear session error:', error);
+                    alert('Failed to clear session: ' + error);
+                  }
+                }}
+                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-yellow-50 rounded-xl transition-all duration-200 group"
+              >
+                <div className="bg-yellow-100 p-2 rounded-lg group-hover:bg-yellow-200 transition-colors">
+                  <span className="text-yellow-600 font-bold">🧹</span>
+                </div>
+                <span className="font-medium text-yellow-700">Clear Session</span>
+              </button>
             </div>
           </div>
 
