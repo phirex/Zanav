@@ -112,25 +112,26 @@ export async function middleware(request: NextRequest) {
     console.log("[Middleware] User from Supabase:", user ? { id: user.id, email: user.email } : "null");
     console.log("[Middleware] Current path:", currentPath);
 
-    // --- Public Path Logic ---
-    const publicPaths = [
-      "/api/auth",
-      "/api/signup", // Allow signup API endpoint
-      "/api/kennel-website/public", // Allow public kennel website API
-      "/api/tenants/by-subdomain", // Allow tenant lookup by subdomain
-      "/kennel", // Allow public kennel websites
-      "/login",
-      "/register",
-      "/signup",
-      "/forgot-password",
-      "/reset-password",
-      "/landing",
-      "/favicon.ico",
-      "/_next",
-      "/assets",
-      "/images",
-      "/api/webhooks",
-    ];
+                    // --- Public Path Logic ---
+                const publicPaths = [
+                  "/api/auth",
+                  "/api/signup", // Allow signup API endpoint
+                  "/api/kennel-website/public", // Allow public kennel website API
+                  "/api/tenants/by-subdomain", // Allow tenant lookup by subdomain
+                  "/kennel", // Allow public kennel websites
+                  "/login",
+                  "/register",
+                  "/signup",
+                  "/forgot-password",
+                  "/reset-password",
+                  "/landing",
+                  "/auth/callback", // Allow OAuth callback route
+                  "/favicon.ico",
+                  "/_next",
+                  "/assets",
+                  "/images",
+                  "/api/webhooks",
+                ];
 
     // If this is a subdomain request, treat it as a public path
     if (subdomain && subdomain !== "www" && subdomain !== "zanav" && !hostname.includes("localhost")) {
