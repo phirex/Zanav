@@ -187,6 +187,7 @@ export default function TenantsPage() {
     if (window.confirm(`Are you sure you want to delete tenant "${tenantName}"? This action cannot be undone.`)) {
       try {
         setIsDeleting(true);
+        console.log(`[DELETE] Starting deletion of tenant: ${tenantName} (${tenantId})`);
         
         // Get the current session
         const { data: { session } } = await supabase.auth.getSession();
@@ -201,16 +202,26 @@ export default function TenantsPage() {
           }
         });
 
+        console.log(`[DELETE] Response status: ${response.status}`);
+        
         if (!response.ok) {
           const errorData = await response.json();
+          console.error(`[DELETE] Error response:`, errorData);
           throw new Error(errorData.error || t("errorFailedToDeleteTenant"));
         }
+
+        const result = await response.json();
+        console.log(`[DELETE] Success response:`, result);
 
         toast({
           title: t("toastSuccessTitle"),
           description: t("successTenantDeleted", { name: tenantName }),
         });
-        fetchTenants();
+
+        console.log(`[DELETE] Refreshing tenants list...`);
+        await fetchTenants();
+        console.log(`[DELETE] Tenants list refreshed successfully`);
+        
       } catch (err) {
         console.error("Error deleting tenant:", err);
         toast({
