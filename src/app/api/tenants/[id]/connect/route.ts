@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const POST = createHandler(async ({ req, client, params }) => {
   try {
-    const tenantId = Array.isArray(params?.tenantId) ? params.tenantId[0] : params?.tenantId;
+    const tenantId = Array.isArray(params?.id) ? params.id[0] : params?.id;
     if (!tenantId) {
       return { error: "Tenant ID is required" };
     }
