@@ -36,8 +36,9 @@ export const DELETE = createAdminHandler(async (ctx) => {
       return { error: "Failed to verify tenant ownership" };
     }
 
+    // Allow deletion even with owners - the cascade deletion will handle cleanup
     if (owners && owners.length > 0) {
-      return { error: "Cannot delete tenant with owners. Please transfer ownership first." };
+      console.log(`⚠️ Tenant has ${owners.length} owners, proceeding with deletion anyway`);
     }
 
     console.log(`Starting deletion of tenant: ${tenant.name} (${tenant.subdomain})`);

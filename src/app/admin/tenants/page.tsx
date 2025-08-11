@@ -297,16 +297,14 @@ export default function TenantsPage() {
                             : t("connectButton", "Connect")}
                         </Button>
                         
-                        {!tenant.ownerEmail && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
-                            disabled={isDeleting}
-                          >
-                            {isDeleting ? "Deleting..." : "Delete"}
-                          </Button>
-                        )}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
