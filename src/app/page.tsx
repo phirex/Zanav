@@ -87,9 +87,28 @@ function Home() {
 
   // Fetch data on component mount
   useEffect(() => {
+    // Check if user has multiple kennels and redirect if needed
+    checkMultipleKennels();
     fetchData();
     fetchTenantName();
   }, []);
+
+  // Check if user has multiple kennels
+  const checkMultipleKennels = async () => {
+    try {
+      const response = await fetch('/api/admin/user-tenants');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.tenants && data.tenants.length > 1) {
+          console.log(`🏢 User has ${data.tenants.length} kennels, redirecting to selection`);
+          router.push('/select-tenant');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user tenants:', error);
+    }
+  };
 
   // Listen for kennel settings updates
   useEffect(() => {

@@ -86,6 +86,23 @@ export function SupabaseBrowserProvider({
                 return;
               }
               
+              // NEW: Check if user has multiple kennels
+              if (userData.redirectTo === '/dashboard') {
+                try {
+                  const tenantCheckResponse = await fetch('/api/admin/user-tenants');
+                  if (tenantCheckResponse.ok) {
+                    const tenantData = await tenantCheckResponse.json();
+                    if (tenantData.tenants && tenantData.tenants.length > 1) {
+                      console.log(`🏢 User has ${tenantData.tenants.length} kennels, redirecting to selection`);
+                      window.location.replace('/select-tenant');
+                      return;
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error checking user tenants:', error);
+                }
+              }
+              
               setIsRedirecting(false);
             } catch (error) {
               setIsRedirecting(false);

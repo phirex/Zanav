@@ -180,6 +180,41 @@ export async function GET(request: NextRequest) {
       redirectPath = '/kennel-setup';
     }
 
+    // NEW: Check if user has multiple kennels and redirect to selection if needed
+    if (userId && redirectPath === '/dashboard') {
+      console.log("🔍 Checking if user has multiple kennels...");
+      const { data: userTenants, error: userTenantsError } = await adminSupabase
+        .from("UserTenant")
+        .select(`
+          tenant_id,
+          Tenant!inner(
+            id,
+            name
+          )
+        `)
+        .eq("user_id", userId);
+
+      if (userTenantsError) {
+        console.error("❌ UserTenants lookup error:", userTenantsError);
+      } else if (userTenants && userTenants.length > 1) {
+        console.log(`🏢 User has ${userTenants.length} kennels, redirecting to tenant selection`);
+        redirectPath = '/select-tenant';
+      } else if (userTenants && userTenants.length === 1) {
+        console.log("✅ User has exactly 1 kennel, proceeding to dashboard");
+        // Ensure the user is connected to this tenant
+        if (userTenants[0].tenant_id !== tenantId) {
+          console.log("🔄 Updating user's tenantId to match their kennel");
+          await adminSupabase
+            .from("User")
+            .update({ tenantId: userTenants[0].tenant_id })
+            .eq("id", userId);
+        }
+      } else {
+        console.log("⚠️ User has no kennels, redirecting to kennel setup");
+        redirectPath = '/kennel-setup';
+      }
+    }
+
     console.log("🎯 Final redirect path:", redirectPath);
 
     // Set the session cookie and redirect
