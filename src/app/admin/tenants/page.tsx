@@ -33,6 +33,7 @@ export default function TenantsPage() {
   const [newTenantName, setNewTenantName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -151,6 +152,38 @@ export default function TenantsPage() {
     }
   };
 
+  const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
+    if (window.confirm(`Are you sure you want to delete tenant "${tenantName}"? This action cannot be undone.`)) {
+      try {
+        setIsDeleting(true);
+        const response = await fetch(`/api/admin/tenants/${tenantId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || t("errorFailedToDeleteTenant"));
+        }
+
+        toast({
+          title: t("toastSuccessTitle"),
+          description: t("successTenantDeleted", { name: tenantName }),
+        });
+        fetchTenants();
+      } catch (err) {
+        console.error("Error deleting tenant:", err);
+        toast({
+          title: t("toastErrorTitle"),
+          description:
+            err instanceof Error ? err.message : t("errorFailedToDeleteTenant"),
+          variant: "destructive",
+        });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) {
       return t("formatDateNA");
@@ -250,18 +283,31 @@ export default function TenantsPage() {
                       {tenant.ownerEmail || "N/A"}
                     </TableCell>
                     <TableCell className="text-right table-cell">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleConnectToTenant(tenant.id, tenant.name)
-                        }
-                        disabled={isConnecting}
-                      >
-                        {isConnecting
-                          ? t("connectingButton", "Connecting...")
-                          : t("connectButton", "Connect")}
-                      </Button>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleConnectToTenant(tenant.id, tenant.name)
+                          }
+                          disabled={isConnecting}
+                        >
+                          {isConnecting
+                            ? t("connectingButton", "Connecting...")
+                            : t("connectButton", "Connect")}
+                        </Button>
+                        
+                        {!tenant.ownerEmail && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
