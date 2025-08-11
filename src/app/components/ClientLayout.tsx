@@ -264,6 +264,26 @@ export default function ClientLayout({
               <LanguageSwitcher />
               <DeleteAccountButton />
               <LogoutButton />
+              {/* Temporary debug button */}
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/debug/user-status');
+                    const data = await response.json();
+                    console.log('User Status:', data);
+                    alert(JSON.stringify(data, null, 2));
+                  } catch (error) {
+                    console.error('Debug error:', error);
+                    alert('Debug failed: ' + error);
+                  }
+                }}
+                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group"
+              >
+                <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition-colors">
+                  <span className="text-blue-600 font-bold">?</span>
+                </div>
+                <span className="font-medium text-blue-700">Debug Status</span>
+              </button>
             </div>
           </div>
 
