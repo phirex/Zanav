@@ -130,8 +130,8 @@ export default function KennelWebsitePage({
       }
 
       const data = await response.json();
-      setWebsiteData(data.website || {});
-      setGalleryImages(data.gallery || []);
+      setWebsiteData(data.websiteData || {});
+      setGalleryImages(data.galleryImages || []);
       setVideos(data.videos || []);
       setTestimonials(data.testimonials || []);
       setFaqs(data.faqs || []);
