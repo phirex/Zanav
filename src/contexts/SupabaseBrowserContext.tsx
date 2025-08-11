@@ -71,6 +71,7 @@ export function SupabaseBrowserProvider({
             console.log("🔄 Processing Google OAuth user creation...");
             
             try {
+              console.log("🔍 Step 1: Checking if user exists in database...");
               // Check if user already exists in our database
               const { data: existingUser, error: userCheckError } = await supabase
                 .from('User')
@@ -83,10 +84,13 @@ export function SupabaseBrowserProvider({
                 return;
               }
 
+              console.log("🔍 Step 2: User check result:", existingUser ? `Found user ${existingUser.id}` : "No existing user");
+
               if (!existingUser) {
-                console.log("🆕 Creating new user record for Google OAuth user...");
+                console.log("🆕 Step 3: Creating new user record for Google OAuth user...");
                 
                 // Create user record via our API
+                console.log("🔍 Step 4: Calling /api/auth/create-google-user...");
                 const response = await fetch('/api/auth/create-google-user', {
                   method: 'POST',
                   headers: {
@@ -98,6 +102,8 @@ export function SupabaseBrowserProvider({
                     name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
                   }),
                 });
+
+                console.log("🔍 Step 5: API response status:", response.status);
 
                 if (!response.ok) {
                   const errorData = await response.json();
@@ -114,7 +120,7 @@ export function SupabaseBrowserProvider({
                   window.location.href = '/kennel-setup';
                 }
               } else {
-                console.log("✅ User already exists:", existingUser.id);
+                console.log("✅ Step 3: User already exists:", existingUser.id);
                 
                 // Check if user has rooms (to determine redirect)
                 if (existingUser.tenantId) {
