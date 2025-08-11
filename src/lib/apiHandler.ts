@@ -187,7 +187,7 @@ export function createAdminHandler(handler: ApiHandler) {
       console.log("[ADMIN_HANDLER] Cookie header:", cookieHeader);
       
       // Extract the auth token from cookies
-      const authCookieMatch = cookieHeader.match(/sb-nlpsmauwwlnblgwtawbs-auth-token[^=]*=([^;]+)/);
+      const authCookieMatch = cookieHeader.match(/sb-nlpsmauwwlnblgwtawbs-auth-token(?:\.\d+)?=([^;]+)/);
       const authToken = authCookieMatch ? authCookieMatch[1] : null;
       console.log("[ADMIN_HANDLER] Auth token extracted:", authToken ? "YES" : "NO");
       
