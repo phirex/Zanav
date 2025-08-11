@@ -67,6 +67,13 @@ export default function KennelWebsitePage({
 }: {
   params: { subdomain: string };
 }) {
+  // Ensure this is only loaded for kennel websites
+  useEffect(() => {
+    // Clear any console logs that might indicate dashboard loading
+    console.clear();
+    console.log("[KENNEL] Loading kennel website for:", params.subdomain);
+  }, [params.subdomain]);
+
   const [websiteData, setWebsiteData] = useState<KennelWebsite>({});
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -85,7 +92,7 @@ export default function KennelWebsitePage({
       setIsLoading(true);
       setIsError(false);
 
-      console.log("[Kennel Page] Fetching data for subdomain:", params.subdomain);
+      console.log("[KENNEL] Fetching data for subdomain:", params.subdomain);
 
       // Fetch the website data using the public API
       const response = await fetch(
@@ -101,14 +108,13 @@ export default function KennelWebsitePage({
       }
 
       const data = await response.json();
-
-      setWebsiteData(data.websiteData || {});
-      setGalleryImages(data.galleryImages || []);
+      setWebsiteData(data.website || {});
+      setGalleryImages(data.gallery || []);
       setVideos(data.videos || []);
       setTestimonials(data.testimonials || []);
       setFaqs(data.faqs || []);
     } catch (error) {
-      console.error("Error fetching website data:", error);
+      console.error("[KENNEL] Error fetching website data:", error);
       setIsError(true);
     } finally {
       setIsLoading(false);
