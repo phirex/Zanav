@@ -3,7 +3,10 @@ import { createAdminHandlerWithAuth } from "@/lib/apiHandler";
 export const DELETE = createAdminHandlerWithAuth(async ({ client, params }) => {
   try {
     console.log("[DELETE_TENANT] Params received:", params);
+    console.log("[DELETE_TENANT] Params type:", typeof params);
+    console.log("[DELETE_TENANT] Params keys:", params ? Object.keys(params) : 'undefined');
     console.log("[DELETE_TENANT] tenantId param:", params?.tenantId);
+    console.log("[DELETE_TENANT] tenantId type:", typeof params?.tenantId);
     
     const tenantId = Array.isArray(params?.tenantId) 
       ? params.tenantId[0] 
@@ -13,6 +16,7 @@ export const DELETE = createAdminHandlerWithAuth(async ({ client, params }) => {
     
     if (!tenantId) {
       console.log("[DELETE_TENANT] No tenantId found, returning error");
+      console.log("[DELETE_TENANT] Full params object:", JSON.stringify(params, null, 2));
       return { error: "Tenant ID is required" };
     }
 

@@ -267,6 +267,7 @@ export function createAdminHandlerWithAuth(handler: (ctx: { client: SupabaseClie
     try {
       console.log("[ADMIN_HANDLER_AUTH] Request method:", req.method);
       console.log("[ADMIN_HANDLER_AUTH] Request URL:", req.url);
+      console.log("[ADMIN_HANDLER_AUTH] Params received:", params);
       
       const client = supabaseAdmin();
 
