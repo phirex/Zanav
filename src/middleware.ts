@@ -254,23 +254,30 @@ export async function middleware(request: NextRequest) {
         // Get user's tenants
         const { data: userRecord } = await adminClient
           .from("User")
-          .select("id")
+          .select("id, tenantId")
           .eq("supabaseUserId", user.id)
           .single();
 
         if (userRecord) {
-          const { data: userTenants } = await adminClient
-            .from("UserTenant")
-            .select("tenant_id")
-            .eq("user_id", userRecord.id);
+          // Check if user has already selected a tenant
+          if (userRecord.tenantId && userRecord.tenantId !== DEFAULT_TENANT_ID) {
+            console.log(`[Middleware] User has already selected tenant: ${userRecord.tenantId}`);
+            tenantId = userRecord.tenantId;
+          } else {
+            // User hasn't selected a tenant, check how many they have
+            const { data: userTenants } = await adminClient
+              .from("UserTenant")
+              .select("tenant_id")
+              .eq("user_id", userRecord.id);
 
-          if (userTenants && userTenants.length > 1) {
-            console.log(`[Middleware] User has ${userTenants.length} kennels, redirecting to selection`);
-            return NextResponse.redirect(new URL("/select-tenant", request.url));
-          } else if (userTenants && userTenants.length === 1) {
-            // User has exactly one kennel, set the correct tenant ID
-            tenantId = userTenants[0].tenant_id;
-            console.log(`[Middleware] User has 1 kennel, setting tenant ID: ${tenantId}`);
+            if (userTenants && userTenants.length > 1) {
+              console.log(`[Middleware] User has ${userTenants.length} kennels, redirecting to selection`);
+              return NextResponse.redirect(new URL("/select-tenant", request.url));
+            } else if (userTenants && userTenants.length === 1) {
+              // User has exactly one kennel, set the correct tenant ID
+              tenantId = userTenants[0].tenant_id;
+              console.log(`[Middleware] User has 1 kennel, setting tenant ID: ${tenantId}`);
+            }
           }
         }
       } catch (error) {
