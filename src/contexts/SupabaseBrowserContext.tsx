@@ -18,28 +18,41 @@ export function SupabaseBrowserProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [supabase] = useState(() =>
-    createBrowserClient(
+  console.log("🔧 SupabaseBrowserProvider: Initializing...");
+  
+  const [supabase] = useState(() => {
+    console.log("🔧 Creating Supabase browser client...");
+    return createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
+    );
+  });
 
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("🔧 SupabaseBrowserProvider: useEffect started");
+    
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(user);
-      setSession(session);
-      setLoading(false);
+      console.log("🔧 Getting initial user and session...");
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("🔧 Initial user:", user?.email, "Initial session:", !!session);
+        setUser(user);
+        setSession(session);
+        setLoading(false);
+      } catch (error) {
+        console.error("🔧 Error getting initial user/session:", error);
+        setLoading(false);
+      }
     };
 
     getUser();
 
+    console.log("🔧 Setting up onAuthStateChange listener...");
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔐 Auth state change:", event, session?.user?.email);
@@ -129,8 +142,15 @@ export function SupabaseBrowserProvider({
       }
     );
 
-    return () => subscription.unsubscribe();
+    console.log("🔧 onAuthStateChange listener set up successfully");
+
+    return () => {
+      console.log("🔧 Cleaning up onAuthStateChange subscription");
+      subscription.unsubscribe();
+    };
   }, [supabase]);
+
+  console.log("🔧 SupabaseBrowserProvider: Rendering with user:", user?.email, "loading:", loading);
 
   return (
     <SupabaseContext.Provider value={{ supabase, user, session, loading }}>

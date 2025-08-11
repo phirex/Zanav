@@ -31,13 +31,20 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { supabase, user, session, loading } = useSupabase();
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentSession, setCurrentSession] = useState<any>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  const { supabase } = useSupabase();
+  // Debug: Log context state
+  console.log("🔍 ClientLayout: Context state:", { 
+    user: user?.email, 
+    session: !!session, 
+    loading,
+    isClient 
+  });
 
   // Initialize client-side flag first
   useEffect(() => {
@@ -48,33 +55,9 @@ export default function ClientLayout({
   useEffect(() => {
     if (!isClient) return;
 
-    const getSession = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        setSession(session);
-      } catch (error) {
-        console.error("Error getting session:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getSession();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
-      setSession(session);
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [isClient, supabase]);
+    // Since we're getting session from context, just set loading to false
+    setIsLoading(false);
+  }, [isClient]);
 
   // Don't render anything until client-side hydration is complete
   if (!isClient || isLoading) {
