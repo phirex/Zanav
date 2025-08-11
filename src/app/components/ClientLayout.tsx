@@ -335,6 +335,25 @@ export default function ClientLayout({
                 </div>
                 <span className="font-medium text-yellow-700">Clear Session</span>
               </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/debug/current-state');
+                    const data = await response.json();
+                    console.log('Current State:', data);
+                    alert(JSON.stringify(data, null, 2));
+                  } catch (error) {
+                    console.error('Current state error:', error);
+                    alert('Failed to get current state: ' + error);
+                  }
+                }}
+                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 rounded-xl transition-all duration-200 group"
+              >
+                <div className="bg-green-100 p-2 rounded-lg group-hover:bg-green-200 transition-colors">
+                  <span className="text-green-600 font-bold">📊</span>
+                </div>
+                <span className="font-medium text-green-700">Current State</span>
+              </button>
             </div>
           </div>
 
