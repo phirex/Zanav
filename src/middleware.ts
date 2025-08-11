@@ -93,6 +93,11 @@ export async function middleware(request: NextRequest) {
       console.error("[Middleware] User error:", userError.message);
     }
 
+    // DEBUG: Log all cookies and user info
+    console.log("[Middleware] All cookies:", Array.from(request.cookies.getAll()));
+    console.log("[Middleware] User from Supabase:", user ? { id: user.id, email: user.email } : "null");
+    console.log("[Middleware] Current path:", currentPath);
+
     // --- Public Path Logic ---
     const publicPaths = [
       "/api/auth",
@@ -130,21 +135,25 @@ export async function middleware(request: NextRequest) {
         currentPath === "/register" ||
         currentPath === "/landing")
     ) {
+      console.log("[Middleware] Authenticated user accessing auth page, redirecting to /");
       return NextResponse.redirect(new URL("/", request.url));
     }
 
     // If it's a public path, allow access
     if (isPublicPath) {
+      console.log("[Middleware] Public path, allowing access");
       return response;
     }
 
     // Special case: if not authenticated and trying root path, send to landing page
     if (!user && (currentPath === "/" || currentPath === "")) {
+      console.log("[Middleware] No user, redirecting root path to /landing");
       return NextResponse.redirect(new URL("/landing", request.url));
     }
 
     // --- Auth Check for Non-Public Paths ---
     if (!user) {
+      console.log("[Middleware] No user found, redirecting to login");
       // Check for potential redirect loops
       if (request.cookies.has("redirect_count")) {
         const redirectCount = parseInt(
