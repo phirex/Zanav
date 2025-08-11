@@ -13,6 +13,11 @@ export const DELETE = createAdminHandlerWithAuth(async ({ client, params }) => {
       : params?.tenantId;
     
     console.log("[DELETE_TENANT] Extracted tenantId:", tenantId);
+    console.log("[DELETE_TENANT] tenantId truthy check:", !!tenantId);
+    console.log("[DELETE_TENANT] tenantId length:", tenantId ? tenantId.length : 'undefined');
+    console.log("[DELETE_TENANT] tenantId === undefined:", tenantId === undefined);
+    console.log("[DELETE_TENANT] tenantId === null:", tenantId === null);
+    console.log("[DELETE_TENANT] tenantId === '':", tenantId === '');
     
     if (!tenantId) {
       console.log("[DELETE_TENANT] No tenantId found, returning error");
