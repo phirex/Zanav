@@ -151,6 +151,58 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
+    // User is authenticated, check if they have a tenant
+    if (user) {
+      try {
+        console.log("[Middleware] Checking user's tenant...");
+        
+        // Get user record from database
+        const { data: userRecord } = await supabaseClient
+          .from("User")
+          .select("id, tenantId")
+          .eq("supabaseUserId", user.id)
+          .single();
+
+        if (userRecord) {
+          // Check how many kennels the user has access to
+          const { data: userTenants } = await supabaseClient
+            .from("UserTenant")
+            .select("tenant_id")
+            .eq("user_id", userRecord.id);
+
+          if (userTenants && userTenants.length > 0) {
+            // User has kennels - auto-assign to the first one
+            const tenantId = userTenants[0].tenant_id;
+            console.log(`[Middleware] User has ${userTenants.length} kennel(s), auto-assigning to: ${tenantId}`);
+            
+            // Update user's tenantId if it's different
+            if (userRecord.tenantId !== tenantId) {
+              await supabaseClient
+                .from("User")
+                .update({ tenantId })
+                .eq("id", userRecord.id);
+              console.log(`[Middleware] Updated user's tenantId to: ${tenantId}`);
+            }
+
+            // Set tenant cookie and continue
+            const response = NextResponse.next();
+            response.cookies.set("tenantId", tenantId, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 24 * 7, // 7 days
+            });
+            console.log(`[Middleware] Set tenantId cookie: ${tenantId}`);
+            return response;
+          } else {
+            console.log("[Middleware] User has no kennels");
+          }
+        }
+      } catch (error) {
+        console.error("[Middleware] Error checking user tenant:", error);
+      }
+    }
+
     // User is authenticated - allow access to all pages
     console.log("[Middleware] User authenticated, allowing access");
     return NextResponse.next();
