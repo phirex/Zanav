@@ -13,12 +13,14 @@ export async function middleware(request: NextRequest) {
   // Skip middleware for static files and API routes
   if (
     currentPath.startsWith("/_next") ||
-    currentPath.startsWith("/api") ||
     currentPath.startsWith("/static") ||
     currentPath.includes(".")
   ) {
     return NextResponse.next();
   }
+
+  // For API routes, just pass through but don't skip entirely
+  const isApiRoute = currentPath.startsWith("/api");
 
   // Handle kennel subdomain routing
   if (subdomain !== "www" && subdomain !== "zanav") {
@@ -143,6 +145,12 @@ export async function middleware(request: NextRequest) {
         currentPath.startsWith("/kennel/")
       ) {
         console.log("[Middleware] Public path, allowing access");
+        return NextResponse.next();
+      }
+
+      // For API routes, just pass through without redirecting
+      if (isApiRoute) {
+        console.log("[Middleware] API route, passing through without auth check");
         return NextResponse.next();
       }
 
