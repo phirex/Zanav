@@ -8,12 +8,25 @@ export async function POST(request: NextRequest) {
   console.log("🆕 Create Google User API called");
   
   try {
-    const { supabaseUserId, email, name } = await request.json();
+    const body = await request.json();
+    console.log("📥 Raw request body:", body);
+    
+    const { supabaseUserId, email, name } = body;
+    
+    console.log("🔍 Parsed fields:", { 
+      supabaseUserId: supabaseUserId, 
+      email: email, 
+      name: name,
+      supabaseUserIdType: typeof supabaseUserId,
+      emailType: typeof email,
+      nameType: typeof name
+    });
     
     if (!supabaseUserId || !email) {
       console.error("❌ Missing required fields:", { supabaseUserId, email });
+      console.error("❌ Validation failed - supabaseUserId:", !!supabaseUserId, "email:", !!email);
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields", details: { supabaseUserId: !!supabaseUserId, email: !!email } },
         { status: 400 }
       );
     }
