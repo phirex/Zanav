@@ -76,11 +76,22 @@ export function SupabaseBrowserProvider({
               console.log("🔍 User email:", user.email);
               
               // Check if user already exists in our database
-              const { data: existingUser, error: userCheckError } = await supabase
-                .from('User')
-                .select('id, tenantId')
-                .eq('supabaseUserId', user.id)
-                .maybeSingle();
+              let existingUser, userCheckError;
+              try {
+                console.log("🔍 About to execute database query...");
+                const result = await supabase
+                  .from('User')
+                  .select('id, tenantId')
+                  .eq('supabaseUserId', user.id)
+                  .maybeSingle();
+                
+                existingUser = result.data;
+                userCheckError = result.error;
+                console.log("🔍 Database query completed successfully");
+              } catch (queryError) {
+                console.error("💥 Database query threw an exception:", queryError);
+                userCheckError = queryError;
+              }
 
               console.log("🔍 Database query result:", { existingUser, userCheckError });
 
