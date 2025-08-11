@@ -18,6 +18,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Skip middleware for public pages entirely
+  if (
+    currentPath === "/" ||
+    currentPath === "/login" ||
+    currentPath === "/signup" ||
+    currentPath === "/landing" ||
+    currentPath.startsWith("/kennel/")
+  ) {
+    console.log(`[Middleware] Public path: ${currentPath}, allowing access without checks`);
+    return NextResponse.next();
+  }
+
   console.log(`[Middleware] Hostname: ${hostname} Subdomain: ${hostname.split('.')[0]} Path: ${currentPath}`);
 
   // Handle kennel subdomains
@@ -35,9 +47,9 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Main domain logic
+  // Main domain logic - only for protected routes
   if (hostname === "www.zanav.io" || hostname === "zanav.io") {
-    console.log("[Middleware] Main domain detected, checking authentication...");
+    console.log("[Middleware] Main domain detected, checking authentication for protected route...");
 
     // Skip API routes entirely for now to avoid breaking them
     if (isApiRoute) {
@@ -60,22 +72,7 @@ export async function middleware(request: NextRequest) {
 
     // If no auth cookie found, redirect to landing page for unauthenticated users
     if (!foundAuthCookie) {
-      console.log("[Middleware] No auth cookie found");
-      
-      // Allow access to public pages
-      if (
-        currentPath === "/" ||
-        currentPath === "/login" ||
-        currentPath === "/signup" ||
-        currentPath === "/landing" ||
-        currentPath.startsWith("/kennel/")
-      ) {
-        console.log("[Middleware] Public path, allowing access");
-        return NextResponse.next();
-      }
-
-      // Redirect to landing for protected pages
-      console.log("[Middleware] Protected path, redirecting to landing");
+      console.log("[Middleware] No auth cookie found, redirecting to landing");
       return NextResponse.redirect(new URL("/landing", request.url));
     }
 
@@ -278,35 +275,9 @@ export async function middleware(request: NextRequest) {
       console.log("[Middleware] No auth cookie found");
     }
 
-    // If no user found, allow access to public pages only
+    // If no user found, redirect to landing
     if (!user) {
-      console.log("[Middleware] User result:", {
-        hasUser: false,
-        userId: undefined,
-        userEmail: undefined,
-        error: "Auth session missing!"
-      });
-
-      // Allow access to public pages
-      if (
-        currentPath === "/" ||
-        currentPath === "/login" ||
-        currentPath === "/signup" ||
-        currentPath === "/landing" ||
-        currentPath.startsWith("/kennel/")
-      ) {
-        console.log("[Middleware] Public path, allowing access");
-        return NextResponse.next();
-      }
-
-      // For API routes, just pass through without redirecting
-      if (isApiRoute) {
-        console.log("[Middleware] API route, passing through without auth check");
-        return NextResponse.next();
-      }
-
-      // Redirect to landing for protected pages
-      console.log("[Middleware] Protected path, redirecting to landing");
+      console.log("[Middleware] User authentication failed, redirecting to landing");
       return NextResponse.redirect(new URL("/landing", request.url));
     }
 
