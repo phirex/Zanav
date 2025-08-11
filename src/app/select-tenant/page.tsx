@@ -72,7 +72,8 @@ export default function SelectTenantPage() {
     try {
       setConnecting(true);
       
-      const response = await fetch(`/api/admin/tenants/${selectedTenantId}/connect`, {
+      // Use the regular user connect endpoint, not the admin one
+      const response = await fetch(`/api/tenants/${selectedTenantId}/connect`, {
         method: 'POST',
       });
 
