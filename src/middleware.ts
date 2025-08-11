@@ -12,11 +12,11 @@ export async function middleware(request: NextRequest) {
     currentPath.startsWith("/_next") ||
     currentPath.startsWith("/static") ||
     currentPath.includes(".") ||
-    currentPath.startsWith("/images/") ||
+      currentPath.startsWith("/images/") ||
     currentPath.startsWith("/favicon")
-  ) {
-    return NextResponse.next();
-  }
+    ) {
+      return NextResponse.next();
+    }
 
   // Skip middleware for public pages entirely
   if (
@@ -66,9 +66,9 @@ export async function middleware(request: NextRequest) {
     // User has auth cookie, try to authenticate them
     const { createClient } = await import("@supabase/supabase-js");
     const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
