@@ -147,6 +147,16 @@ export async function middleware(request: NextRequest) {
 
     // Special case: if not authenticated and trying root path, send to landing page
     if (!user && (currentPath === "/" || currentPath === "")) {
+      // Check if this is an OAuth callback (has code parameter)
+      const url = new URL(request.url);
+      const code = url.searchParams.get("code");
+      
+      if (code) {
+        console.log("[Middleware] OAuth code detected at root, redirecting to /auth/callback");
+        // Redirect OAuth callback to our proper callback route
+        return NextResponse.redirect(new URL(`/auth/callback?code=${code}`, request.url));
+      }
+      
       console.log("[Middleware] No user, redirecting root path to /landing");
       return NextResponse.redirect(new URL("/landing", request.url));
     }
