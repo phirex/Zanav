@@ -35,7 +35,9 @@ export default function AdminLayout({
         // Fetch admin status from a dedicated API route instead of direct DB check
         // This keeps sensitive logic server-side
         const response = await fetch("/api/admin/status", {
-          credentials: 'include' // This ensures cookies are sent with the request
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
         });
         if (response.ok) {
           const { isAdmin: adminStatusResult } = await response.json();
