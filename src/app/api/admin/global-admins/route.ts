@@ -1,7 +1,7 @@
-import { createAdminHandler } from "@/lib/apiHandler";
+import { createAdminHandlerWithAuth } from "@/lib/apiHandler";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
-export const GET = createAdminHandler(async () => {
+export const GET = createAdminHandlerWithAuth(async () => {
   try {
     const adminSupabase = supabaseAdmin();
 

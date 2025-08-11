@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Crown, User, Building } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useSupabase } from "@/contexts/SupabaseBrowserContext";
 
 type GlobalAdmin = {
   id: string;
@@ -35,6 +36,7 @@ type UserWithTenants = {
 
 export default function AdminUsersPage() {
   const { t } = useTranslation();
+  const { supabase } = useSupabase();
   const [globalAdmins, setGlobalAdmins] = useState<GlobalAdmin[]>([]);
   const [regularUsers, setRegularUsers] = useState<UserWithTenants[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,18 +53,39 @@ export default function AdminUsersPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch global admins
-      const adminsResponse = await fetch('/api/admin/global-admins');
+      // Get the current session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('No access token available');
+        setError('No access token available');
+        return;
+      }
+
+      // Fetch global admins with proper authorization
+      const adminsResponse = await fetch('/api/admin/global-admins', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
       if (adminsResponse.ok) {
         const adminsData = await adminsResponse.json();
         setGlobalAdmins(adminsData.admins || []);
+      } else {
+        console.error('Failed to fetch admins:', adminsResponse.status, adminsResponse.statusText);
       }
 
-      // Fetch regular users
-      const usersResponse = await fetch('/api/admin/all-users');
+      // Fetch regular users with proper authorization
+      const usersResponse = await fetch('/api/admin/all-users', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
         setRegularUsers(usersData.users || []);
+      } else {
+        console.error('Failed to fetch users:', usersResponse.status, usersResponse.statusText);
       }
 
     } catch (err: any) {
@@ -84,9 +107,24 @@ export default function AdminUsersPage() {
     }
 
     try {
+      // Get the current session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        toast({
+          title: "Error",
+          description: "No access token available",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch(`/api/admin/remove-admin`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({ adminId })
       });
 

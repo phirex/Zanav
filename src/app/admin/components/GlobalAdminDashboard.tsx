@@ -19,6 +19,7 @@ import {
   Zap
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useSupabase } from "@/contexts/SupabaseBrowserContext";
 
 interface DashboardStats {
   totalTenants: number;
@@ -41,6 +42,7 @@ interface RecentActivity {
 
 export default function GlobalAdminDashboard() {
   const { t } = useTranslation();
+  const { supabase } = useSupabase();
   const [stats, setStats] = useState<DashboardStats>({
     totalTenants: 0,
     totalUsers: 0,
@@ -60,20 +62,40 @@ export default function GlobalAdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch real data from our APIs
+      // Get the current session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('No access token available');
+        return;
+      }
+
+      // Fetch real data from our APIs with proper authorization
       const [statsResponse, activityResponse] = await Promise.all([
-        fetch('/api/admin/dashboard-stats'),
-        fetch('/api/admin/recent-activity')
+        fetch('/api/admin/dashboard-stats', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        }),
+        fetch('/api/admin/recent-activity', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        })
       ]);
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData);
+      } else {
+        console.error('Failed to fetch stats:', statsResponse.status, statsResponse.statusText);
       }
 
       if (activityResponse.ok) {
         const activityData = await activityResponse.json();
         setRecentActivity(activityData);
+      } else {
+        console.error('Failed to fetch activity:', activityResponse.status, activityResponse.statusText);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
