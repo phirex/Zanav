@@ -71,15 +71,24 @@ export default function SelectTenantPage() {
 
     try {
       setConnecting(true);
+      console.log('🔄 Connecting to tenant:', selectedTenantId);
       
       // Use the regular user connect endpoint, not the admin one
       const response = await fetch(`/api/tenants/${selectedTenantId}/connect`, {
         method: 'POST',
       });
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+
       if (!response.ok) {
-        throw new Error('Failed to connect to tenant');
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
+        throw new Error(`Failed to connect to tenant: ${response.status} ${errorText}`);
       }
+
+      const result = await response.json();
+      console.log('✅ Connect result:', result);
 
       toast({
         title: "Success",
@@ -87,10 +96,11 @@ export default function SelectTenantPage() {
       });
 
       // Redirect to dashboard
+      console.log('🔄 Redirecting to dashboard...');
       router.push('/');
       
     } catch (err) {
-      console.error('Error connecting to tenant:', err);
+      console.error('❌ Error connecting to tenant:', err);
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : 'Failed to connect to kennel',

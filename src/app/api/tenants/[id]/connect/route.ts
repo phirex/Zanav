@@ -3,29 +3,41 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const POST = createHandler(async ({ req, client, params }) => {
   try {
+    console.log('🔗 [CONNECT] Starting tenant connection...');
+    console.log('🔗 [CONNECT] Params:', params);
+    
     const tenantId = Array.isArray(params?.id) ? params.id[0] : params?.id;
     if (!tenantId) {
+      console.log('❌ [CONNECT] No tenant ID provided');
       return { error: "Tenant ID is required" };
     }
+    
+    console.log('🔗 [CONNECT] Tenant ID:', tenantId);
 
     // Get current user
     const { data: { user: authUser } } = await client.auth.getUser();
     if (!authUser) {
+      console.log('❌ [CONNECT] No authenticated user');
       return { error: "Not authenticated" };
     }
+    
+    console.log('🔗 [CONNECT] Auth user:', authUser.email);
 
     const adminSupabase = supabaseAdmin();
 
     // Verify the user has access to this tenant
-    const { data: userRecord } = await adminSupabase
+    const { data: userRecord, error: userError } = await adminSupabase
       .from("User")
       .select("id")
       .eq("supabaseUserId", authUser.id)
       .single();
 
-    if (!userRecord) {
+    if (userError || !userRecord) {
+      console.log('❌ [CONNECT] User not found:', userError);
       return { error: "User not found" };
     }
+    
+    console.log('🔗 [CONNECT] User record found:', userRecord.id);
 
     // Check if user has access to this tenant
     const { data: userTenant, error: userTenantError } = await adminSupabase
@@ -36,8 +48,11 @@ export const POST = createHandler(async ({ req, client, params }) => {
       .single();
 
     if (userTenantError || !userTenant) {
+      console.log('❌ [CONNECT] UserTenant access check failed:', userTenantError);
       return { error: "User does not have access to this tenant" };
     }
+    
+    console.log('🔗 [CONNECT] UserTenant access confirmed:', userTenant);
 
     // Update the user's active tenant
     const { error: updateError } = await adminSupabase
@@ -50,7 +65,7 @@ export const POST = createHandler(async ({ req, client, params }) => {
       return { error: "Failed to connect to tenant" };
     }
 
-    console.log(`✅ User ${authUser.email} connected to tenant ${tenantId}`);
+    console.log(`✅ [CONNECT] User ${authUser.email} connected to tenant ${tenantId}`);
 
     return { 
       success: true, 
