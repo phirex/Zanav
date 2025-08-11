@@ -266,16 +266,21 @@ export async function middleware(request: NextRequest) {
             .eq("user_id", userRecord.id);
 
           if (userTenants && userTenants.length > 1) {
-            // User has multiple kennels - check if they've already made a selection
-            if (!userRecord.tenantId || userRecord.tenantId === DEFAULT_TENANT_ID) {
-              // No selection made yet, redirect to selection
-              console.log(`[Middleware] User has ${userTenants.length} kennels but no selection, redirecting to selection`);
-              return NextResponse.redirect(new URL("/select-tenant", request.url));
-            } else {
-              // User has made a selection, use it
-              console.log(`[Middleware] User has selected tenant: ${userRecord.tenantId}`);
-              tenantId = userRecord.tenantId;
+            // User has multiple kennels - ALWAYS require fresh selection
+            console.log(`[Middleware] User has ${userTenants.length} kennels, always requiring fresh selection`);
+            
+            // Clear any existing tenant selection to force fresh choice
+            try {
+              await adminClient
+                .from("User")
+                .update({ tenantId: DEFAULT_TENANT_ID })
+                .eq("id", userRecord.id);
+              console.log(`[Middleware] Cleared existing tenant selection for user`);
+            } catch (clearError) {
+              console.error("[Middleware] Error clearing tenant selection:", clearError);
             }
+            
+            return NextResponse.redirect(new URL("/select-tenant", request.url));
           } else if (userTenants && userTenants.length === 1) {
             // User has exactly one kennel, automatically set it
             tenantId = userTenants[0].tenant_id;
