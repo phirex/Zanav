@@ -50,6 +50,7 @@ export async function middleware(request: NextRequest) {
     // Create supabase client configured for middleware
     let supabase;
     try {
+      console.log("[Middleware] Creating Supabase client...");
       supabase = createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -57,9 +58,12 @@ export async function middleware(request: NextRequest) {
           cookies: {
             get(name: string) {
               const cookie = request.cookies.get(name);
+              const hasValue = !!cookie?.value;
+              console.log(`[Middleware] Getting cookie ${name}:`, hasValue);
               return cookie?.value;
             },
             set(name: string, value: string, options: CookieOptions) {
+              console.log(`[Middleware] Setting cookie ${name}:`, !!value);
               response.cookies.set({
                 name,
                 value,
@@ -67,6 +71,7 @@ export async function middleware(request: NextRequest) {
               });
             },
             remove(name: string, options: CookieOptions) {
+              console.log(`[Middleware] Removing cookie ${name}`);
               response.cookies.delete({
                 name,
                 ...options,
@@ -75,6 +80,7 @@ export async function middleware(request: NextRequest) {
           },
         },
       );
+      console.log("[Middleware] Supabase client created successfully");
     } catch (supabaseError) {
       console.error(
         "[Middleware] Error creating supabase client:",
@@ -84,6 +90,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Get current user
+    console.log("[Middleware] About to get user from Supabase...");
     const {
       data: { user },
       error: userError,
@@ -92,6 +99,13 @@ export async function middleware(request: NextRequest) {
     if (userError) {
       console.error("[Middleware] User error:", userError.message);
     }
+
+    console.log("[Middleware] User result:", {
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      error: userError?.message
+    });
 
     // DEBUG: Log all cookies and user info
     console.log("[Middleware] All cookies:", Array.from(request.cookies.getAll()));
