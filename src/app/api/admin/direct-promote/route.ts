@@ -1,4 +1,5 @@
 import { createAdminHandlerWithAuth } from "@/lib/apiHandler";
+import { promoteUserDirect } from "@/services/adminDirectPromote";
 
 // POST /api/admin/direct-promote - Last resort direct SQL method to promote a user to global admin
 export const POST = createAdminHandlerWithAuth(async ({ client, body }) => {
