@@ -251,7 +251,7 @@ export async function middleware(request: NextRequest) {
           }
         );
 
-        // Get user's tenants
+        // Get user's current tenant selection
         const { data: userRecord } = await adminClient
           .from("User")
           .select("id, tenantId")
@@ -259,30 +259,60 @@ export async function middleware(request: NextRequest) {
           .single();
 
         if (userRecord) {
-          // Check if user has already selected a tenant
+          // Check if user has already selected a valid tenant
           if (userRecord.tenantId && userRecord.tenantId !== DEFAULT_TENANT_ID) {
             console.log(`[Middleware] User has already selected tenant: ${userRecord.tenantId}`);
             tenantId = userRecord.tenantId;
           } else {
-            // User hasn't selected a tenant, check how many they have
+            // User hasn't selected a tenant yet, check how many they have access to
             const { data: userTenants } = await adminClient
               .from("UserTenant")
               .select("tenant_id")
               .eq("user_id", userRecord.id);
 
             if (userTenants && userTenants.length > 1) {
-              console.log(`[Middleware] User has ${userTenants.length} kennels, redirecting to selection`);
+              console.log(`[Middleware] User has ${userTenants.length} kennels but no selection, redirecting to selection`);
               return NextResponse.redirect(new URL("/select-tenant", request.url));
             } else if (userTenants && userTenants.length === 1) {
-              // User has exactly one kennel, set the correct tenant ID
+              // User has exactly one kennel, automatically set it
               tenantId = userTenants[0].tenant_id;
-              console.log(`[Middleware] User has 1 kennel, setting tenant ID: ${tenantId}`);
+              console.log(`[Middleware] User has 1 kennel, auto-setting tenant ID: ${tenantId}`);
             }
           }
         }
       } catch (error) {
         console.error("[Middleware] Error checking user tenants:", error);
         // Continue with default behavior if check fails
+      }
+    }
+
+    // Prevent redirect loops: if user is on select-tenant page and has a valid tenant, don't redirect
+    if (user && currentPath === "/select-tenant") {
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const adminClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        );
+
+        const { data: userRecord } = await adminClient
+          .from("User")
+          .select("id, tenantId")
+          .eq("supabaseUserId", user.id)
+          .single();
+
+        if (userRecord && userRecord.tenantId && userRecord.tenantId !== DEFAULT_TENANT_ID) {
+          console.log(`[Middleware] User on select-tenant page but already has tenant: ${userRecord.tenantId}, redirecting to dashboard`);
+          return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+      } catch (error) {
+        console.error("[Middleware] Error checking user tenant on select-tenant page:", error);
       }
     }
 
