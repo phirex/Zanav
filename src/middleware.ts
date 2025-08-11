@@ -7,6 +7,17 @@ export async function middleware(request: NextRequest) {
   const { pathname: currentPath, hostname } = request.nextUrl;
   const isApiRoute = currentPath.startsWith("/api/");
 
+  // Skip middleware for static files and assets
+  if (
+    currentPath.startsWith("/_next") ||
+    currentPath.startsWith("/static") ||
+    currentPath.includes(".") ||
+    currentPath.startsWith("/images/") ||
+    currentPath.startsWith("/favicon")
+  ) {
+    return NextResponse.next();
+  }
+
   console.log(`[Middleware] Hostname: ${hostname} Subdomain: ${hostname.split('.')[0]} Path: ${currentPath}`);
 
   // Handle kennel subdomains
@@ -69,7 +80,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // User has auth cookie, try to authenticate them
-    console.log("[Middleware] Supabase client created successfully");
+    console.log("[Middleware] Found auth cookie, attempting to authenticate...");
     
     const { createClient } = await import("@supabase/supabase-js");
     const supabaseClient = createClient(
