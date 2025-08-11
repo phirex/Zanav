@@ -101,7 +101,12 @@ export default function SelectTenantPage() {
 
       // Redirect to dashboard
       console.log('🔄 Redirecting to dashboard...');
-      router.push('/');
+      
+      // Add a small delay to ensure database update is committed
+      setTimeout(() => {
+        // Use window.location.href for more reliable redirect
+        window.location.href = '/';
+      }, 500);
       
     } catch (err) {
       console.error('❌ Error connecting to tenant:', err);
