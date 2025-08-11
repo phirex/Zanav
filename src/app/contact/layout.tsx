@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
-import SupabaseProvider from "@/contexts/SupabaseBrowserContext";
+import { SupabaseBrowserProvider } from "@/contexts/SupabaseBrowserContext";
 import I18nProviderComponent from "@/components/I18nProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,8 +17,8 @@ export default function ContactLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SupabaseProvider>
+    <SupabaseBrowserProvider>
       <I18nProviderComponent>{children}</I18nProviderComponent>
-    </SupabaseProvider>
+    </SupabaseBrowserProvider>
   );
 }

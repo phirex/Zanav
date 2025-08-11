@@ -16,7 +16,7 @@ export default function AdminLayout({
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
 
   useEffect(() => {
     async function checkAdminStatus() {
