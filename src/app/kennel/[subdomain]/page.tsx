@@ -67,11 +67,33 @@ export default function KennelWebsitePage({
 }: {
   params: { subdomain: string };
 }) {
-  // Ensure this is only loaded for kennel websites
+  // CRITICAL: Ensure this is only loaded for kennel websites
   useEffect(() => {
     // Clear any console logs that might indicate dashboard loading
     console.clear();
     console.log("[KENNEL] Loading kennel website for:", params.subdomain);
+    console.log("[KENNEL] Current URL:", window.location.href);
+    console.log("[KENNEL] Component loaded successfully");
+    
+    // Prevent any dashboard initialization
+    if (typeof window !== 'undefined') {
+      // Override any global dashboard functions
+      (window as any).initializeDashboard = () => {
+        console.log("[KENNEL] Dashboard initialization blocked on kennel website");
+        return false;
+      };
+      
+      // Block any fetch calls to /api/bookings
+      const originalFetch = window.fetch;
+      window.fetch = function(input: RequestInfo | URL, init?: RequestInit) {
+        const url = typeof input === 'string' ? input : input.toString();
+        if (url.includes('/api/bookings')) {
+          console.log("[KENNEL] Blocked fetch to /api/bookings on kennel website");
+          return Promise.reject(new Error('Bookings API blocked on kennel website'));
+        }
+        return originalFetch.call(this, input, init);
+      };
+    }
   }, [params.subdomain]);
 
   const [websiteData, setWebsiteData] = useState<KennelWebsite>({});
