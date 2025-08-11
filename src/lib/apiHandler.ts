@@ -182,9 +182,43 @@ export function createAdminHandler(handler: ApiHandler) {
       
       const client = supabaseAdmin();
 
-      // Get tenant ID from headers
-      const tenantId = req.headers.get("x-tenant-id") || null;
-      console.log("[ADMIN_HANDLER] Tenant ID from headers:", tenantId);
+      // Get auth token from cookies
+      const cookieHeader = req.headers.get("cookie") || "";
+      console.log("[ADMIN_HANDLER] Cookie header:", cookieHeader);
+      
+      // Extract the auth token from cookies
+      const authCookieMatch = cookieHeader.match(/sb-nlpsmauwwlnblgwtawbs-auth-token[^=]*=([^;]+)/);
+      const authToken = authCookieMatch ? authCookieMatch[1] : null;
+      console.log("[ADMIN_HANDLER] Auth token extracted:", authToken ? "YES" : "NO");
+      
+      if (!authToken) {
+        console.log("[ADMIN_HANDLER] No auth token found, returning 401");
+        return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+      }
+      
+      // Verify the user is authenticated
+      const { data: { user }, error: authError } = await client.auth.getUser(authToken);
+      
+      if (authError || !user) {
+        console.log("[ADMIN_HANDLER] Auth failed:", authError);
+        return NextResponse.json({ error: "Invalid authentication" }, { status: 401 });
+      }
+      
+      console.log("[ADMIN_HANDLER] User authenticated:", user.email);
+      
+      // Check if user is a global admin
+      const { data: globalAdmin, error: adminError } = await client
+        .from("GlobalAdmin")
+        .select("id")
+        .eq("supabaseUserId", user.id)
+        .single();
+      
+      if (adminError || !globalAdmin) {
+        console.log("[ADMIN_HANDLER] User is not a global admin");
+        return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+      }
+      
+      console.log("[ADMIN_HANDLER] User is global admin, proceeding");
 
       // Parse JSON body for non-GET / non-HEAD
       let body: any = undefined;
@@ -205,8 +239,8 @@ export function createAdminHandler(handler: ApiHandler) {
         }
       }
 
-      console.log("[ADMIN_HANDLER] Calling handler with params:", { req: "Request object", client: "Supabase client", tenantId, body, params });
-      const result = await handler({ req, client, tenantId, body, params });
+      console.log("[ADMIN_HANDLER] Calling handler with params:", { req: "Request object", client: "Supabase client", tenantId: null, body, params });
+      const result = await handler({ req, client, tenantId: null, body, params });
       console.log("[ADMIN_HANDLER] Handler result:", result);
       
       if (result instanceof Response) return result;
