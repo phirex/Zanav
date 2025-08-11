@@ -5,9 +5,9 @@ import { DEFAULT_TENANT_ID, getTenantId } from "./lib/tenant";
 
 export async function middleware(request: NextRequest) {
   const { pathname: currentPath } = request.nextUrl;
-  const hostname = request.headers.get("host") || "";
-  const subdomain = hostname.split(".")[0];
-
+    const hostname = request.headers.get("host") || "";
+    const subdomain = hostname.split(".")[0];
+    
   console.log(`[Middleware] Hostname: ${hostname} Subdomain: ${subdomain} Path: ${currentPath}`);
 
   // Skip middleware for static files and API routes
@@ -34,17 +34,17 @@ export async function middleware(request: NextRequest) {
     
     // Check if this is a valid kennel subdomain
     try {
-      const { createClient } = await import("@supabase/supabase-js");
-      const adminClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
+        const { createClient } = await import("@supabase/supabase-js");
+        const adminClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
           }
-        }
-      );
+        );
 
       const { data: tenant } = await adminClient
         .from("Tenant")

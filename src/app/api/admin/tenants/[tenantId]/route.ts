@@ -3,11 +3,17 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const DELETE = createAdminHandler(async (ctx) => {
   try {
+    console.log("[DELETE_TENANT] Params received:", ctx.params);
+    console.log("[DELETE_TENANT] tenantId param:", ctx.params?.tenantId);
+    
     const tenantId = Array.isArray(ctx.params?.tenantId) 
       ? ctx.params.tenantId[0] 
       : ctx.params?.tenantId;
     
+    console.log("[DELETE_TENANT] Extracted tenantId:", tenantId);
+    
     if (!tenantId) {
+      console.log("[DELETE_TENANT] No tenantId found, returning error");
       return { error: "Tenant ID is required" };
     }
 
