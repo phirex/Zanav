@@ -176,19 +176,27 @@ export function createAdminHandler(handler: ApiHandler) {
     params?: Record<string, any>,
   ): Promise<Response> {
     try {
+      console.log("[ADMIN_HANDLER] Request method:", req.method);
+      console.log("[ADMIN_HANDLER] Request URL:", req.url);
+      console.log("[ADMIN_HANDLER] Params received:", params);
+      
       const client = supabaseAdmin();
 
       // Get tenant ID from headers
       const tenantId = req.headers.get("x-tenant-id") || null;
+      console.log("[ADMIN_HANDLER] Tenant ID from headers:", tenantId);
 
       // Parse JSON body for non-GET / non-HEAD
       let body: any = undefined;
       if (req.method !== "GET" && req.method !== "HEAD") {
         const contentType = req.headers.get("content-type") || "";
+        console.log("[ADMIN_HANDLER] Content-Type:", contentType);
         if (contentType.includes("application/json")) {
           try {
             body = await req.json();
+            console.log("[ADMIN_HANDLER] Body parsed:", body);
           } catch (e) {
+            console.log("[ADMIN_HANDLER] Failed to parse body:", e);
             return NextResponse.json(
               { error: "Invalid JSON body" },
               { status: 400 },
@@ -197,17 +205,21 @@ export function createAdminHandler(handler: ApiHandler) {
         }
       }
 
+      console.log("[ADMIN_HANDLER] Calling handler with params:", { req: "Request object", client: "Supabase client", tenantId, body, params });
       const result = await handler({ req, client, tenantId, body, params });
+      console.log("[ADMIN_HANDLER] Handler result:", result);
+      
       if (result instanceof Response) return result;
       
       // Check if the result contains an error and return appropriate status code
       if (result && typeof result === 'object' && 'error' in result) {
+        console.log("[ADMIN_HANDLER] Returning error result:", result);
         return NextResponse.json(result, { status: 400 });
       }
       
       return NextResponse.json(result ?? {}, { status: 200 });
     } catch (err: any) {
-      console.error("Admin API Handler Error", err);
+      console.error("[ADMIN_HANDLER] Error caught:", err);
       return NextResponse.json(
         { error: err?.message || "Internal Server Error" },
         { status: 500 },
