@@ -64,14 +64,16 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check for auth cookies
-    const authCookie = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token");
-    const authCookie1 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.1");
-    const authCookie2 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.2");
-    const authCookie3 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.3");
-    const authCookie4 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.4");
+    const base = "sb-nlpsmauwwlnblgwtawbs-auth-token";
+    const authCookie = request.cookies.get(base);
+    const authCookie0 = request.cookies.get(`${base}.0`);
+    const authCookie1 = request.cookies.get(`${base}.1`);
+    const authCookie2 = request.cookies.get(`${base}.2`);
+    const authCookie3 = request.cookies.get(`${base}.3`);
+    const authCookie4 = request.cookies.get(`${base}.4`);
 
     // Find the first available auth cookie
-    let foundAuthCookie = authCookie || authCookie1 || authCookie2 || authCookie3 || authCookie4;
+    let foundAuthCookie = authCookie || authCookie4 || authCookie3 || authCookie2 || authCookie1 || authCookie0;
 
     // If no auth cookie found, redirect to landing page for unauthenticated users
     if (!foundAuthCookie) {
