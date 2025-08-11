@@ -4,115 +4,84 @@ import type { Database } from "@/lib/database.types";
 import { DEFAULT_TENANT_ID, getTenantId } from "./lib/tenant";
 
 export async function middleware(request: NextRequest) {
-  const { pathname: currentPath } = request.nextUrl;
-    const hostname = request.headers.get("host") || "";
-    const subdomain = hostname.split(".")[0];
-    
-  console.log(`[Middleware] Hostname: ${hostname} Subdomain: ${subdomain} Path: ${currentPath}`);
+  const { pathname: currentPath, hostname } = request.nextUrl;
+  const isApiRoute = currentPath.startsWith("/api/");
 
-  // Skip middleware for static files and API routes
-  if (
-    currentPath.startsWith("/_next") ||
-    currentPath.startsWith("/static") ||
-    currentPath.includes(".")
-  ) {
-    return NextResponse.next();
-  }
+  console.log(`[Middleware] Hostname: ${hostname} Subdomain: ${hostname.split('.')[0]} Path: ${currentPath}`);
 
-  // For API routes, just pass through but don't skip entirely
-  const isApiRoute = currentPath.startsWith("/api");
-  
-  // TEMPORARILY: Allow admin routes to pass through without middleware interference
-  if (currentPath.startsWith("/admin")) {
-    console.log("[Middleware] Admin route detected, allowing access without middleware checks");
-    return NextResponse.next();
-  }
-
-  // Handle kennel subdomain routing
-  if (subdomain !== "www" && subdomain !== "zanav") {
-    console.log(`[Middleware] Kennel subdomain detected: ${subdomain}`);
+  // Handle kennel subdomains
+  if (hostname !== "www.zanav.io" && hostname !== "zanav.io") {
+    const subdomain = hostname.split('.')[0];
     
     // Check if this is a valid kennel subdomain
-    try {
-        const { createClient } = await import("@supabase/supabase-js");
-        const adminClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false
-            }
-          }
-        );
-
-      const { data: tenant } = await adminClient
-        .from("Tenant")
-        .select("id, name, subdomain")
-        .eq("subdomain", subdomain)
-        .single();
-
-      if (tenant) {
-        console.log(`[Middleware] Valid kennel subdomain: ${tenant.name}`);
-        // Rewrite to kennel page
-        const url = request.nextUrl.clone();
-        url.pathname = `/kennel/${subdomain}`;
-        return NextResponse.rewrite(url);
-      } else {
-        console.log(`[Middleware] Invalid kennel subdomain: ${subdomain}`);
-        // Redirect to 404
-        return NextResponse.redirect(new URL("/not-found", request.url));
-      }
-    } catch (error) {
-      console.error(`[Middleware] Error checking kennel subdomain:`, error);
+    if (subdomain && subdomain !== "www") {
+      console.log(`[Middleware] Valid kennel subdomain: ${subdomain}`);
+      // Allow access to kennel subdomain
+      return NextResponse.next();
+    } else {
+      console.log(`[Middleware] Invalid kennel subdomain: ${subdomain}`);
       return NextResponse.redirect(new URL("/not-found", request.url));
     }
   }
 
-  // For www.zanav.io, handle basic authentication only
-  if (subdomain === "www" || subdomain === "zanav") {
+  // Main domain logic
+  if (hostname === "www.zanav.io" || hostname === "zanav.io") {
     console.log("[Middleware] Main domain detected, checking authentication...");
-    
-    // Create Supabase client
-    let supabaseClient;
-    try {
-      const { createClient } = await import("@supabase/supabase-js");
-      supabaseClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-      console.log("[Middleware] Supabase client created successfully");
-    } catch (error) {
-      console.error("[Middleware] Error creating Supabase client:", error);
+
+    // Skip API routes entirely for now to avoid breaking them
+    if (isApiRoute) {
+      console.log("[Middleware] API route, passing through without auth check");
       return NextResponse.next();
     }
 
-    // Get auth token from cookies
+    // Check for auth cookies
     const authCookie = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token");
-    console.log("[Middleware] Getting cookie sb-nlpsmauwwlnblgwtawbs-auth-token:", !!authCookie);
+    const authCookie1 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.1");
+    const authCookie2 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.2");
+    const authCookie3 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.3");
+    const authCookie4 = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token.4");
 
-    let foundAuthCookie = authCookie;
+    console.log(`[Middleware] Getting cookie sb-nlpsmauwwlnblgwtawbs-auth-token: ${!!authCookie}`);
+    console.log(`[Middleware] Getting cookie sb-nlpsmauwwlnblgwtawbs-auth-token.2: ${!!authCookie2}`);
 
-    if (!authCookie) {
+    // Find the first available auth cookie
+    let foundAuthCookie = authCookie || authCookie1 || authCookie2 || authCookie3 || authCookie4;
+
+    // If no auth cookie found, redirect to landing page for unauthenticated users
+    if (!foundAuthCookie) {
       console.log("[Middleware] No auth cookie found");
-      // Check other auth cookie variations
-      for (let i = 0; i < 5; i++) {
-        const cookieName = `sb-nlpsmauwwlnblgwtawbs-auth-token${i === 0 ? "" : `.${i}`}`;
-        const cookie = request.cookies.get(cookieName);
-        console.log(`[Middleware] Getting cookie ${cookieName}:`, !!cookie);
-        if (cookie) {
-          console.log(`[Middleware] Found auth cookie: ${cookieName}`);
-          foundAuthCookie = cookie;
-          break;
-        }
+      
+      // Allow access to public pages
+      if (
+        currentPath === "/" ||
+        currentPath === "/login" ||
+        currentPath === "/signup" ||
+        currentPath === "/landing" ||
+        currentPath.startsWith("/kennel/")
+      ) {
+        console.log("[Middleware] Public path, allowing access");
+        return NextResponse.next();
       }
+
+      // Redirect to landing for protected pages
+      console.log("[Middleware] Protected path, redirecting to landing");
+      return NextResponse.redirect(new URL("/landing", request.url));
     }
+
+    // User has auth cookie, try to authenticate them
+    console.log("[Middleware] Supabase client created successfully");
+    
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabaseClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
     // Try to get user from auth token
     let user = null;
@@ -325,9 +294,9 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
       }
 
-      // Redirect to login for protected pages
-      console.log("[Middleware] Protected path, redirecting to login");
-      return NextResponse.redirect(new URL("/login", request.url));
+      // Redirect to landing for protected pages
+      console.log("[Middleware] Protected path, redirecting to landing");
+      return NextResponse.redirect(new URL("/landing", request.url));
     }
 
     // User is authenticated, check if they have a tenant
