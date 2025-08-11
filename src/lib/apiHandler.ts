@@ -52,10 +52,19 @@ export function createHandler(handler: ApiHandler) {
       if (!tenantId) {
         try {
           const {
-            data: { session },
-          } = await client.auth.getSession();
+            data: { user },
+            error: userError,
+          } = await client.auth.getUser();
 
-          const supabaseUid = session?.user?.id;
+          if (userError) {
+            console.error("[API_HANDLER] Auth error:", userError);
+            return NextResponse.json(
+              { error: "Authentication failed" },
+              { status: 401 },
+            );
+          }
+
+          const supabaseUid = user?.id;
           if (supabaseUid) {
             console.log("[API_HANDLER] Looking up tenant for user:", supabaseUid);
             
