@@ -14,12 +14,12 @@ export const GET = createAdminHandler(async () => {
         name,
         createdAt,
         tenantId,
-        UserTenant!inner(
+        UserTenant(
           role,
-          tenant_id
-        ),
-        Tenant!inner(
-          name
+          tenant_id,
+          Tenant(
+            name
+          )
         )
       `)
       .order("createdAt", { ascending: false });
@@ -30,16 +30,22 @@ export const GET = createAdminHandler(async () => {
     }
 
     // Transform the data to a cleaner format
-    const transformedUsers = users?.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      createdAt: user.createdAt,
-      tenantId: user.tenantId,
-      tenantName: user.Tenant?.name,
-      role: user.UserTenant?.[0]?.role
-    })) || [];
+    const transformedUsers = users?.map(user => {
+      // Get the first user-tenant relationship (most users will have one)
+      const userTenant = user.UserTenant?.[0];
+      
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+        tenantId: user.tenantId,
+        tenantName: userTenant?.Tenant?.name || 'No tenant',
+        role: userTenant?.role || 'No role'
+      };
+    }) || [];
 
+    console.log("Fetched users:", transformedUsers.length, "users found");
     return { users: transformedUsers };
 
   } catch (error) {
