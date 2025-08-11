@@ -261,3 +261,77 @@ export function createAdminHandler(handler: ApiHandler) {
     }
   };
 }
+
+export function createAdminHandlerWithAuth(handler: (ctx: { client: SupabaseClient<Database>, body?: any, params?: Record<string, any> }) => Promise<any>) {
+  return async function (req: Request, params?: Record<string, any>): Promise<Response> {
+    try {
+      console.log("[ADMIN_HANDLER_AUTH] Request method:", req.method);
+      console.log("[ADMIN_HANDLER_AUTH] Request URL:", req.url);
+      
+      const client = supabaseAdmin();
+
+      // Get the authorization header from the request
+      const authHeader = req.headers.get("authorization");
+      
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        console.log("[ADMIN_HANDLER_AUTH] No authorization header found");
+        return NextResponse.json({ error: "No authorization header" }, { status: 401 });
+      }
+      
+      const token = authHeader.substring(7); // Remove "Bearer " prefix
+      console.log("[ADMIN_HANDLER_AUTH] Token extracted from header");
+      
+      // Verify the token using Supabase admin client
+      const { data: { user }, error: authError } = await client.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.log("[ADMIN_HANDLER_AUTH] Auth failed:", authError);
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      }
+      
+      console.log("[ADMIN_HANDLER_AUTH] User authenticated:", user.email);
+      
+      // Check if user is a global admin
+      const { data: globalAdmin, error: adminError } = await client
+        .from("GlobalAdmin")
+        .select("id")
+        .eq("supabaseUserId", user.id)
+        .single();
+      
+      if (adminError || !globalAdmin) {
+        console.log("[ADMIN_HANDLER_AUTH] User is not a global admin");
+        return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+      }
+      
+      console.log("[ADMIN_HANDLER_AUTH] User is global admin, proceeding");
+
+      // Parse JSON body for non-GET / non-HEAD
+      let body: any = undefined;
+      if (req.method !== "GET" && req.method !== "HEAD") {
+        const contentType = req.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          try {
+            body = await req.json();
+          } catch (e) {
+            return NextResponse.json(
+              { error: "Invalid JSON body" },
+              { status: 400 },
+            );
+          }
+        }
+      }
+
+      const result = await handler({ client, body, params });
+      
+      if (result instanceof Response) return result;
+      
+      return NextResponse.json(result ?? {}, { status: 200 });
+    } catch (err: any) {
+      console.error("[ADMIN_HANDLER_AUTH] Error caught:", err);
+      return NextResponse.json(
+        { error: err?.message || "Internal Server Error" },
+        { status: 500 },
+      );
+    }
+  };
+}

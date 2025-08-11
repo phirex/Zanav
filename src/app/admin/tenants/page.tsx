@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { PlusCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useSupabase } from "@/contexts/SupabaseBrowserContext";
 
 type Tenant = {
   id: string;
@@ -27,6 +28,7 @@ type Tenant = {
 
 export default function TenantsPage() {
   const { t } = useTranslation();
+  const { supabase } = useSupabase();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +42,18 @@ export default function TenantsPage() {
   const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/admin/tenants");
+      
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No session found");
+      }
+
+      const response = await fetch("/api/admin/tenants", {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -64,7 +77,7 @@ export default function TenantsPage() {
     } finally {
       setLoading(false);
     }
-  }, [t, toast]);
+  }, [t, toast, supabase.auth]);
 
   useEffect(() => {
     fetchTenants();
@@ -84,10 +97,18 @@ export default function TenantsPage() {
 
     try {
       setIsCreating(true);
+      
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No session found");
+      }
+
       const response = await fetch("/api/admin/tenants", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ name: newTenantName }),
       });
@@ -124,8 +145,18 @@ export default function TenantsPage() {
   ) => {
     try {
       setIsConnecting(true);
+      
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No session found");
+      }
+
       const response = await fetch(`/api/admin/tenants/${tenantId}/connect`, {
         method: "POST",
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
       });
 
       if (!response.ok) {
@@ -156,8 +187,18 @@ export default function TenantsPage() {
     if (window.confirm(`Are you sure you want to delete tenant "${tenantName}"? This action cannot be undone.`)) {
       try {
         setIsDeleting(true);
+        
+        // Get the current session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("No session found");
+        }
+
         const response = await fetch(`/api/admin/tenants/${tenantId}`, {
           method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
         });
 
         if (!response.ok) {
