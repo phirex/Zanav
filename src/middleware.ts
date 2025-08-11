@@ -12,13 +12,40 @@ export async function middleware(request: NextRequest) {
     currentPath.startsWith("/_next") ||
     currentPath.startsWith("/static") ||
     currentPath.includes(".") ||
-      currentPath.startsWith("/images/") ||
+    currentPath.startsWith("/images/") ||
     currentPath.startsWith("/favicon")
-    ) {
+  ) {
+    return NextResponse.next();
+  }
+
+  // Handle kennel subdomains FIRST with explicit rewrite to public site
+  if (hostname !== "www.zanav.io" && hostname !== "zanav.io") {
+    const subdomain = hostname.split(".")[0];
+
+    // Allow public kennel APIs to pass through
+    if (isApiRoute) {
+      if (currentPath.startsWith(`/api/kennel-website/public/`)) {
+        return NextResponse.next();
+      }
+      // Everything else under kennel subdomain API should be public-safe by default
+      // but explicitly block private app APIs like /api/bookings
+      if (currentPath.startsWith("/api/bookings")) {
+        return NextResponse.json({ error: "Not available on public kennel site" }, { status: 404 });
+      }
       return NextResponse.next();
     }
 
-  // Skip middleware for public pages entirely
+    // Rewrite kennel root and any non-/kennel path to the public kennel page
+    if (!currentPath.startsWith("/kennel/")) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/kennel/${subdomain}`;
+      return NextResponse.rewrite(url);
+    }
+
+    return NextResponse.next();
+  }
+
+  // Skip middleware for public pages entirely (main domain)
   if (
     currentPath === "/" ||
     currentPath === "/login" ||
@@ -27,18 +54,6 @@ export async function middleware(request: NextRequest) {
     currentPath.startsWith("/kennel/")
   ) {
     return NextResponse.next();
-  }
-
-  // Handle kennel subdomains
-  if (hostname !== "www.zanav.io" && hostname !== "zanav.io") {
-    const subdomain = hostname.split('.')[0];
-    
-    // Check if this is a valid kennel subdomain
-    if (subdomain && subdomain !== "www") {
-      return NextResponse.next();
-    } else {
-      return NextResponse.redirect(new URL("/not-found", request.url));
-    }
   }
 
   // Main domain logic - only for protected routes
@@ -66,9 +81,9 @@ export async function middleware(request: NextRequest) {
     // User has auth cookie, try to authenticate them
     const { createClient } = await import("@supabase/supabase-js");
     const supabaseClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -112,139 +127,9 @@ export async function middleware(request: NextRequest) {
                     };
                   }
                 }
-              } catch (decodeError) {
-                // Silent fail - try next method
-              }
-            } else if (tokenParts.length === 1) {
-              // Token is completely corrupted, try to extract user ID from the readable part
-              try {
-                // Try to decode the single part as base64
-                const decodedPart = atob(tokenParts[0]);
-                
-                // Look for user ID patterns in the decoded content
-                const userIdMatch = decodedPart.match(/"sub":"([^"]+)"/) || 
-                                   decodedPart.match(/"user_id":"([^"]+)"/) ||
-                                   decodedPart.match(/"id":"([^"]+)"/);
-                
-                if (userIdMatch) {
-                  const extractedUserId = userIdMatch[1];
-                  
-                  // Verify the user exists via database lookup instead of admin client
-                  const { data: userRecord, error: userError } = await supabaseClient
-                    .from("User")
-                    .select("id, email, tenantId")
-                    .eq("supabaseUserId", extractedUserId)
-                    .single();
-                  
-                  if (!userError && userRecord) {
-                    user = {
-                      id: extractedUserId,
-                      email: userRecord.email,
-                      user_metadata: { email: userRecord.email }
-                    };
-                  }
-                } else {
-                  // Direct bypass: Use the known user ID from API calls
-                  const knownUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea';
-                  
-                  // Verify this user exists using database lookup instead of admin client
-                  const { data: userRecord, error: userError } = await supabaseClient
-                    .from("User")
-                    .select("id, email, tenantId")
-                    .eq("supabaseUserId", knownUserId)
-                    .single();
-                  
-                  if (!userError && userRecord) {
-                    user = {
-                      id: knownUserId,
-                      email: userRecord.email,
-                      user_metadata: { email: userRecord.email }
-                    };
-                  }
-                }
-              } catch (decodeError) {
-                // Fallback: Try to extract user ID from the raw corrupted token
-                try {
-                  // Try to find any readable patterns in the raw token
-                  const rawToken = tokenParts[0];
-                  
-                  // Look for UUID patterns in the raw token
-                  const uuidPattern = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i;
-                  const uuidMatch = rawToken.match(uuidPattern);
-                  
-                  if (uuidMatch) {
-                    const extractedUserId = uuidMatch[0];
-                    
-                    // Verify this user exists using database lookup instead of admin client
-                    const { data: userRecord, error: userError } = await supabaseClient
-                      .from("User")
-                      .select("id, email, tenantId")
-                      .eq("supabaseUserId", extractedUserId)
-                      .single();
-                    
-                    if (!userError && userRecord) {
-                      user = {
-                        id: extractedUserId,
-                        email: userRecord.email,
-                        user_metadata: { email: userRecord.email }
-                      };
-                    }
-                  } else {
-                    // Last resort: Try to find the user by email from the create-google-user API calls
-                    const fallbackUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea';
-                    
-                    const { data: userRecord, error: userError } = await supabaseClient
-                      .from("User")
-                      .select("id, email, tenantId")
-                      .eq("supabaseUserId", fallbackUserId)
-                      .single();
-                    
-                    if (!userError && userRecord) {
-                      user = {
-                        id: fallbackUserId,
-                        email: userRecord.email,
-                        user_metadata: { email: userRecord.email }
-                      };
-                    }
-                  }
-                } catch (fallbackError) {
-                  // Ultimate bypass: Use the known user ID when everything else fails
-                  const ultimateUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea';
-                  
-                  const { data: userRecord, error: userError } = await supabaseClient
-                    .from("User")
-                    .select("id, email, tenantId")
-                    .eq("supabaseUserId", ultimateUserId)
-                    .single();
-                  
-                  if (!userError && userRecord) {
-                    user = {
-                      id: ultimateUserId,
-                      email: userRecord.email,
-                      user_metadata: { email: userRecord.email }
-                    };
-                  }
-                }
-              }
+              } catch {}
             }
-          } catch (extractError) {
-            // Ultimate bypass: Use the known user ID when everything else fails
-            const ultimateUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea';
-            
-            const { data: userRecord, error: userError } = await supabaseClient
-              .from("User")
-              .select("id, email, tenantId")
-              .eq("supabaseUserId", ultimateUserId)
-              .single();
-            
-            if (!userError && userRecord) {
-              user = {
-                id: ultimateUserId,
-                email: userRecord.email,
-                user_metadata: { email: userRecord.email }
-              };
-            }
-          }
+          } catch {}
         }
       } else if (authUser) {
         user = authUser;
@@ -260,7 +145,7 @@ export async function middleware(request: NextRequest) {
     if (user) {
       try {
         // Get user record from database
-        const { data: userRecord, error: userError } = await supabaseClient
+        const { data: userRecord } = await supabaseClient
           .from("User")
           .select("id, tenantId")
           .eq("supabaseUserId", user.id)
@@ -268,7 +153,7 @@ export async function middleware(request: NextRequest) {
 
         if (userRecord) {
           // Check how many kennels the user has access to
-          const { data: userTenants, error: userTenantsError } = await supabaseClient
+          const { data: userTenants } = await supabaseClient
             .from("UserTenant")
             .select("tenant_id")
             .eq("user_id", userRecord.id);
@@ -296,9 +181,7 @@ export async function middleware(request: NextRequest) {
             return response;
           }
         }
-      } catch (error) {
-        // Silent fail - continue without tenant assignment
-      }
+      } catch {}
     }
 
     // User is authenticated - allow access to all pages
@@ -310,14 +193,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - api/auth (Supabase auth routes)
-     * - api/webhooks (webhook routes)
-     */
     "/((?!_next/static|_next/image|favicon.ico|api/auth|api/webhooks).*)",
   ],
 };
