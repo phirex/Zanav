@@ -106,8 +106,31 @@ export async function getCurrentUser() {
  * @returns {Promise<boolean>} true if the user is a global admin
  */
 export async function isGlobalAdmin(): Promise<boolean> {
-  // GlobalAdmin functionality temporarily disabled
-  return false;
+  try {
+    const user = await getCurrentUser();
+    if (!user) return false;
+
+    // Dynamic import to keep supabaseServer import server-side only
+    const { supabaseServer } = await import("./supabase");
+    const supabase = supabaseServer();
+
+    // Check if user exists in GlobalAdmin table
+    const { data: globalAdmin, error } = await supabase
+      .from("GlobalAdmin")
+      .select("id")
+      .eq("supabaseUserId", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error checking global admin status:", error);
+      return false;
+    }
+
+    return !!globalAdmin;
+  } catch (error) {
+    console.error("Error in isGlobalAdmin:", error);
+    return false;
+  }
 }
 
 /**
