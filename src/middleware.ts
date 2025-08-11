@@ -368,6 +368,19 @@ export async function middleware(request: NextRequest) {
             const tenantId = userTenants[0].tenant_id;
             console.log(`[Middleware] User has ${userTenants.length} kennel(s), auto-assigning to: ${tenantId}`);
             
+            // Get tenant details for debugging
+            const { data: tenantDetails, error: tenantError } = await supabaseClient
+              .from("Tenant")
+              .select("id, name, subdomain")
+              .eq("id", tenantId)
+              .single();
+            
+            if (tenantDetails) {
+              console.log(`[Middleware] Tenant details:`, tenantDetails);
+            } else {
+              console.error("[Middleware] Error fetching tenant details:", tenantError);
+            }
+            
             // Update user's tenantId if it's different
             if (userRecord.tenantId !== tenantId) {
               const { error: updateError } = await supabaseClient
@@ -393,7 +406,20 @@ export async function middleware(request: NextRequest) {
             console.log(`[Middleware] Set tenantId cookie: ${tenantId}`);
             return response;
           } else {
-            console.log("[Middleware] User has no kennels");
+            console.log("[Middleware] User has no kennels - checking if this is a new user...");
+            
+            // Check if this user should have a kennel but the association is missing
+            const { data: existingTenants, error: tenantsError } = await supabaseClient
+              .from("Tenant")
+              .select("id, name, subdomain")
+              .eq("subdomain", "happy");
+            
+            if (existingTenants && existingTenants.length > 0) {
+              console.log("[Middleware] Found existing happy.zanav.io kennel:", existingTenants[0]);
+              console.log("[Middleware] This user should be associated with this kennel!");
+            } else {
+              console.log("[Middleware] No existing happy.zanav.io kennel found");
+            }
           }
         } else {
           console.log("[Middleware] No user record found in database");
