@@ -33,11 +33,56 @@ export async function GET(request: NextRequest) {
     );
 
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error) {
-        return response;
+      // Exchange the code for a session
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      
+      if (error) {
+        console.error("[Auth Callback] Error exchanging code:", error.message);
+        throw error;
       }
-      console.error("[Auth Callback] Error exchanging code:", error.message);
+
+      if (data.user) {
+        console.log("[Auth Callback] User authenticated:", data.user.email);
+        
+        // Check if user exists in our User table
+        const { data: existingUser, error: userCheckError } = await supabase
+          .from('User')
+          .select('id')
+          .eq('supabase_user_id', data.user.id)
+          .single();
+
+        if (userCheckError && userCheckError.code !== 'PGRST116') {
+          console.error("[Auth Callback] Error checking user:", userCheckError);
+        }
+
+        // If user doesn't exist in our table, create them
+        if (!existingUser) {
+          console.log("[Auth Callback] Creating new user record for:", data.user.email);
+          
+          const { error: createError } = await supabase
+            .from('User')
+            .insert({
+              supabase_user_id: data.user.id,
+              email: data.user.email,
+              first_name: data.user.user_metadata?.full_name?.split(' ')[0] || '',
+              last_name: data.user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+              tenant_id: 'c97bd573-06b9-4093-bb30-002d6e3bb0b9', // Default tenant
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+
+          if (createError) {
+            console.error("[Auth Callback] Error creating user:", createError);
+            // Don't throw - user is still authenticated, just missing from our table
+          } else {
+            console.log("[Auth Callback] User record created successfully");
+          }
+        } else {
+          console.log("[Auth Callback] User already exists in our table");
+        }
+      }
+
+      return response;
     } catch (e) {
       console.error("[Auth Callback] Exception during code exchange:", e);
     }
