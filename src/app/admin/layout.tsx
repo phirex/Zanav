@@ -34,7 +34,7 @@ export default function AdminLayout({
 
         // Fetch admin status from a dedicated API route instead of direct DB check
         // This keeps sensitive logic server-side
-        const response = await fetch("/api/admin/status"); // We need to create this route
+        const response = await fetch("/api/admin/status");
         if (response.ok) {
           const { isAdmin: adminStatusResult } = await response.json();
           setIsAdmin(adminStatusResult);
@@ -43,6 +43,21 @@ export default function AdminLayout({
             router.push("/");
           }
         } else {
+          // Try alternative approach: check if user is OWNER of their tenant
+          try {
+            const tenantResponse = await fetch("/api/tenants/current");
+            if (tenantResponse.ok) {
+              const tenantData = await tenantResponse.json();
+              if (tenantData.role === "OWNER") {
+                console.log("User is OWNER of their tenant, allowing admin access");
+                setIsAdmin(true);
+                return;
+              }
+            }
+          } catch (tenantError) {
+            console.error("Error checking tenant ownership:", tenantError);
+          }
+          
           // Failed to get status, assume not admin for safety
           console.error("Failed to fetch admin status:", response.statusText);
           setIsAdmin(false);
