@@ -88,27 +88,33 @@ function Home() {
   // Fetch data on component mount
   useEffect(() => {
     // Check if user has multiple kennels and redirect if needed
-    checkMultipleKennels();
-    fetchData();
-    fetchTenantName();
-  }, []);
-
-  // Check if user has multiple kennels
-  const checkMultipleKennels = async () => {
-    try {
-      const response = await fetch('/api/admin/user-tenants');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.tenants && data.tenants.length > 1) {
-          console.log(`🏢 User has ${data.tenants.length} kennels, redirecting to selection`);
-          router.push('/select-tenant');
-          return;
+    const initializePage = async () => {
+      try {
+        // First, check for multiple kennels
+        const response = await fetch('/api/admin/user-tenants');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.tenants && data.tenants.length > 1) {
+            console.log(`🏢 User has ${data.tenants.length} kennels, redirecting to selection`);
+            router.push('/select-tenant');
+            return; // Don't continue with other API calls
+          }
         }
+        
+        // Only if user has single kennel, proceed with other API calls
+        console.log('✅ User has single kennel, proceeding with data fetch');
+        await fetchData();
+        await fetchTenantName();
+      } catch (error) {
+        console.error('Error checking user tenants:', error);
+        // Fallback: try to fetch data anyway
+        await fetchData();
+        await fetchTenantName();
       }
-    } catch (error) {
-      console.error('Error checking user tenants:', error);
-    }
-  };
+    };
+
+    initializePage();
+  }, []);
 
   // Listen for kennel settings updates
   useEffect(() => {
