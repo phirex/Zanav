@@ -21,6 +21,12 @@ export async function middleware(request: NextRequest) {
 
   // For API routes, just pass through but don't skip entirely
   const isApiRoute = currentPath.startsWith("/api");
+  
+  // TEMPORARILY: Allow admin routes to pass through without middleware interference
+  if (currentPath.startsWith("/admin")) {
+    console.log("[Middleware] Admin route detected, allowing access without middleware checks");
+    return NextResponse.next();
+  }
 
   // Handle kennel subdomain routing
   if (subdomain !== "www" && subdomain !== "zanav") {
