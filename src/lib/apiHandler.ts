@@ -268,6 +268,7 @@ export function createAdminHandlerWithAuth(handler: (ctx: { client: SupabaseClie
       console.log("[ADMIN_HANDLER_AUTH] Request method:", req.method);
       console.log("[ADMIN_HANDLER_AUTH] Request URL:", req.url);
       console.log("[ADMIN_HANDLER_AUTH] Params received:", params);
+      console.log("[ADMIN_HANDLER_AUTH] Starting authentication...");
       
       const client = supabaseAdmin();
 
@@ -305,6 +306,7 @@ export function createAdminHandlerWithAuth(handler: (ctx: { client: SupabaseClie
       }
       
       console.log("[ADMIN_HANDLER_AUTH] User is global admin, proceeding");
+      console.log("[ADMIN_HANDLER_AUTH] About to call handler with params:", params);
 
       // Parse JSON body for non-GET / non-HEAD
       let body: any = undefined;
@@ -322,7 +324,9 @@ export function createAdminHandlerWithAuth(handler: (ctx: { client: SupabaseClie
         }
       }
 
+      console.log("[ADMIN_HANDLER_AUTH] Calling handler...");
       const result = await handler({ client, body, params });
+      console.log("[ADMIN_HANDLER_AUTH] Handler completed, result:", result);
       
       if (result instanceof Response) return result;
       
