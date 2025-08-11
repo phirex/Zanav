@@ -14,6 +14,7 @@ import {
   UserPlus,
   User,
   Globe,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -228,6 +229,22 @@ export default function ClientLayout({
                   </div>
                   <span className="font-medium text-sm">
                     {t("manageUsersLink", "Manage Users")}
+                  </span>
+                </Link>
+              </div>
+
+              {/* Promote to Admin Section */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <Link
+                  href="/promote-to-admin"
+                  className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-purple-50 rounded-lg transition-all duration-200 group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div className="bg-purple-100 p-1.5 rounded-md group-hover:bg-purple-200 transition-colors">
+                    <Crown className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <span className="font-medium text-sm">
+                    {t("promoteToAdminLink", "Promote to Admin")}
                   </span>
                 </Link>
               </div>
