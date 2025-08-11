@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 
-// Force deployment - ensure latest column names are used
+// Force deployment - ensure latest column names are used - Vercel redeploy
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
