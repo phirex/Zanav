@@ -117,55 +117,64 @@ export async function middleware(request: NextRequest) {
     // Try to get user from auth token
     let user = null;
 
-    try {
-      if (foundAuthCookie) {
-        // Try to parse the JWT token normally first
-        try {
-          const { data: { user: authUser }, error } = await supabaseClient.auth.getUser(foundAuthCookie.value);
-          if (error) {
-            console.error("[Middleware] Error getting user from token:", error);
+    if (foundAuthCookie) {
+      console.log("[Middleware] Found auth cookie, attempting to authenticate...");
+      
+      // Try to parse the JWT token normally first
+      const { data: { user: authUser }, error } = await supabaseClient.auth.getUser(foundAuthCookie.value);
+      
+      if (error) {
+        console.error("[Middleware] Error getting user from token:", error);
+        
+        // If JWT parsing fails, try to extract user ID from the corrupted token
+        if (error.message.includes("token is malformed") || error.message.includes("invalid JWT")) {
+          console.log("[Middleware] JWT corrupted, attempting to extract user ID from token...");
+          
+          // Try to extract user ID from the corrupted token
+          try {
+            // The token might be partially readable - try to extract what we can
+            const tokenParts = foundAuthCookie.value.split('.');
+            console.log("[Middleware] Token parts count:", tokenParts.length);
             
-            // If JWT parsing fails, try to extract user ID from the corrupted token
-            if (error.message.includes("token is malformed") || error.message.includes("invalid JWT")) {
-              console.log("[Middleware] JWT corrupted, attempting to extract user ID from token...");
-              
-              // Try to extract user ID from the corrupted token
+            if (tokenParts.length >= 2) {
+              // Try to decode the payload part (second part)
               try {
-                // The token might be partially readable - try to extract what we can
-                const tokenParts = foundAuthCookie.value.split('.');
-                if (tokenParts.length >= 2) {
-                  // Try to decode the payload part (second part)
-                  const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-                  if (payload.sub) {
-                    console.log("[Middleware] Successfully extracted user ID from corrupted JWT:", payload.sub);
-                    
-                    // Verify this user exists using admin client
-                    const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(payload.sub);
-                    if (!adminError && adminUser) {
-                      user = adminUser;
-                      console.log("[Middleware] User verified via admin client:", user.email);
-                    }
+                const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+                console.log("[Middleware] Extracted payload:", payload);
+                
+                if (payload.sub) {
+                  console.log("[Middleware] Successfully extracted user ID from corrupted JWT:", payload.sub);
+                  
+                  // Verify this user exists using admin client
+                  const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(payload.sub);
+                  if (!adminError && adminUser) {
+                    user = adminUser;
+                    console.log("[Middleware] User verified via admin client:", user.email);
+                  } else {
+                    console.error("[Middleware] Admin verification failed:", adminError);
                   }
                 }
-              } catch (extractError) {
-                console.error("[Middleware] Failed to extract user ID from corrupted JWT:", extractError);
+              } catch (decodeError) {
+                console.error("[Middleware] Failed to decode payload:", decodeError);
               }
+            } else {
+              console.log("[Middleware] Token has insufficient parts for extraction");
             }
-          } else if (authUser) {
-            user = authUser;
-            console.log("[Middleware] User result:", {
-              hasUser: true,
-              userId: user.id,
-              userEmail: user.email,
-              error: undefined
-            });
+          } catch (extractError) {
+            console.error("[Middleware] Failed to extract user ID from corrupted JWT:", extractError);
           }
-        } catch (parseError) {
-          console.error("[Middleware] JWT parsing completely failed:", parseError);
         }
+      } else if (authUser) {
+        user = authUser;
+        console.log("[Middleware] User result:", {
+          hasUser: true,
+          userId: user.id,
+          userEmail: user.email,
+          error: undefined
+        });
       }
-    } catch (error) {
-      console.error("[Middleware] Error in auth check:", error);
+    } else {
+      console.log("[Middleware] No auth cookie found");
     }
 
     // If no user found, allow access to public pages only
