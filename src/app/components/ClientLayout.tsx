@@ -20,7 +20,6 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/contexts/SupabaseBrowserContext";
 import LogoutButton from "@/components/LogoutButton";
-import DeleteAccountButton from "@/components/DeleteAccountButton";
 import type { Session } from "@supabase/supabase-js";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import GlobalAdminSidebar from "@/components/GlobalAdminSidebar";
@@ -37,14 +36,6 @@ export default function ClientLayout({
   const [isLoading, setIsLoading] = useState(true);
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [isClient, setIsClient] = useState(false);
-
-  // Debug: Log context state
-  console.log("🔍 ClientLayout: Context state:", { 
-    user: user?.email, 
-    session: !!session, 
-    loading,
-    isClient 
-  });
 
   // Initialize client-side flag first
   useEffect(() => {
@@ -245,98 +236,7 @@ export default function ClientLayout({
             {/* Sticky Footer Section */}
             <div className="mt-4 space-y-3 pt-4 border-t border-gray-200 bg-white">
               <LanguageSwitcher />
-              <DeleteAccountButton />
               <LogoutButton />
-              {/* Temporary debug buttons */}
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/debug/user-status');
-                    const data = await response.json();
-                    console.log('User Status:', data);
-                    alert(JSON.stringify(data, null, 2));
-                  } catch (error) {
-                    console.error('Debug error:', error);
-                    alert('Debug failed: ' + error);
-                  }
-                }}
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group"
-              >
-                <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition-colors">
-                  <span className="text-blue-600 font-bold">?</span>
-                </div>
-                <span className="font-medium text-blue-700">Debug Status</span>
-              </button>
-              <button
-                onClick={async () => {
-                  if (confirm('⚠️ FORCE DELETE: This will completely remove your account and all data. Are you absolutely sure?')) {
-                    try {
-                      const response = await fetch('/api/debug/force-delete-user', { method: 'POST' });
-                      const data = await response.json();
-                      console.log('Force Delete Result:', data);
-                      if (data.success) {
-                        alert('Account deleted! Redirecting to landing page...');
-                        window.location.href = '/landing';
-                      } else {
-                        alert('Force delete failed: ' + (data.error || data.message));
-                      }
-                    } catch (error) {
-                      console.error('Force delete error:', error);
-                      alert('Force delete failed: ' + error);
-                    }
-                  }
-                }}
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 rounded-xl transition-all duration-200 group"
-              >
-                <div className="bg-red-100 p-2 rounded-lg group-hover:bg-red-200 transition-colors">
-                  <span className="text-red-600 font-bold">⚠️</span>
-                </div>
-                <span className="font-medium text-red-700">FORCE DELETE</span>
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    // Clear all cookies manually
-                    document.cookie.split(";").forEach(function(c) { 
-                      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-                    });
-                    // Clear localStorage
-                    localStorage.clear();
-                    // Clear sessionStorage
-                    sessionStorage.clear();
-                    alert('Session cleared! Refreshing page...');
-                    window.location.reload();
-                  } catch (error) {
-                    console.error('Clear session error:', error);
-                    alert('Failed to clear session: ' + error);
-                  }
-                }}
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-yellow-50 rounded-xl transition-all duration-200 group"
-              >
-                <div className="bg-yellow-100 p-2 rounded-lg group-hover:bg-yellow-200 transition-colors">
-                  <span className="text-yellow-600 font-bold">🧹</span>
-                </div>
-                <span className="font-medium text-yellow-700">Clear Session</span>
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/debug/current-state');
-                    const data = await response.json();
-                    console.log('Current State:', data);
-                    alert(JSON.stringify(data, null, 2));
-                  } catch (error) {
-                    console.error('Current state error:', error);
-                    alert('Failed to get current state: ' + error);
-                  }
-                }}
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 rounded-xl transition-all duration-200 group"
-              >
-                <div className="bg-green-100 p-2 rounded-lg group-hover:bg-green-200 transition-colors">
-                  <span className="text-green-600 font-bold">📊</span>
-                </div>
-                <span className="font-medium text-green-700">Current State</span>
-              </button>
             </div>
           </div>
 
