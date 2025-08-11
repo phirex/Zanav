@@ -93,7 +93,7 @@ export async function middleware(request: NextRequest) {
       console.log("[Middleware] No auth cookie found");
       // Check other auth cookie variations
       for (let i = 0; i < 5; i++) {
-        const cookieName = `sb-nlpsmauwwlnblgwtawbs-auth-token${i === 0 ? "" : ".${i}`}`;
+        const cookieName = `sb-nlpsmauwwlnblgwtawbs-auth-token${i === 0 ? "" : `.${i}`}`;
         const cookie = request.cookies.get(cookieName);
         console.log(`[Middleware] Getting cookie ${cookieName}:`, !!cookie);
         if (cookie) {
