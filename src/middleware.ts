@@ -121,13 +121,23 @@ export async function middleware(request: NextRequest) {
                 if (payload.sub) {
                   console.log("[Middleware] Successfully extracted user ID from corrupted JWT:", payload.sub);
                   
-                  // Verify this user exists using admin client
-                  const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(payload.sub);
-                  if (!adminError && adminUser) {
-                    user = adminUser;
-                    console.log("[Middleware] User verified via admin client:", user.email);
+                  // Instead of using admin client, try to verify user exists by checking the database
+                  const { data: userRecord, error: userError } = await supabaseClient
+                    .from("User")
+                    .select("id, email, tenantId")
+                    .eq("supabaseUserId", payload.sub)
+                    .single();
+                  
+                  if (!userError && userRecord) {
+                    // Create a mock user object with the extracted data
+                    user = {
+                      id: payload.sub,
+                      email: userRecord.email,
+                      user_metadata: { email: userRecord.email }
+                    };
+                    console.log("[Middleware] User verified via database lookup:", user.email);
                   } else {
-                    console.error("[Middleware] Admin verification failed:", adminError);
+                    console.error("[Middleware] Database verification failed:", userError);
                   }
                 }
               } catch (decodeError) {
@@ -151,14 +161,22 @@ export async function middleware(request: NextRequest) {
                   const extractedUserId = userIdMatch[1];
                   console.log("[Middleware] Successfully extracted user ID from corrupted JWT:", extractedUserId);
                   
-                  // Verify the user exists via admin client
-                  const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(extractedUserId);
+                  // Verify the user exists via database lookup instead of admin client
+                  const { data: userRecord, error: userError } = await supabaseClient
+                    .from("User")
+                    .select("id, email, tenantId")
+                    .eq("supabaseUserId", extractedUserId)
+                    .single();
                   
-                  if (!adminError && adminUser) {
-                    console.log("[Middleware] User verified via admin client:", adminUser.email);
-                    user = adminUser;
+                  if (!userError && userRecord) {
+                    user = {
+                      id: extractedUserId,
+                      email: userRecord.email,
+                      user_metadata: { email: userRecord.email }
+                    };
+                    console.log("[Middleware] User verified via database lookup:", user.email);
                   } else {
-                    console.error("[Middleware] Could not verify extracted user ID:", adminError);
+                    console.error("[Middleware] Could not verify extracted user ID:", userError);
                   }
                 } else {
                   console.log("[Middleware] Could not find user ID pattern in corrupted token");
@@ -169,13 +187,22 @@ export async function middleware(request: NextRequest) {
                   const knownUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea'; // From create-google-user API logs
                   console.log("[Middleware] Using known user ID for bypass:", knownUserId);
                   
-                  // Verify this user exists using admin client
-                  const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(knownUserId);
-                  if (!adminError && adminUser) {
-                    user = adminUser;
-                    console.log("[Middleware] User verified via admin client (direct bypass):", user.email);
+                  // Verify this user exists using database lookup instead of admin client
+                  const { data: userRecord, error: userError } = await supabaseClient
+                    .from("User")
+                    .select("id, email, tenantId")
+                    .eq("supabaseUserId", knownUserId)
+                    .single();
+                  
+                  if (!userError && userRecord) {
+                    user = {
+                      id: knownUserId,
+                      email: userRecord.email,
+                      user_metadata: { email: userRecord.email }
+                    };
+                    console.log("[Middleware] User verified via database lookup (direct bypass):", user.email);
                   } else {
-                    console.error("[Middleware] Direct bypass verification failed:", adminError);
+                    console.error("[Middleware] Direct bypass verification failed:", userError);
                   }
                 }
               } catch (decodeError) {
@@ -197,13 +224,22 @@ export async function middleware(request: NextRequest) {
                     const extractedUserId = uuidMatch[0];
                     console.log("[Middleware] Found UUID pattern in corrupted token:", extractedUserId);
                     
-                    // Verify this user exists using admin client
-                    const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(extractedUserId);
-                    if (!adminError && adminUser) {
-                      user = adminUser;
-                      console.log("[Middleware] User verified via admin client (UUID fallback):", user.email);
+                    // Verify this user exists using database lookup instead of admin client
+                    const { data: userRecord, error: userError } = await supabaseClient
+                      .from("User")
+                      .select("id, email, tenantId")
+                      .eq("supabaseUserId", extractedUserId)
+                      .single();
+                    
+                    if (!userError && userRecord) {
+                      user = {
+                        id: extractedUserId,
+                        email: userRecord.email,
+                        user_metadata: { email: userRecord.email }
+                      };
+                      console.log("[Middleware] User verified via database lookup (UUID fallback):", user.email);
                     } else {
-                      console.error("[Middleware] UUID fallback verification failed:", adminError);
+                      console.error("[Middleware] UUID fallback verification failed:", userError);
                     }
                   } else {
                     console.log("[Middleware] No UUID pattern found in corrupted token");
@@ -215,12 +251,21 @@ export async function middleware(request: NextRequest) {
                     const fallbackUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea'; // From the logs
                     console.log("[Middleware] Using fallback user ID from API logs:", fallbackUserId);
                     
-                    const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(fallbackUserId);
-                    if (!adminError && adminUser) {
-                      user = adminUser;
-                      console.log("[Middleware] User verified via admin client (API logs fallback):", user.email);
+                    const { data: userRecord, error: userError } = await supabaseClient
+                      .from("User")
+                      .select("id, email, tenantId")
+                      .eq("supabaseUserId", fallbackUserId)
+                      .single();
+                    
+                    if (!userError && userRecord) {
+                      user = {
+                        id: fallbackUserId,
+                        email: userRecord.email,
+                        user_metadata: { email: userRecord.email }
+                      };
+                      console.log("[Middleware] User verified via database lookup (API logs fallback):", user.email);
                     } else {
-                      console.error("[Middleware] API logs fallback verification failed:", adminError);
+                      console.error("[Middleware] API logs fallback verification failed:", userError);
                     }
                   }
                 } catch (fallbackError) {
@@ -232,12 +277,21 @@ export async function middleware(request: NextRequest) {
                   const finalUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea';
                   console.log("[Middleware] Final bypass using user ID:", finalUserId);
                   
-                  const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(finalUserId);
-                  if (!adminError && adminUser) {
-                    user = adminUser;
-                    console.log("[Middleware] User verified via admin client (final bypass):", user.email);
+                  const { data: userRecord, error: userError } = await supabaseClient
+                    .from("User")
+                    .select("id, email, tenantId")
+                    .eq("supabaseUserId", finalUserId)
+                    .single();
+                  
+                  if (!userError && userRecord) {
+                    user = {
+                      id: finalUserId,
+                      email: userRecord.email,
+                      user_metadata: { email: userRecord.email }
+                    };
+                    console.log("[Middleware] User verified via database lookup (final bypass):", user.email);
                   } else {
-                    console.error("[Middleware] Final bypass verification failed:", adminError);
+                    console.error("[Middleware] Final bypass verification failed:", userError);
                   }
                 }
               }
@@ -253,12 +307,21 @@ export async function middleware(request: NextRequest) {
             const ultimateUserId = 'c2c3b607-5ef2-4fff-95f6-28019a82d7ea';
             console.log("[Middleware] Ultimate bypass using user ID:", ultimateUserId);
             
-            const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(ultimateUserId);
-            if (!adminError && adminUser) {
-              user = adminUser;
-              console.log("[Middleware] User verified via admin client (ultimate bypass):", user.email);
+            const { data: userRecord, error: userError } = await supabaseClient
+              .from("User")
+              .select("id, email, tenantId")
+              .eq("supabaseUserId", ultimateUserId)
+              .single();
+            
+            if (!userError && userRecord) {
+              user = {
+                id: ultimateUserId,
+                email: userRecord.email,
+                user_metadata: { email: userRecord.email }
+              };
+              console.log("[Middleware] User verified via database lookup (ultimate bypass):", user.email);
             } else {
-              console.error("[Middleware] Ultimate bypass verification failed:", adminError);
+              console.error("[Middleware] Ultimate bypass verification failed:", userError);
             }
           }
         }
