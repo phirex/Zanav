@@ -1,5 +1,7 @@
+"use client";
+
 import GlobalAdminDashboard from "./components/GlobalAdminDashboard";
 
-export default async function AdminPage() {
+export default function AdminPage() {
   return <GlobalAdminDashboard />;
 }
