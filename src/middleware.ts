@@ -266,13 +266,16 @@ export async function middleware(request: NextRequest) {
             .eq("user_id", userRecord.id);
 
           if (userTenants && userTenants.length > 1) {
-            // User has multiple kennels - ALWAYS require selection
-            console.log(`[Middleware] User has ${userTenants.length} kennels, redirecting to selection`);
-            
-            // Clear any existing tenant selection to force fresh choice
-            const redirectResponse = NextResponse.redirect(new URL("/select-tenant", request.url));
-            redirectResponse.cookies.delete("tenantId");
-            return redirectResponse;
+            // User has multiple kennels - check if they've already made a selection
+            if (!userRecord.tenantId || userRecord.tenantId === DEFAULT_TENANT_ID) {
+              // No selection made yet, redirect to selection
+              console.log(`[Middleware] User has ${userTenants.length} kennels but no selection, redirecting to selection`);
+              return NextResponse.redirect(new URL("/select-tenant", request.url));
+            } else {
+              // User has made a selection, use it
+              console.log(`[Middleware] User has selected tenant: ${userRecord.tenantId}`);
+              tenantId = userRecord.tenantId;
+            }
           } else if (userTenants && userTenants.length === 1) {
             // User has exactly one kennel, automatically set it
             tenantId = userTenants[0].tenant_id;
@@ -285,7 +288,7 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Prevent redirect loops: if user is on select-tenant page and has a valid tenant, don't redirect
+    // Prevent redirect loops: if user is on select-tenant page, don't redirect them away
     if (user && currentPath === "/select-tenant") {
       try {
         const { createClient } = await import("@supabase/supabase-js");
@@ -306,9 +309,18 @@ export async function middleware(request: NextRequest) {
           .eq("supabaseUserId", user.id)
           .single();
 
-        if (userRecord && userRecord.tenantId && userRecord.tenantId !== DEFAULT_TENANT_ID) {
-          console.log(`[Middleware] User on select-tenant page but already has tenant: ${userRecord.tenantId}, redirecting to dashboard`);
-          return NextResponse.redirect(new URL("/dashboard", request.url));
+        // Only redirect away from select-tenant if user has exactly one kennel
+        if (userRecord) {
+          const { data: userTenants } = await adminClient
+            .from("UserTenant")
+            .select("tenant_id")
+            .eq("user_id", userRecord.id);
+
+          if (userTenants && userTenants.length === 1) {
+            console.log(`[Middleware] User on select-tenant page but has only 1 kennel, redirecting to dashboard`);
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          // If user has multiple kennels, let them stay on select-tenant page
         }
       } catch (error) {
         console.error("[Middleware] Error checking user tenant on select-tenant page:", error);
