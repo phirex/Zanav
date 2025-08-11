@@ -130,7 +130,6 @@ export async function middleware(request: NextRequest) {
         if (error.message.includes("token is malformed") || error.message.includes("invalid JWT")) {
           console.log("[Middleware] JWT corrupted, attempting to extract user ID from token...");
           
-          // Try to extract user ID from the corrupted token
           try {
             // The token might be partially readable - try to extract what we can
             const tokenParts = foundAuthCookie.value.split('.');
@@ -156,6 +155,39 @@ export async function middleware(request: NextRequest) {
                 }
               } catch (decodeError) {
                 console.error("[Middleware] Failed to decode payload:", decodeError);
+              }
+            } else if (tokenParts.length === 1) {
+              // Token is completely corrupted, try to extract user ID from the readable part
+              console.log("[Middleware] Token completely corrupted, attempting to extract user ID from readable part...");
+              
+              try {
+                // Try to decode the single part as base64
+                const decodedPart = atob(tokenParts[0]);
+                console.log("[Middleware] Decoded part:", decodedPart);
+                
+                // Look for user ID patterns in the decoded content
+                const userIdMatch = decodedPart.match(/"sub":"([^"]+)"/) || 
+                                   decodedPart.match(/"user_id":"([^"]+)"/) ||
+                                   decodedPart.match(/"id":"([^"]+)"/);
+                
+                if (userIdMatch) {
+                  const extractedUserId = userIdMatch[1];
+                  console.log("[Middleware] Successfully extracted user ID from corrupted JWT:", extractedUserId);
+                  
+                  // Verify the user exists via admin client
+                  const { data: { user: adminUser }, error: adminError } = await supabaseClient.auth.admin.getUserById(extractedUserId);
+                  
+                  if (!adminError && adminUser) {
+                    console.log("[Middleware] User verified via admin client:", adminUser.email);
+                    user = adminUser;
+                  } else {
+                    console.error("[Middleware] Could not verify extracted user ID:", adminError);
+                  }
+                } else {
+                  console.log("[Middleware] Could not find user ID pattern in corrupted token");
+                }
+              } catch (decodeError) {
+                console.error("[Middleware] Error decoding corrupted token part:", decodeError);
               }
             } else {
               console.log("[Middleware] Token has insufficient parts for extraction");
