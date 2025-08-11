@@ -1,37 +1,17 @@
 import { createHandler } from "@/lib/apiHandler";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
-export const POST = createHandler(async ({ req, client, params }) => {
+export const POST = createHandler(async ({ req, client, body }) => {
   try {
     console.log('🔗 [CONNECT] Starting tenant connection...');
-    console.log('🔗 [CONNECT] Params:', params);
-    console.log('🔗 [CONNECT] Params type:', typeof params);
-    console.log('🔗 [CONNECT] Params keys:', params ? Object.keys(params) : 'undefined');
-    console.log('🔗 [CONNECT] Params.id:', params?.id);
-    console.log('🔗 [CONNECT] Params.id type:', typeof params?.id);
-    console.log('🔗 [CONNECT] Params.id is array:', Array.isArray(params?.id));
+    console.log('🔗 [CONNECT] Request body:', body);
     
-    // Extract tenant ID from URL path as fallback
-    let tenantId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-    
-    // If params.id is not available, extract from URL
-    if (!tenantId) {
-      const url = new URL(req.url);
-      const pathParts = url.pathname.split('/');
-      // URL format: /api/tenants/{id}/connect
-      const tenantIdIndex = pathParts.indexOf('tenants') + 1;
-      if (tenantIdIndex < pathParts.length) {
-        tenantId = pathParts[tenantIdIndex];
-        console.log('🔗 [CONNECT] Extracted tenantId from URL:', tenantId);
-      }
-    }
-    
-    console.log('🔗 [CONNECT] Final tenantId:', tenantId);
-    console.log('🔗 [CONNECT] Final tenantId type:', typeof tenantId);
+    const { tenantId } = body;
+    console.log('🔗 [CONNECT] Tenant ID from body:', tenantId);
     
     if (!tenantId) {
-      console.log('❌ [CONNECT] No tenant ID provided');
-      return { error: "Tenant ID is required" };
+      console.log('❌ [CONNECT] No tenant ID provided in request body');
+      return { error: "Tenant ID is required in request body" };
     }
     
     console.log('🔗 [CONNECT] Tenant ID:', tenantId);
@@ -100,4 +80,4 @@ export const POST = createHandler(async ({ req, client, params }) => {
     console.error("Error in tenant connect API:", error);
     return { error: "Internal server error" };
   }
-}); 
+});

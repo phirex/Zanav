@@ -111,7 +111,12 @@ export function createHandler(handler: ApiHandler) {
       // If handler already returned a Response
       if (result instanceof Response) return result;
 
-      // Otherwise serialize to JSON
+      // Check if the result contains an error and return appropriate status code
+      if (result && typeof result === 'object' && 'error' in result) {
+        return NextResponse.json(result, { status: 400 });
+      }
+
+      // Otherwise serialize to JSON with 200 status
       return NextResponse.json(result ?? {}, { status: 200 });
     } catch (err: any) {
       console.error("[API_HANDLER] Error caught:", err);
@@ -172,6 +177,12 @@ export function createAdminHandler(handler: ApiHandler) {
 
       const result = await handler({ req, client, tenantId, body, params });
       if (result instanceof Response) return result;
+      
+      // Check if the result contains an error and return appropriate status code
+      if (result && typeof result === 'object' && 'error' in result) {
+        return NextResponse.json(result, { status: 400 });
+      }
+      
       return NextResponse.json(result ?? {}, { status: 200 });
     } catch (err: any) {
       console.error("Admin API Handler Error", err);
