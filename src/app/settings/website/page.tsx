@@ -68,6 +68,8 @@ interface FAQ {
   sort_order: number;
 }
 
+const DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000000";
+
 export default function WebsiteSettingsPage() {
   const [websiteData, setWebsiteData] = useState<KennelWebsite>({});
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
@@ -84,47 +86,53 @@ export default function WebsiteSettingsPage() {
     fetchWebsiteData();
   }, []);
 
-  const fetchWebsiteData = async () => {
+  const resolveTenantId = async (): Promise<string | null> => {
     try {
       let tenantId = localStorage.getItem("tenantId");
-      console.log(
-        "Fetching website data with tenantId from localStorage:",
-        tenantId,
-      );
-
-      // If not in localStorage, try to get from current tenant context
-      if (!tenantId) {
-        try {
-          console.log("Tenant ID not in localStorage, fetching from API...");
-          const response = await fetch("/api/tenants/current");
-          if (response.ok) {
-            const tenantData = await response.json();
-            tenantId = tenantData.id;
-            console.log("Got tenant ID from API:", tenantId);
-            // Store it in localStorage for future use
-            if (tenantId) {
-              localStorage.setItem("tenantId", tenantId);
-            }
+      if (!tenantId || tenantId === DEFAULT_TENANT_ID || tenantId.length !== 36) {
+        console.log("Tenant ID not valid in localStorage, fetching from API /api/tenants/current...");
+        const res = await fetch("/api/tenants/current");
+        if (res.ok) {
+          const data = await res.json();
+          tenantId = data?.id || null;
+          if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
+            localStorage.setItem("tenantId", tenantId);
+          } else {
+            console.warn("/api/tenants/current did not return a valid tenantId", data);
+            return null;
           }
-        } catch (error) {
-          console.error("Failed to get current tenant:", error);
+        } else {
+          console.warn("/api/tenants/current request failed:", res.status);
+          return null;
         }
       }
+      return tenantId || null;
+    } catch (e) {
+      console.error("resolveTenantId error:", e);
+      return null;
+    }
+  };
 
+  const fetchWebsiteData = async () => {
+    try {
+      setIsLoading(true);
+      // Resolve tenant first
+      const tenantId = await resolveTenantId();
+      console.log("Fetching website data with resolved tenantId:", tenantId);
       if (!tenantId) {
-        toast({
-          title: "Error",
-          description: "No tenant ID found",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "No tenant ID found", variant: "destructive" });
+        setIsLoading(false);
         return;
       }
 
-      const response = await fetch("/api/kennel-website", {
-        headers: {
-          "x-tenant-id": tenantId,
-        },
-      });
+      // First try with header
+      let response = await fetch("/api/kennel-website", { headers: { "x-tenant-id": tenantId } });
+
+      // If backend rejects (e.g., 400 because header was bad), retry without header so API can fall back to cookie
+      if (!response.ok && response.status === 400) {
+        console.warn("Retrying /api/kennel-website without header after 400...");
+        response = await fetch("/api/kennel-website");
+      }
 
       console.log("Fetch response status:", response.status);
 
@@ -133,55 +141,41 @@ export default function WebsiteSettingsPage() {
         console.log("Fetch result:", result);
 
         if (result.data) {
-          console.log("Setting website data:", result.data);
-          console.log("Subdomain from API:", result.data.subdomain);
           setWebsiteData(result.data);
         } else {
-          console.log("No website data found");
+          console.log("No website data found for tenant");
+          setWebsiteData({});
         }
 
-        // Load related data
-        if (result.galleryImages) {
-          setGalleryImages(result.galleryImages);
-        }
+        if (result.galleryImages) setGalleryImages(result.galleryImages);
         if (result.videos) {
-          // Map database fields to frontend fields
           const mappedVideos = result.videos.map((video: any) => ({
             id: video.id,
             video_url: video.video_url || "",
             title: video.caption || "",
-            description: "", // Database doesn't store description separately
+            description: "",
             sort_order: video.sort_order || 0,
           }));
           setVideos(mappedVideos);
         }
         if (result.testimonials) {
-          // Map database fields to frontend fields
-          const mappedTestimonials = result.testimonials.map(
-            (testimonial: any) => ({
-              id: testimonial.id,
-              customer_name: testimonial.author_name || "",
-              customer_photo_url: testimonial.author_photo || "",
-              rating: 5, // Default rating since database doesn't store it
-              testimonial_text: testimonial.text || "",
-              sort_order: testimonial.sort_order || 0,
-            }),
-          );
+          const mappedTestimonials = result.testimonials.map((t: any) => ({
+            id: t.id,
+            customer_name: t.author_name || "",
+            customer_photo_url: t.author_photo || "",
+            rating: 5,
+            testimonial_text: t.text || "",
+            sort_order: t.sort_order || 0,
+          }));
           setTestimonials(mappedTestimonials);
         }
-        if (result.faqs) {
-          setFaqs(result.faqs);
-        }
+        if (result.faqs) setFaqs(result.faqs);
       } else {
         console.error("Fetch failed with status:", response.status);
       }
     } catch (error) {
       console.error("Error fetching website data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load website data",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to load website data", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
