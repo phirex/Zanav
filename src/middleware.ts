@@ -195,21 +195,26 @@ export async function middleware(request: NextRequest) {
       } catch (error) {
         console.error("[Middleware] Error checking user tenant:", error);
       }
-    }
 
-    // Set tenant cookie and continue
-    if (tenantId) {
+      // Always continue for authenticated users, with or without tenant
       const response = NextResponse.next();
-      response.cookies.set("tenantId", tenantId, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
+      
+      // Set tenant cookie if we have one
+      if (tenantId) {
+        response.cookies.set("tenantId", tenantId, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+        console.log(`[Middleware] Set tenantId cookie: ${tenantId}`);
+      }
+      
       return response;
     }
   }
 
+  // If we get here, either no user or no subdomain match
   return NextResponse.next();
 }
 
