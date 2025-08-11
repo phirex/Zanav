@@ -97,6 +97,8 @@ export async function middleware(request: NextRequest) {
     const authCookie = request.cookies.get("sb-nlpsmauwwlnblgwtawbs-auth-token");
     console.log("[Middleware] Getting cookie sb-nlpsmauwwlnblgwtawbs-auth-token:", !!authCookie);
 
+    let foundAuthCookie = authCookie;
+
     if (!authCookie) {
       console.log("[Middleware] No auth cookie found");
       // Check other auth cookie variations
@@ -106,6 +108,7 @@ export async function middleware(request: NextRequest) {
         console.log(`[Middleware] Getting cookie ${cookieName}:`, !!cookie);
         if (cookie) {
           console.log(`[Middleware] Found auth cookie: ${cookieName}`);
+          foundAuthCookie = cookie;
           break;
         }
       }
@@ -115,8 +118,8 @@ export async function middleware(request: NextRequest) {
     let user = null;
 
     try {
-      if (authCookie) {
-        const { data: { user: authUser }, error } = await supabaseClient.auth.getUser(authCookie.value);
+      if (foundAuthCookie) {
+        const { data: { user: authUser }, error } = await supabaseClient.auth.getUser(foundAuthCookie.value);
         if (error) {
           console.error("[Middleware] Error getting user from token:", error);
         } else if (authUser) {
