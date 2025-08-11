@@ -57,22 +57,44 @@ export function createHandler(handler: ApiHandler) {
 
           const supabaseUid = session?.user?.id;
           if (supabaseUid) {
+            console.log("[API_HANDLER] Looking up tenant for user:", supabaseUid);
+            
             // First, get the User record ID using the supabaseUserId
             const { data: userRecord, error: userError } = await client
               .from("User")
-              .select("id")
+              .select("id, tenantId")
               .eq("supabaseUserId", supabaseUid)
               .single();
 
             if (!userError && userRecord) {
-              // Now check if the User.id is linked to any tenant
-              const { data: link } = await client
-                .from("UserTenant")
-                .select("tenant_id")
-                .eq("user_id", userRecord.id)
-                .maybeSingle();
+              console.log("[API_HANDLER] Found user record:", userRecord.id);
+              
+              // First try to use the user's tenantId if it's set
+              if (userRecord.tenantId) {
+                tenantId = userRecord.tenantId;
+                console.log("[API_HANDLER] Using user's tenantId:", tenantId);
+              } else {
+                // Fallback: check if the User.id is linked to any tenant
+                const { data: link } = await client
+                  .from("UserTenant")
+                  .select("tenant_id")
+                  .eq("user_id", userRecord.id)
+                  .maybeSingle();
 
-              tenantId = link?.tenant_id ?? null;
+                if (link?.tenant_id) {
+                  tenantId = link.tenant_id;
+                  console.log("[API_HANDLER] Found tenant from UserTenant:", tenantId);
+                  
+                  // Update the user's tenantId for future requests
+                  await client
+                    .from("User")
+                    .update({ tenantId })
+                    .eq("id", userRecord.id);
+                  console.log("[API_HANDLER] Updated user's tenantId to:", tenantId);
+                }
+              }
+            } else {
+              console.error("[API_HANDLER] User record not found:", userError);
             }
           }
         } catch (lookupErr) {
