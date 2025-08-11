@@ -75,21 +75,31 @@ export function SupabaseBrowserProvider({
               console.log("🔍 User ID to search for:", user.id);
               console.log("🔍 User email:", user.email);
               
-              // Check if user already exists in our database
+              // Check if user already exists in our database via API call (bypasses RLS)
               let existingUser, userCheckError;
               try {
-                console.log("🔍 About to execute database query...");
-                const result = await supabase
-                  .from('User')
-                  .select('id, tenantId')
-                  .eq('supabaseUserId', user.id)
-                  .maybeSingle();
-                
-                existingUser = result.data;
+                console.log("🔍 About to call API to check user existence...");
+                const response = await fetch('/api/debug/check-user-exists', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    supabaseUserId: user.id,
+                    email: user.email
+                  }),
+                });
+
+                if (!response.ok) {
+                  throw new Error(`API call failed: ${response.status}`);
+                }
+
+                const result = await response.json();
+                existingUser = result.user;
                 userCheckError = result.error;
-                console.log("🔍 Database query completed successfully");
+                console.log("🔍 API call completed successfully");
               } catch (queryError) {
-                console.error("💥 Database query threw an exception:", queryError);
+                console.error("💥 API call threw an exception:", queryError);
                 userCheckError = queryError;
               }
 
