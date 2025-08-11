@@ -4,6 +4,12 @@ import type { Database } from "@/lib/database.types";
 import { DEFAULT_TENANT_ID, getTenantId } from "./lib/tenant";
 
 export async function middleware(request: NextRequest) {
+  // TEMPORARILY DISABLED - Testing if middleware is causing redirect issues
+  console.log("[Middleware] TEMPORARILY DISABLED - Allowing all requests through");
+  return NextResponse.next();
+  
+  // ORIGINAL CODE COMMENTED OUT BELOW
+  /*
   const { pathname: currentPath } = request.nextUrl;
   const hostname = request.headers.get("host") || "";
   const subdomain = hostname.split(".")[0];
@@ -93,7 +99,7 @@ export async function middleware(request: NextRequest) {
       console.log("[Middleware] No auth cookie found");
       // Check other auth cookie variations
       for (let i = 0; i < 5; i++) {
-        const cookieName = `sb-nlpsmauwwlnblgwtawbs-auth-token${i === 0 ? "" : `.${i}`}`;
+        const cookieName = `sb-nlpsmauwwlnblgwtawbs-auth-token${i === 0 ? "" : ".${i}`}`;
         const cookie = request.cookies.get(cookieName);
         console.log(`[Middleware] Getting cookie ${cookieName}:`, !!cookie);
         if (cookie) {
@@ -216,6 +222,7 @@ export async function middleware(request: NextRequest) {
 
   // If we get here, either no user or no subdomain match
   return NextResponse.next();
+  */
 }
 
 export const config = {
