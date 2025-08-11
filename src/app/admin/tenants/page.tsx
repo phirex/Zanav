@@ -22,6 +22,7 @@ type Tenant = {
   name: string;
   createdAt: string;
   ownerEmail: string | null;
+  subdomain?: string;
 };
 
 export default function TenantsPage() {
@@ -206,16 +207,19 @@ export default function TenantsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-left">
-                    {t("tableHeaderName")}
+                    {t("tableHeaderName", "Name")}
                   </TableHead>
                   <TableHead className="text-left">
-                    {t("tableHeaderCreated")}
+                    {t("tableHeaderSubdomain", "Subdomain")}
                   </TableHead>
                   <TableHead className="text-left">
-                    {t("tableHeaderOwner")}
+                    {t("tableHeaderCreated", "Created")}
+                  </TableHead>
+                  <TableHead className="text-left">
+                    {t("tableHeaderOwner", "Owner")}
                   </TableHead>
                   <TableHead className="text-right">
-                    {t("tableHeaderActions")}
+                    {t("tableHeaderActions", "Actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -224,6 +228,20 @@ export default function TenantsPage() {
                   <TableRow key={tenant.id}>
                     <TableCell className="font-medium table-cell">
                       {tenant.name}
+                    </TableCell>
+                    <TableCell className="table-cell">
+                      {tenant.subdomain ? (
+                        <a 
+                          href={`https://${tenant.subdomain}.zanav.io`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {tenant.subdomain}.zanav.io
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">No subdomain</span>
+                      )}
                     </TableCell>
                     <TableCell className="table-cell">
                       {formatDate(tenant.createdAt)}
@@ -241,8 +259,8 @@ export default function TenantsPage() {
                         disabled={isConnecting}
                       >
                         {isConnecting
-                          ? t("connectingButton")
-                          : t("connectButton")}
+                          ? t("connectingButton", "Connecting...")
+                          : t("connectButton", "Connect")}
                       </Button>
                     </TableCell>
                   </TableRow>
