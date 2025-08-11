@@ -264,7 +264,7 @@ export default function ClientLayout({
               <LanguageSwitcher />
               <DeleteAccountButton />
               <LogoutButton />
-              {/* Temporary debug button */}
+              {/* Temporary debug buttons */}
               <button
                 onClick={async () => {
                   try {
@@ -283,6 +283,32 @@ export default function ClientLayout({
                   <span className="text-blue-600 font-bold">?</span>
                 </div>
                 <span className="font-medium text-blue-700">Debug Status</span>
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm('⚠️ FORCE DELETE: This will completely remove your account and all data. Are you absolutely sure?')) {
+                    try {
+                      const response = await fetch('/api/debug/force-delete-user', { method: 'POST' });
+                      const data = await response.json();
+                      console.log('Force Delete Result:', data);
+                      if (data.success) {
+                        alert('Account deleted! Redirecting to landing page...');
+                        window.location.href = '/landing';
+                      } else {
+                        alert('Force delete failed: ' + (data.error || data.message));
+                      }
+                    } catch (error) {
+                      console.error('Force delete error:', error);
+                      alert('Force delete failed: ' + error);
+                    }
+                  }
+                }}
+                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 rounded-xl transition-all duration-200 group"
+              >
+                <div className="bg-red-100 p-2 rounded-lg group-hover:bg-red-200 transition-colors">
+                  <span className="text-red-600 font-bold">⚠️</span>
+                </div>
+                <span className="font-medium text-red-700">FORCE DELETE</span>
               </button>
             </div>
           </div>
