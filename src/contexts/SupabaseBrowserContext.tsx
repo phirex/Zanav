@@ -72,12 +72,17 @@ export function SupabaseBrowserProvider({
             
             try {
               console.log("🔍 Step 1: Checking if user exists in database...");
+              console.log("🔍 User ID to search for:", user.id);
+              console.log("🔍 User email:", user.email);
+              
               // Check if user already exists in our database
               const { data: existingUser, error: userCheckError } = await supabase
                 .from('User')
                 .select('id, tenantId')
                 .eq('supabaseUserId', user.id)
                 .maybeSingle();
+
+              console.log("🔍 Database query result:", { existingUser, userCheckError });
 
               if (userCheckError) {
                 console.error("❌ Error checking existing user:", userCheckError);
@@ -142,6 +147,15 @@ export function SupabaseBrowserProvider({
               }
             } catch (error) {
               console.error("💥 Error in Google OAuth user creation:", error);
+              if (error instanceof Error) {
+                console.error("💥 Error details:", {
+                  message: error.message,
+                  stack: error.stack,
+                  name: error.name
+                });
+              } else {
+                console.error("💥 Unknown error type:", typeof error, error);
+              }
             }
           }
         }
