@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
-import SupabaseProvider from "@/contexts/SupabaseBrowserContext";
+import { SupabaseBrowserProvider } from "@/contexts/SupabaseBrowserContext";
 import I18nProviderComponent from "@/components/I18nProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -41,9 +41,9 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.ico?v=3" />
       </head>
       <body className={inter.className}>
-        <SupabaseProvider>
+        <SupabaseBrowserProvider>
           <I18nProviderComponent>{children}</I18nProviderComponent>
-        </SupabaseProvider>
+        </SupabaseBrowserProvider>
       </body>
     </html>
   );

@@ -1,126 +1,148 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { Database } from "@/lib/database.types";
+import { User, Session } from "@supabase/supabase-js";
 
-type SupabaseContextType = {
-  supabase: SupabaseClient<Database>;
+interface SupabaseContextType {
+  supabase: ReturnType<typeof createBrowserClient>;
   user: User | null;
-  isLoading: boolean;
-  error: Error | null;
-};
+  session: Session | null;
+  loading: boolean;
+}
 
-const SupabaseContext = createContext<SupabaseContextType | undefined>(
-  undefined,
-);
+const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
 
-export default function SupabaseProvider({
+export function SupabaseBrowserProvider({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
+  const [supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
+
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Initialize the client only once
-  const [supabase] = useState(() => {
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error("Missing Supabase environment variables");
-      }
-
-      return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
-    } catch (err) {
-      console.error("Error initializing Supabase client:", err);
-      setError(
-        err instanceof Error
-          ? err
-          : new Error("Failed to initialize Supabase client"),
-      );
-      return null;
-    }
-  });
-
-  // Handle auth state changes
   useEffect(() => {
-    if (!supabase) return;
-
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Error getting initial session:", error);
-          setError(error);
-        } else {
-          setUser(session?.user ?? null);
-        }
-      } catch (err) {
-        console.error("Error in getInitialSession:", err);
-        setError(err instanceof Error ? err : new Error("Failed to get session"));
-      } finally {
-        setIsLoading(false);
-      }
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(user);
+      setSession(session);
+      setLoading(false);
     };
 
-    getInitialSession();
+    getUser();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session?.user?.email);
+        console.log("🔐 Auth state change:", event, session?.user?.email);
+        
         setUser(session?.user ?? null);
+        setSession(session);
+        setLoading(false);
+
+        // Handle Google OAuth user creation
+        if (event === 'SIGNED_IN' && session?.user) {
+          const user = session.user;
+          console.log("🆕 User signed in:", user.email, "Provider:", user.app_metadata?.provider);
+          
+          // Only handle Google OAuth users
+          if (user.app_metadata?.provider === 'google') {
+            console.log("🔄 Processing Google OAuth user creation...");
+            
+            try {
+              // Check if user already exists in our database
+              const { data: existingUser, error: userCheckError } = await supabase
+                .from('User')
+                .select('id, tenantId')
+                .eq('supabaseUserId', user.id)
+                .maybeSingle();
+
+              if (userCheckError) {
+                console.error("❌ Error checking existing user:", userCheckError);
+                return;
+              }
+
+              if (!existingUser) {
+                console.log("🆕 Creating new user record for Google OAuth user...");
+                
+                // Create user record via our API
+                const response = await fetch('/api/auth/create-google-user', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    supabaseUserId: user.id,
+                    email: user.email,
+                    name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+                  }),
+                });
+
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  console.error("❌ Failed to create user record:", errorData);
+                  return;
+                }
+
+                const userData = await response.json();
+                console.log("✅ User record created successfully:", userData);
+                
+                // Redirect to kennel setup if this is a new user
+                if (userData.redirectTo === '/kennel-setup') {
+                  console.log("🏗️ Redirecting new user to kennel setup");
+                  window.location.href = '/kennel-setup';
+                }
+              } else {
+                console.log("✅ User already exists:", existingUser.id);
+                
+                // Check if user has rooms (to determine redirect)
+                if (existingUser.tenantId) {
+                  const { data: rooms, error: roomsError } = await supabase
+                    .from('Room')
+                    .select('id')
+                    .eq('tenantId', existingUser.tenantId);
+
+                  if (!roomsError && rooms && rooms.length > 0) {
+                    console.log(`✅ User has ${rooms.length} rooms, staying on dashboard`);
+                  } else {
+                    console.log("🏗️ User has no rooms, redirecting to kennel setup");
+                    window.location.href = '/kennel-setup';
+                  }
+                } else {
+                  console.log("🏗️ User has no tenant, redirecting to kennel setup");
+                  window.location.href = '/kennel-setup';
+                }
+              }
+            } catch (error) {
+              console.error("💥 Error in Google OAuth user creation:", error);
+            }
+          }
+        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  // Show error state only
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center text-red-600">
-          <p>Error: {error.message}</p>
-          <p className="mt-2 text-sm">
-            Please refresh the page or contact support if the problem persists.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <SupabaseContext.Provider value={{ supabase: supabase!, user, isLoading, error }}>
+    <SupabaseContext.Provider value={{ supabase, user, session, loading }}>
       {children}
     </SupabaseContext.Provider>
   );
 }
 
-export const useSupabase = () => {
+export function useSupabase() {
   const context = useContext(SupabaseContext);
   if (context === undefined) {
-    throw new Error("useSupabase must be used within a SupabaseProvider");
+    throw new Error("useSupabase must be used within a SupabaseBrowserProvider");
   }
-  return context.supabase;
-};
-
-export const useAuth = () => {
-  const context = useContext(SupabaseContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within a SupabaseProvider");
-  }
-  return { user: context.user, isLoading: context.isLoading };
-};
+  return context;
+}
