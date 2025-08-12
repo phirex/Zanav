@@ -52,9 +52,9 @@ export function bookingRequestCustomerEmail(params: {
 }) {
   const { kennelName, subdomain, customerName, dogs, startDate, endDate, totalFormatted } = params;
   const content = `
-    <p>Hello ${escapeHtml(customerName)},</p>
-    <p>Thanks for your booking request at <strong>${escapeHtml(kennelName)}</strong>.</p>
-    <p class="muted" style="margin-top:12px">We’ll review your request and get back to you shortly.</p>
+    <p>Hi ${escapeHtml(customerName)} 🐾</p>
+    <p>We’ve fetched your booking request at <strong>${escapeHtml(kennelName)}</strong> and our team is wagging into action.</p>
+    <p class="muted" style="margin-top:12px">A human will review the dates and give you a paws‑itive confirmation shortly.</p>
     <div style="margin-top:16px">
       <span class="pill">Pending Confirmation</span>
     </div>
@@ -79,10 +79,11 @@ export function bookingRequestCustomerEmail(params: {
       </table>
     </div>
     <div style="margin-top:24px">
-      <a href="https://${escapeHtml(subdomain)}.zanav.io" class="btn">View Kennel Website</a>
+      <a href="https://${escapeHtml(subdomain)}.zanav.io" class="btn">Visit Kennel Website</a>
     </div>
+    <p style="margin-top:12px" class="muted">Tip: Bring a favorite toy—tails tend to wag extra fast on check‑in day.</p>
   `;
-  return baseEmailTemplate({ title: "We received your booking request", preview: `Pending booking at ${kennelName}`, contentHtml: content });
+  return baseEmailTemplate({ title: "We received your booking request 🐶", preview: `Pending booking at ${kennelName}`, contentHtml: content });
 }
 
 export function bookingNotificationOwnerEmail(params: {
@@ -98,7 +99,7 @@ export function bookingNotificationOwnerEmail(params: {
   const { kennelName, customerName, customerEmail, customerPhone, dogs, startDate, endDate, totalFormatted } = params;
   const contact = [customerPhone, customerEmail].filter(Boolean).join(" · ");
   const content = `
-    <p>You received a new booking request for <strong>${escapeHtml(kennelName)}</strong>.</p>
+    <p>New booking request for <strong>${escapeHtml(kennelName)}</strong> 🐾</p>
     <div style="margin-top:16px">
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
         <tr>
@@ -122,8 +123,9 @@ export function bookingNotificationOwnerEmail(params: {
     <div style="margin-top:24px">
       <a href="https://www.zanav.io" class="btn">Open Dashboard</a>
     </div>
+    <p style="margin-top:12px" class="muted">Give the pack a heads‑up—new paws arriving soon.</p>
   `;
-  return baseEmailTemplate({ title: "New booking request", preview: `${customerName} requested a booking`, contentHtml: content });
+  return baseEmailTemplate({ title: "New booking request 🐕", preview: `${customerName} requested a booking`, contentHtml: content });
 }
 
 function escapeHtml(input: string): string {

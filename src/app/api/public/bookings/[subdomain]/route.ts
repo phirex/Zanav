@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/resend";
 import type { Database } from "@/lib/database.types";
 import { bookingRequestCustomerEmail, bookingNotificationOwnerEmail } from "@/lib/email/templates";
@@ -15,10 +15,10 @@ enum BookingStatus {
 
 export async function POST(request: NextRequest, { params }: { params: { subdomain: string } }) {
   try {
-    const supabase = supabaseServer();
+    const admin = supabaseAdmin();
     const body = await request.json();
 
-    const { data: website } = await supabase
+    const { data: website } = await admin
       .from("kennel_websites")
       .select("id, tenant_id, contact_email, subdomain")
       .eq("subdomain", params.subdomain)
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
     }
 
     // Settings for price & currency
-    const { data: settingsRows } = await supabase
+    const { data: settingsRows } = await admin
       .from("Setting")
       .select("key,value")
       .eq("tenantId", tenantId);
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
     const currency = (settings.get("default_currency") || "usd").toUpperCase();
 
     // Create owner
-    const { data: ownerRow, error: ownerErr } = await supabase
+    const { data: ownerRow, error: ownerErr } = await admin
       .from("Owner")
       .insert({ name: ownerName, email: ownerEmail || null, phone: ownerPhone, tenantId })
       .select("id")
@@ -51,14 +51,14 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
 
     // Create dogs
     const dogRows = dogs.map((d: any) => ({ name: d.name, breed: d.breed || "", specialNeeds: "", ownerId: ownerRow!.id, tenantId }));
-    const { data: insertedDogs, error: dogErr } = await supabase
+    const { data: insertedDogs, error: dogErr } = await admin
       .from("Dog")
       .insert(dogRows)
       .select("id,name");
     if (dogErr) return NextResponse.json({ error: dogErr.message }, { status: 400 });
 
     // Pick any available room for now (first room)
-    const { data: room } = await supabase.from("Room").select("id").eq("tenantId", tenantId).order("id").limit(1).single();
+    const { data: room } = await admin.from("Room").select("id").eq("tenantId", tenantId).order("id").limit(1).single();
     if (!room) return NextResponse.json({ error: "No rooms configured" }, { status: 400 });
 
     // Calculate per-dog price
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
       tenantId,
     }));
 
-    const { data: created, error: bookErr } = await supabase.from("Booking").insert(bookingRows).select("id");
+    const { data: created, error: bookErr } = await admin.from("Booking").insert(bookingRows).select("id");
     if (bookErr) return NextResponse.json({ error: bookErr.message }, { status: 400 });
 
     // Emails (HTML templates)
