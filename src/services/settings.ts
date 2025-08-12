@@ -3,7 +3,7 @@ import { Database } from "@/lib/database.types";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export async function listSettings(
-  client: SupabaseClient<Database>,
+  _client: SupabaseClient<Database>,
   tenantId: string,
 ) {
   if (!tenantId) {
@@ -13,7 +13,8 @@ export async function listSettings(
     return {};
   }
 
-  const { data, error } = await client
+  const admin = supabaseAdmin();
+  const { data, error } = await admin
     .from("Setting")
     .select("key, value")
     .eq("tenantId", tenantId);
