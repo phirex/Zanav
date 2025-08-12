@@ -551,5 +551,24 @@
     "passwordsMismatch": "✗ Passwords do not match",
     "creatingAccount": "Creating account...",
     "alreadyHave": "Already have an account?"
+  },
+  "upload": {
+    "unsupportedType": "File type not supported. Please upload: {{types}}",
+    "maxSize": "File size must be less than {{mb}}MB",
+    "failed": "Upload failed",
+    "preview": "Preview",
+    "uploading": "Uploading...",
+    "clickOrDrag": "Click to upload or drag and drop",
+    "upTo": "up to"
+  },
+  "auth": {
+    "checkInbox": "Check your inbox",
+    "verifySentTo": "We sent a verification link to {{email}}. Please verify to continue.",
+    "yourEmail": "your email",
+    "verificationSent": "Verification email sent.",
+    "sending": "Sending…",
+    "resendVerification": "Resend verification email",
+    "missingEmail": "Missing email",
+    "resendFailed": "Failed to resend email"
   }
 }

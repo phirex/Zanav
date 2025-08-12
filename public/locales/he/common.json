@@ -546,5 +546,14 @@
     "passwordsMismatch": "✗ הסיסמאות אינן תואמות",
     "creatingAccount": "יוצר חשבון...",
     "alreadyHave": "כבר יש לך חשבון?"
+  },
+  "upload": {
+    "unsupportedType": "סוג קובץ לא נתמך. נא להעלות: {{types}}",
+    "maxSize": "גודל הקובץ חייב להיות קטן מ-{{mb}}MB",
+    "failed": "העלאה נכשלה",
+    "preview": "תצוגה מקדימה",
+    "uploading": "מעלה...",
+    "clickOrDrag": "לחץ להעלאה או גרור ושחרר",
+    "upTo": "עד"
   }
 }
