@@ -232,7 +232,7 @@ export default function AdminUsersPage() {
               <div className="text-center py-8 text-gray-500">
                 <Crown className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p>No global administrators found</p>
-                <p className="text-sm mt-1">Use the "Promote to Admin" button in the sidebar to add one</p>
+                <p className="text-sm mt-1">Use the action in this page to add one</p>
               </div>
             ) : (
               <Table>
