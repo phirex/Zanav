@@ -81,6 +81,7 @@ function SettingsContent() {
   });
 
   const [importing, setImporting] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState<{connected?: boolean, configured?: boolean, accountId?: string} | null>(null);
 
   const fetchRooms = useCallback(async () => {
     if (!initialized) return;
@@ -163,13 +164,21 @@ function SettingsContent() {
     }
   }, []);
 
+  const loadStripeStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/payments/stripe/connect/status", { headers: createTenantHeaders() });
+      if (res.ok) setStripeStatus(await res.json());
+    } catch {}
+  }, []);
+
   useEffect(() => {
     // Immediately fetch rooms & settings in single-tenant mode
     (async () => {
       await Promise.all([fetchRooms(), fetchSettings()]);
       await fetchTenantName();
+      loadStripeStatus();
     })();
-  }, [fetchRooms, fetchSettings, fetchTenantName]);
+  }, [fetchRooms, fetchSettings, fetchTenantName, loadStripeStatus]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -396,6 +405,14 @@ function SettingsContent() {
     }
   };
 
+  const startStripeOnboarding = async () => {
+    try {
+      const res = await fetch("/api/payments/stripe/connect/start", { method: "POST", headers: createTenantHeaders() });
+      const data = await res.json();
+      if (data?.url) window.location.href = data.url;
+    } catch {}
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="space-y-6">
@@ -476,6 +493,20 @@ function SettingsContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+
+        {/* Stripe Payments */}
+        <div className="bg-white rounded-2xl shadow-sm">
+          <div className="p-6">
+            <div className="flex items-center justify-between text-gray-700 mb-6">
+              <div className="flex items-center gap-2">
+                <SettingsIcon className="h-5 w-5" />
+                <h2 className="text-xl font-bold">Payments (Stripe)</h2>
+              </div>
+              <button onClick={startStripeOnboarding} className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">{stripeStatus?.connected ? 'Reconnect' : 'Connect Stripe'}</button>
+            </div>
+            <p className="text-gray-600 text-sm">{stripeStatus?.configured === false ? 'Stripe not configured on platform' : stripeStatus?.connected ? `Connected (account ${stripeStatus.accountId})` : 'Not connected'}</p>
           </div>
         </div>
 
