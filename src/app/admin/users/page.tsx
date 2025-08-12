@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
-import { Crown, User, Building } from "lucide-react";
+import { Crown, User, Building, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSupabase } from "@/contexts/SupabaseBrowserContext";
 
@@ -143,6 +143,27 @@ export default function AdminUsersPage() {
         description: "Failed to remove admin",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteUser = async (user: UserWithTenants) => {
+    if (!confirm(`Delete user ${user.email || user.id}? This removes their tenant and all related data.`)) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No token');
+      const res = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ userId: user.id })
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      toast({ title: 'Deleted', description: `User ${user.email || user.id} deleted` });
+      fetchUsers();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e?.message || 'Failed to delete user', variant: 'destructive' });
     }
   };
 
@@ -278,6 +299,7 @@ export default function AdminUsersPage() {
                     <TableHead>Tenant</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -299,6 +321,16 @@ export default function AdminUsersPage() {
                         </span>
                       </TableCell>
                       <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
