@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, Dog, User, DollarSign } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import ClientLayout from "@/app/components/ClientLayout";
 
 interface Owner {
   id: number;
@@ -278,7 +279,8 @@ export default function NewBookingPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <ClientLayout>
+      <div className="space-y-6">
       <h1 className="text-3xl font-bold">{t("newBookingTitle")}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -789,6 +791,7 @@ export default function NewBookingPage() {
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </ClientLayout>
   );
 }
