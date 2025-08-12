@@ -6,6 +6,7 @@ import PaymentHistory from "@/app/components/PaymentHistory";
 import NotificationsHistory from "@/components/booking/NotificationsHistory";
 import Link from "next/link";
 import type { Database } from "@/lib/database.types";
+import { fetchTenantCurrency, formatCurrencyIntl } from "@/lib/currency";
 
 type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 import { formatDateLocale } from "@/lib/utils";
@@ -47,6 +48,11 @@ export default function BookingPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState(false);
+  const [tenantCurrency, setTenantCurrency] = useState<string>("ILS");
+
+  useEffect(() => {
+    fetchTenantCurrency().then(setTenantCurrency).catch(() => setTenantCurrency("ILS"));
+  }, []);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -229,15 +235,15 @@ export default function BookingPage() {
         <dl className="grid grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <dt className="text-sm text-gray-500">Total</dt>
-            <dd className="text-lg font-medium text-gray-900">₪{totalAmount.toLocaleString()}</dd>
+            <dd className="text-lg font-medium text-gray-900">{formatCurrencyIntl(totalAmount, tenantCurrency)}</dd>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-xl">
             <dt className="text-sm text-gray-500">Paid</dt>
-            <dd className="text-lg font-medium text-green-600">₪{paidAmount.toLocaleString()}</dd>
+            <dd className="text-lg font-medium text-green-600">{formatCurrencyIntl(paidAmount, tenantCurrency)}</dd>
           </div>
           <div className="text-center p-4 bg-blue-50 rounded-xl">
             <dt className="text-sm text-gray-500">Remaining</dt>
-            <dd className="text-lg font-medium text-blue-600">₪{remainingAmount.toLocaleString()}</dd>
+            <dd className="text-lg font-medium text-blue-600">{formatCurrencyIntl(remainingAmount, tenantCurrency)}</dd>
           </div>
         </dl>
       </div>
