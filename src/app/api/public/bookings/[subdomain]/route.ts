@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/resend";
+import type { Database } from "@/lib/database.types";
+
+type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
+type PriceType = Database["public"]["Enums"]["PriceType"];
+
+enum BookingStatus {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  CANCELLED = "CANCELLED",
+}
 
 export async function POST(request: NextRequest, { params }: { params: { subdomain: string } }) {
   try {
@@ -50,22 +60,26 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
     const { data: room } = await supabase.from("Room").select("id").eq("tenantId", tenantId).order("id").limit(1).single();
     if (!room) return NextResponse.json({ error: "No rooms configured" }, { status: 400 });
 
-    // Calculate per-dog price, total calculated later server-side if needed
+    // Calculate per-dog price
     const days = Math.max(0, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000*60*60*24)));
     const perDogTotal = pricePerDay > 0 ? pricePerDay * days : null;
 
-    // Create one booking row per dog, marked PENDING
-    const bookingRows = insertedDogs!.map((d: any) => ({
+    const priceType: PriceType = "DAILY";
+    const paymentMethod: PaymentMethod = "CASH";
+    const status: Database["public"]["Enums"]["BookingStatus"] = "PENDING";
+
+    // Create one booking row per dog
+    const bookingRows: Database["public"]["Tables"]["Booking"]["Insert"][] = insertedDogs!.map((d: any) => ({
       dogId: d.id,
       roomId: room.id,
       ownerId: ownerRow!.id,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
-      priceType: "DAILY",
+      priceType,
       pricePerDay: pricePerDay > 0 ? pricePerDay : null,
       totalPrice: perDogTotal,
-      paymentMethod: "CASH",
-      status: "PENDING",
+      paymentMethod,
+      status,
       tenantId,
     }));
 
