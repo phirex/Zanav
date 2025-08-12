@@ -4,6 +4,13 @@ export async function middleware(request: NextRequest) {
   const { pathname: currentPath, hostname } = request.nextUrl;
   const isApiRoute = currentPath.startsWith("/api/");
 
+  // Normalize naked domain to www for app cookies
+  if (hostname === "zanav.io") {
+    const url = request.nextUrl.clone();
+    url.hostname = "www.zanav.io";
+    return NextResponse.redirect(url, 308);
+  }
+
   // Skip middleware for static files and assets
   if (
     currentPath.startsWith("/_next") ||
@@ -38,8 +45,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Main domain logic
-  if (hostname === "www.zanav.io" || hostname === "zanav.io") {
+  // Main domain logic (www)
+  if (hostname === "www.zanav.io") {
     if (isApiRoute) {
       return NextResponse.next();
     }
@@ -55,7 +62,6 @@ export async function middleware(request: NextRequest) {
 
     const isAuthed = !!foundAuthCookie;
 
-    // Public paths
     const isPublicPath =
       currentPath === "/landing" ||
       currentPath.startsWith("/login") ||
