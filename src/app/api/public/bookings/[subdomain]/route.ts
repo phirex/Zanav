@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/resend";
 import type { Database } from "@/lib/database.types";
+import { bookingRequestCustomerEmail, bookingNotificationOwnerEmail } from "@/lib/email/templates";
 
 type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 type PriceType = Database["public"]["Enums"]["PriceType"];
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
       .eq("tenantId", tenantId);
     const settings = new Map((settingsRows || []).map((r: any) => [r.key, r.value]));
     const pricePerDay = parseFloat(settings.get("default_price_per_day") || "0") || 0;
-    const currency = (settings.get("default_currency") || "usd").toLowerCase();
+    const currency = (settings.get("default_currency") || "usd").toUpperCase();
 
     // Create owner
     const { data: ownerRow, error: ownerErr } = await supabase
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
     const { data: insertedDogs, error: dogErr } = await supabase
       .from("Dog")
       .insert(dogRows)
-      .select("id");
+      .select("id,name");
     if (dogErr) return NextResponse.json({ error: dogErr.message }, { status: 400 });
 
     // Pick any available room for now (first room)
@@ -86,15 +87,35 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
     const { data: created, error: bookErr } = await supabase.from("Booking").insert(bookingRows).select("id");
     if (bookErr) return NextResponse.json({ error: bookErr.message }, { status: 400 });
 
-    // Emails
+    // Emails (HTML templates)
     const totalAll = perDogTotal ? perDogTotal * insertedDogs!.length : 0;
-    const subject = `New booking request on ${params.subdomain}`;
-    const htmlOwner = `<p>You received a new booking request.</p><p>Customer: ${ownerName} (${ownerPhone}${ownerEmail ? ", " + ownerEmail : ""})</p><p>Dates: ${startDate} → ${endDate}</p><p>Dogs: ${dogs.map((d:any)=>d.name).join(", ")}</p><p>Estimated total: ${totalAll} ${currency.toUpperCase()}</p>`;
-    const htmlCustomer = `<p>Thanks for your request at ${params.subdomain}. We will confirm shortly.</p><p>Dates: ${startDate} → ${endDate}</p><p>Dogs: ${dogs.map((d:any)=>d.name).join(", ")}</p>`;
+    const totalFormatted = `${totalAll.toFixed(2)} ${currency}`;
+    const dateFmt = (d: string) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+    const customerHtml = bookingRequestCustomerEmail({
+      kennelName: params.subdomain,
+      subdomain: params.subdomain,
+      customerName: ownerName,
+      dogs: insertedDogs!.map((d:any)=>d.name),
+      startDate: dateFmt(startDate),
+      endDate: dateFmt(endDate),
+      totalFormatted,
+    });
+
+    const ownerHtml = bookingNotificationOwnerEmail({
+      kennelName: params.subdomain,
+      customerName: ownerName,
+      customerEmail: ownerEmail || null,
+      customerPhone: ownerPhone,
+      dogs: insertedDogs!.map((d:any)=>d.name),
+      startDate: dateFmt(startDate),
+      endDate: dateFmt(endDate),
+      totalFormatted,
+    });
 
     try {
-      if (website.contact_email) await sendEmail({ to: website.contact_email, subject, html: htmlOwner });
-      if (ownerEmail) await sendEmail({ to: ownerEmail, subject: "We received your booking request", html: htmlCustomer });
+      if (website.contact_email) await sendEmail({ to: website.contact_email, subject: `New booking request — ${ownerName}`, html: ownerHtml });
+      if (ownerEmail) await sendEmail({ to: ownerEmail, subject: `We received your booking request`, html: customerHtml });
     } catch (e) {
       console.warn("Email send failed", e);
     }
