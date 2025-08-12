@@ -874,7 +874,7 @@ export default function WebsiteSettingsPage() {
                 {videos.map((video, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium">{t("website.videoItem", "Video {{num}}", { num: index + 1 } as any)}</h4>
+                      <h4 className="font-medium">{t("website.videoItem", { defaultValue: "Video {{num}}", num: index + 1 }) as unknown as string}</h4>
                       <button
                         onClick={() => removeVideo(index)}
                         className="text-red-500 hover:text-red-700"
@@ -939,7 +939,7 @@ export default function WebsiteSettingsPage() {
                 {testimonials.map((testimonial, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium">{t("website.testimonialItem", "Testimonial {{num}}", { num: index + 1 } as any)}</h4>
+                      <h4 className="font-medium">{t("website.testimonialItem", { defaultValue: "Testimonial {{num}}", num: index + 1 }) as unknown as string}</h4>
                       <button
                         onClick={() => removeTestimonial(index)}
                         className="text-red-500 hover:text-red-700"
@@ -1070,7 +1070,7 @@ export default function WebsiteSettingsPage() {
                 {faqs.map((faq, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium">{t("website.faqItem", "FAQ {{num}}", { num: index + 1 } as any)}</h4>
+                      <h4 className="font-medium">{t("website.faqItem", { defaultValue: "FAQ {{num}}", num: index + 1 }) as unknown as string}</h4>
                       <button
                         onClick={() => removeFAQ(index)}
                         className="text-red-500 hover:text-red-700"
