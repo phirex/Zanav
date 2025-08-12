@@ -487,5 +487,25 @@
     "close": "סגור",
     "unableToBook": "לא ניתן להזמין כעת",
     "completeForm": "נא למלא תאריכים, פרטי קשר ושמות כל הכלבים"
-  }
+  },
+  "systemOnline": "המערכת פעילה",
+  "readyForBookings": "מוכן להזמנות",
+  "welcomeBack": "ברוך שובך ללוח הבקרה",
+  "demoDataTooltip": "יצירת נתוני דמו",
+  "generatingDemo": "⏳ יוצר...",
+  "demoDataButton": "🎭 נתוני דמו",
+  "regenerateTooltip": "יצירה מחדש של נתוני דמו (מוחק נתונים קיימים)",
+  "regeneratingDemo": "⏳ יוצר מחדש...",
+  "regenerateButton": "🔄 צור מחדש",
+  "restoreWebsiteTooltip": "שחזור תוכן אתר (המלצות, שאלות נפוצות, גלריה)",
+  "restoringWebsite": "⏳ משחזר...",
+  "restoreWebsite": "🌐 שחזר אתר",
+  "pendingBookings": "הזמנות ממתינות",
+  "noPendingBookings": "אין הזמנות ממתינות",
+  "review": "סקירה",
+  "open": "פתח",
+  "noRecentBookings": "אין הזמנות אחרונות",
+  "loadingDashboard": "טוען את לוח הבקרה...",
+  "loadingKennelName": "טוען פרטי פנסיון...",
+  "tryAgain": "נסה שוב"
 }

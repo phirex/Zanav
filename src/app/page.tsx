@@ -528,11 +528,11 @@ function Home() {
               <div className="flex items-center gap-6 text-sm text-gray-500">
                 <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-200">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="font-medium">System Online</span>
+                  <span className="font-medium">{t("systemOnline", "System Online")}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium">Ready for Bookings</span>
+                  <span className="font-medium">{t("readyForBookings", "Ready for Bookings")}</span>
                 </div>
               </div>
             </div>
@@ -567,7 +567,7 @@ function Home() {
                 {t("dashboardGreeting", { name: userName })}
               </h2>
               <p className="text-sm text-gray-500">
-                Welcome back to your dashboard
+                {t("welcomeBack", "Welcome back to your dashboard")}
               </p>
             </div>
           </div>
@@ -576,25 +576,25 @@ function Home() {
               onClick={generateDemoData}
               disabled={generatingDemo}
               className="text-sm px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-blue-700 disabled:text-gray-500 border border-blue-200 hover:border-blue-300 transition-all duration-200"
-              title="Generate demo data"
+              title={t("demoDataTooltip", "Generate demo data") as string}
             >
-              {generatingDemo ? "⏳ Generating..." : "🎭 Demo Data"}
+              {generatingDemo ? t("generatingDemo", "⏳ Generating...") : t("demoDataButton", "🎭 Demo Data")}
             </button>
             <button
               onClick={regenerateDemoData}
               disabled={generatingDemo}
               className="text-sm px-3 py-2 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-orange-700 disabled:text-gray-500 border border-orange-200 hover:border-orange-300 transition-all duration-200"
-              title="Regenerate demo data (clears existing data)"
+              title={t("regenerateTooltip", "Regenerate demo data (clears existing data)") as string}
             >
-              {generatingDemo ? "⏳ Regenerating..." : "🔄 Regenerate"}
+              {generatingDemo ? t("regeneratingDemo", "⏳ Regenerating...") : t("regenerateButton", "🔄 Regenerate")}
             </button>
             <button
               onClick={restoreWebsiteContent}
               disabled={generatingDemo}
               className="text-sm px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-green-700 disabled:text-gray-500 border border-green-200 hover:border-green-300 transition-all duration-200"
-              title="Restore website content (testimonials, FAQ, gallery)"
+              title={t("restoreWebsiteTooltip", "Restore website content (testimonials, FAQ, gallery)") as string}
             >
-              {generatingDemo ? "⏳ Restoring..." : "🌐 Restore Website"}
+              {generatingDemo ? t("restoringWebsite", "⏳ Restoring...") : t("restoreWebsite", "🌐 Restore Website")}
             </button>
           </div>
         </div>
@@ -669,13 +669,13 @@ function Home() {
 
       <div className="bg-white shadow-sm rounded-2xl p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Pending Bookings</h2>
+          <h2 className="text-xl font-bold text-gray-900">{t("pendingBookings", "Pending Bookings")}</h2>
           <Link href="/bookings" className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
-            Review <ArrowUpRight className="h-4 w-4 mr-1" />
+            {t("review", "Review")} <ArrowUpRight className="h-4 w-4 mr-1" />
           </Link>
         </div>
         {pendingBookings.length === 0 ? (
-          <p className="text-gray-500">No pending bookings</p>
+          <p className="text-gray-500">{t("noPendingBookings", "No pending bookings")}</p>
         ) : (
           <div className="space-y-3">
             {pendingBookings.map((b) => (
@@ -684,7 +684,7 @@ function Home() {
                   <div className="font-medium">{b.dog?.name} · {b.dog?.owner?.name || 'Owner'}</div>
                   <div className="text-xs text-gray-500">{formatDate(b.startDate)} → {formatDate(b.endDate)}</div>
                 </div>
-                <Link href={`/bookings/${b.id}`} className="text-blue-600 text-sm">Open</Link>
+                <Link href={`/bookings/${b.id}`} className="text-blue-600 text-sm">{t("open", "Open")}</Link>
               </div>
             ))}
           </div>

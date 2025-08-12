@@ -492,5 +492,25 @@
     "close": "Close",
     "unableToBook": "Unable to book right now",
     "completeForm": "Please fill dates, your details, and all dog names"
-  }
+  },
+  "systemOnline": "System Online",
+  "readyForBookings": "Ready for Bookings",
+  "welcomeBack": "Welcome back to your dashboard",
+  "demoDataTooltip": "Generate demo data",
+  "generatingDemo": "⏳ Generating...",
+  "demoDataButton": "🎭 Demo Data",
+  "regenerateTooltip": "Regenerate demo data (clears existing data)",
+  "regeneratingDemo": "⏳ Regenerating...",
+  "regenerateButton": "🔄 Regenerate",
+  "restoreWebsiteTooltip": "Restore website content (testimonials, FAQ, gallery)",
+  "restoringWebsite": "⏳ Restoring...",
+  "restoreWebsite": "🌐 Restore Website",
+  "pendingBookings": "Pending Bookings",
+  "noPendingBookings": "No pending bookings",
+  "review": "Review",
+  "open": "Open",
+  "noRecentBookings": "No recent bookings",
+  "loadingDashboard": "Loading dashboard...",
+  "loadingKennelName": "Loading kennel information...",
+  "tryAgain": "Try Again"
 }
