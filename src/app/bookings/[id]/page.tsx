@@ -84,7 +84,12 @@ export default function BookingPage() {
     const shouldExempt = !booking.exemptLastDay;
     const actionText = shouldExempt ? t("actionRemove", "remove") : t("actionAdd", "add");
 
-    if (!confirm(t("confirmToggleLastDay", "Are you sure you want to {{action}} the last day from pricing?", { action: actionText } as any))) {
+    const confirmMessage = t("confirmToggleLastDay", {
+      defaultValue: "Are you sure you want to {{action}} the last day from pricing?",
+      action: actionText as string,
+    }) as unknown as string;
+
+    if (!confirm(confirmMessage)) {
       return;
     }
 
