@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface KennelWebsite {
   id?: string;
@@ -67,6 +68,7 @@ export default function KennelWebsitePage({
 }: {
   params: { subdomain: string };
 }) {
+  const { t } = useTranslation();
   // CRITICAL: Ensure this is only loaded for kennel websites
   useEffect(() => {
     // Clear any console logs that might indicate dashboard loading
@@ -146,9 +148,9 @@ export default function KennelWebsitePage({
   };
 
   const submitBooking = async () => {
-    if (!tenantId) return alert("Unable to book right now");
+    if (!tenantId) return alert(t("publicSite.unableToBook", "Unable to book right now"));
     if (!checkIn || !checkOut || !ownerName || !ownerPhone || dogs.some((d) => !d.name)) {
-      return alert("Please fill dates, your details, and all dog names");
+      return alert(t("publicSite.completeForm", "Please fill dates, your details, and all dog names"));
     }
     setBookingSubmitting(true);
     try {
@@ -267,16 +269,13 @@ export default function KennelWebsitePage({
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Kennel Not Found
+              {t("publicSite.kennelNotFound", "Kennel Not Found")}
             </h1>
             <p className="text-lg text-gray-600 mb-6">
-              Sorry, we couldn't find a kennel with the subdomain{" "}
-              <span className="font-semibold text-gray-800">
-                {params.subdomain}.zanav.io
-              </span>
+              {t("publicSite.subdomainNotFound", "Sorry, we couldn't find a kennel with the subdomain {{subdomain}}.zanav.io", { subdomain: params.subdomain } as any)}
             </p>
             <p className="text-gray-500 mb-8">
-              This kennel might not exist or may have been removed.
+              {t("publicSite.kennelMissing", "This kennel might not exist or may have been removed.")}
             </p>
           </div>
           
@@ -298,11 +297,11 @@ export default function KennelWebsitePage({
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
-              Go to Zanav Homepage
+              {t("publicSite.goHome", "Go to Zanav Homepage")}
             </a>
             
             <div className="text-sm text-gray-500">
-              <p>Looking for a kennel? Visit our main site to find one.</p>
+              <p>{t("publicSite.findKennel", "Looking for a kennel? Visit our main site to find one.")}</p>
             </div>
           </div>
         </div>
@@ -326,11 +325,10 @@ export default function KennelWebsitePage({
         <div className="relative z-10 flex items-center justify-center h-full text-center text-white">
           <div className="max-w-4xl mx-auto px-4">
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
-              {websiteData.hero_title || "Welcome to Our Kennel"}
+              {websiteData.hero_title || t("publicSite.heroTitle", "Welcome to Our Kennel")}
             </h1>
             <p className="text-xl md:text-2xl mb-8">
-              {websiteData.hero_tagline ||
-                "Where your furry friends feel at home"}
+              {websiteData.hero_tagline || t("publicSite.heroTagline", "Where your furry friends feel at home")}
             </p>
             {websiteData.allow_direct_booking && (
               <button
@@ -338,7 +336,7 @@ export default function KennelWebsitePage({
                 style={{ backgroundColor: themeColor, color: "white" }}
                 onClick={() => setShowBooking(true)}
               >
-                Book Now
+                {t("publicSite.bookNow", "Book Now")}
               </button>
             )}
           </div>
@@ -350,7 +348,7 @@ export default function KennelWebsitePage({
         <section className="py-16 bg-white">
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-8">
-              About Our Kennel
+              {t("publicSite.aboutTitle", "About Our Kennel")}
             </h2>
             <div className="prose prose-lg mx-auto text-gray-700 leading-relaxed">
               <div className="whitespace-pre-wrap text-center">
@@ -366,7 +364,7 @@ export default function KennelWebsitePage({
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">
-              Our Gallery
+              {t("publicSite.galleryTitle", "Our Gallery")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {galleryImages.map((image, index) => (
@@ -395,7 +393,9 @@ export default function KennelWebsitePage({
       {videos.length > 0 && (
         <section className="py-16">
           <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Videos</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">
+              {t("publicSite.videosTitle", "Videos")}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {videos.map((video, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-6">
@@ -447,7 +447,7 @@ export default function KennelWebsitePage({
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">
-              What Our Customers Say
+              {t("publicSite.testimonialsTitle", "What Our Customers Say")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {testimonials.map((testimonial, index) => (
@@ -487,11 +487,11 @@ export default function KennelWebsitePage({
         <section className="py-16">
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-8">
-              Important Information
+              {t("publicSite.importantInfo", "Important Information")}
             </h2>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-yellow-800 mb-4">
-                Special Requirements
+                {t("publicSite.specialRequirements", "Special Requirements")}
               </h3>
               <p className="text-yellow-700 whitespace-pre-wrap">
                 {websiteData.special_restrictions}
@@ -506,7 +506,7 @@ export default function KennelWebsitePage({
         <section className="py-16 bg-gray-50">
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">
-              Frequently Asked Questions
+              {t("publicSite.faqTitle", "Frequently Asked Questions")}
             </h2>
             <div className="space-y-4">
               {faqs.map((faq, index) => (
@@ -537,7 +537,9 @@ export default function KennelWebsitePage({
       {/* Contact Section */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Contact Us</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">
+            {t("publicSite.contactUs", "Contact Us")}
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {/* Contact Info */}
@@ -549,7 +551,9 @@ export default function KennelWebsitePage({
                     style={{ color: themeColor }}
                   />
                   <div>
-                    <h3 className="font-semibold mb-1">Address</h3>
+                    <h3 className="font-semibold mb-1">
+                      {t("publicSite.address", "Address")}
+                    </h3>
                     <p className="text-gray-600 whitespace-pre-wrap">
                       {websiteData.address}
                     </p>
@@ -564,7 +568,9 @@ export default function KennelWebsitePage({
                     style={{ color: themeColor }}
                   />
                   <div>
-                    <h3 className="font-semibold mb-1">Phone</h3>
+                    <h3 className="font-semibold mb-1">
+                      {t("publicSite.phone", "Phone")}
+                    </h3>
                     <a
                       href={`tel:${websiteData.contact_phone}`}
                       className="text-gray-600 hover:underline"
@@ -582,7 +588,9 @@ export default function KennelWebsitePage({
                     style={{ color: themeColor }}
                   />
                   <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
+                    <h3 className="font-semibold mb-1">
+                      {t("publicSite.email", "Email")}
+                    </h3>
                     <a
                       href={`mailto:${websiteData.contact_email}`}
                       className="text-gray-600 hover:underline"
@@ -600,7 +608,9 @@ export default function KennelWebsitePage({
                     style={{ color: themeColor }}
                   />
                   <div>
-                    <h3 className="font-semibold mb-1">WhatsApp</h3>
+                    <h3 className="font-semibold mb-1">
+                      {t("publicSite.whatsapp", "WhatsApp")}
+                    </h3>
                     <a
                       href={`https://wa.me/${websiteData.contact_whatsapp.replace(/\D/g, "")}`}
                       className="text-gray-600 hover:underline"
@@ -615,7 +625,9 @@ export default function KennelWebsitePage({
             {/* Map */}
             {websiteData.map_embed_url && (
               <div>
-                <h3 className="font-semibold mb-4">Location</h3>
+                <h3 className="font-semibold mb-4">
+                  {t("publicSite.location", "Location")}
+                </h3>
                 <div className="aspect-video rounded-lg overflow-hidden">
                   <iframe
                     src={websiteData.map_embed_url}
@@ -637,8 +649,7 @@ export default function KennelWebsitePage({
       <footer className="bg-gray-900 text-white py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p>
-            &copy; 2025 {websiteData.hero_title || "Kennel"}. All rights
-            reserved.
+            &copy; 2025 {websiteData.hero_title || t("publicSite.kennel", "Kennel")} {t("publicSite.allRights", "All rights reserved.")}
           </p>
         </div>
       </footer>
@@ -649,45 +660,61 @@ export default function KennelWebsitePage({
             {!submitSuccess ? (
               <>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold">Request a Booking</h3>
+                  <h3 className="text-xl font-semibold">
+                    {t("publicSite.requestBooking", "Request a Booking")}
+                  </h3>
                   <button onClick={() => { setShowBooking(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">✕</button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-gray-600">Check-in</label>
+                    <label className="text-sm text-gray-600">
+                      {t("publicSite.checkIn", "Check-in")}
+                    </label>
                     <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkIn} onChange={(e)=>setCheckIn(e.target.value)} />
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Check-out</label>
+                    <label className="text-sm text-gray-600">
+                      {t("publicSite.checkOut", "Check-out")}
+                    </label>
                     <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkOut} onChange={(e)=>setCheckOut(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm text-gray-600">Your Name</label>
-                    <input className="w-full border rounded-lg px-3 py-2" value={ownerName} onChange={(e)=>setOwnerName(e.target.value)} placeholder="Full name" />
+                    <label className="text-sm text-gray-600">
+                      {t("publicSite.yourName", "Your Name")}
+                    </label>
+                    <input className="w-full border rounded-lg px-3 py-2" value={ownerName} onChange={(e)=>setOwnerName(e.target.value)} placeholder={t("publicSite.fullName", "Full name")} />
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Email (optional)</label>
+                    <label className="text-sm text-gray-600">
+                      {t("publicSite.emailOptional", "Email (optional)")}
+                    </label>
                     <input type="email" className="w-full border rounded-lg px-3 py-2" value={ownerEmail} onChange={(e)=>setOwnerEmail(e.target.value)} placeholder="you@example.com" />
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Phone</label>
+                    <label className="text-sm text-gray-600">
+                      {t("publicSite.phone", "Phone")}
+                    </label>
                     <input className="w-full border rounded-lg px-3 py-2" value={ownerPhone} onChange={(e)=>setOwnerPhone(e.target.value)} placeholder="+1 555 555 5555" />
                   </div>
                 </div>
 
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">Dogs</h4>
-                    <button onClick={addDog} className="text-sm px-3 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">Add Dog</button>
+                    <h4 className="font-medium">
+                      {t("publicSite.dogs", "Dogs")}
+                    </h4>
+                    <button onClick={addDog} className="text-sm px-3 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                      {t("publicSite.addDog", "Add Dog")}
+                    </button>
                   </div>
                   <div className="space-y-3">
                     {dogs.map((d, i) => (
                       <div key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input className="border rounded-lg px-3 py-2" placeholder="Dog name" value={d.name} onChange={(e)=>updateDog(i,'name',e.target.value)} />
-                        <input className="border rounded-lg px-3 py-2" placeholder="Breed" value={d.breed} onChange={(e)=>updateDog(i,'breed',e.target.value)} />
+                        <input className="border rounded-lg px-3 py-2" placeholder={t("publicSite.dogName", "Dog name")} value={d.name} onChange={(e)=>updateDog(i,'name',e.target.value)} />
+                        <input className="border rounded-lg px-3 py-2" placeholder={t("publicSite.breed", "Breed")} value={d.breed} onChange={(e)=>updateDog(i,'breed',e.target.value)} />
                       </div>
                     ))}
                   </div>
@@ -697,38 +724,62 @@ export default function KennelWebsitePage({
                   <div className="text-gray-700 text-sm">
                     {pricing ? (
                       <>
-                        <div>Price per day: {pricing.defaultPricePerDay} {currency}</div>
-                        <div>Days: {days} · Dogs: {dogs.length}</div>
+                        <div>
+                          {t("publicSite.pricePerDay", "Price per day:")} {pricing.defaultPricePerDay} {currency}
+                        </div>
+                        <div>
+                          {t("publicSite.daysDogs", "Days:")} {days} · {t("publicSite.dogsLabel", "Dogs:")} {dogs.length}
+                        </div>
                       </>
                     ) : (
-                      <div>Pricing not available</div>
+                      <div>
+                        {t("publicSite.pricingNA", "Pricing not available")}
+                      </div>
                     )}
                   </div>
                   <div className="text-xl font-semibold">
-                    Total: {total.toFixed(2)} {currency}
+                    {t("publicSite.total", "Total:")} {total.toFixed(2)} {currency}
                   </div>
                 </div>
 
                 <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
-                  <button onClick={()=>{ setShowBooking(false); resetForm(); }} className="px-4 py-2 rounded-lg border w-full sm:w-auto">Cancel</button>
-                  <button onClick={submitBooking} disabled={bookingSubmitting} className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50 w-full sm:w-auto">{bookingSubmitting ? 'Submitting…' : 'Submit Request'}</button>
+                  <button onClick={()=>{ setShowBooking(false); resetForm(); }} className="px-4 py-2 rounded-lg border w-full sm:w-auto">
+                    {t("cancel", "Cancel")}
+                  </button>
+                  <button onClick={submitBooking} disabled={bookingSubmitting} className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50 w-full sm:w-auto">
+                    {bookingSubmitting ? t("publicSite.submitting", "Submitting…") : t("publicSite.submitRequest", "Submit Request")}
+                  </button>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold">All set! 🐾</h3>
+                  <h3 className="text-xl font-semibold">
+                    {t("publicSite.allSet", "All set! 🐾")}
+                  </h3>
                   <button onClick={() => { setShowBooking(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">✕</button>
                 </div>
-                <p className="text-gray-700">Thank you! Your request was received and is pending confirmation. We’ll be in touch soon.</p>
+                <p className="text-gray-700">
+                  {t("publicSite.thankYouPending", "Thank you! Your request was received and is pending confirmation. We’ll be in touch soon.")}
+                </p>
                 <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-green-800">
-                  <div className="font-medium">Summary</div>
-                  <div className="text-sm mt-1">Dates: {checkIn} → {checkOut}</div>
-                  <div className="text-sm">Dogs: {dogs.map(d => d.name).join(', ')}</div>
-                  <div className="text-sm">Estimated total: {total.toFixed(2)} {currency}</div>
+                  <div className="font-medium">
+                    {t("publicSite.summary", "Summary")}
+                  </div>
+                  <div className="text-sm mt-1">
+                    {t("publicSite.dates", "Dates:")} {checkIn} → {checkOut}
+                  </div>
+                  <div className="text-sm">
+                    {t("publicSite.dogsLabel", "Dogs:")} {dogs.map(d => d.name).join(', ')}
+                  </div>
+                  <div className="text-sm">
+                    {t("publicSite.estimatedTotal", "Estimated total:")} {total.toFixed(2)} {currency}
+                  </div>
                 </div>
                 <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
-                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="px-5 py-2 rounded-lg bg-blue-600 text-white">Close</button>
+                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="px-5 py-2 rounded-lg bg-blue-600 text-white">
+                    {t("publicSite.close", "Close")}
+                  </button>
                 </div>
               </>
             )}
