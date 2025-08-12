@@ -1,4 +1,5 @@
 export function baseEmailTemplate({ title, preview, contentHtml }: { title: string; preview?: string; contentHtml: string }) {
+  const logoUrl = "https://www.zanav.io/images/logo-white.svg";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -10,7 +11,8 @@ export function baseEmailTemplate({ title, preview, contentHtml }: { title: stri
       .container{max-width:640px;margin:0 auto;padding:24px}
       .card{background:#ffffff;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,0.04),0 1px 3px rgba(16,24,40,0.1);overflow:hidden}
       .header{background:linear-gradient(135deg,#2563eb,#7c3aed);padding:24px}
-      .brand{color:#fff;font-weight:800;font-size:20px;letter-spacing:.3px}
+      .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+      .brand img{height:24px}
       .title{margin:0;color:#fff;font-weight:700;font-size:22px}
       .content{padding:24px}
       .muted{color:#64748b}
@@ -26,7 +28,7 @@ export function baseEmailTemplate({ title, preview, contentHtml }: { title: stri
     <div class="container">
       <div class="card">
         <div class="header">
-          <div class="brand">ZANAV</div>
+          <div class="brand"><img src="${logoUrl}" alt="Zanav" /></div>
           <p class="title">${escapeHtml(title)}</p>
         </div>
         <div class="content">
