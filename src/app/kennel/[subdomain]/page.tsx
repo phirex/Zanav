@@ -272,7 +272,10 @@ export default function KennelWebsitePage({
               {t("publicSite.kennelNotFound", "Kennel Not Found")}
             </h1>
             <p className="text-lg text-gray-600 mb-6">
-              {t("publicSite.subdomainNotFound", "Sorry, we couldn't find a kennel with the subdomain {{subdomain}}.zanav.io", { subdomain: params.subdomain } as any)}
+              {t("publicSite.subdomainNotFound", {
+                defaultValue: "Sorry, we couldn't find a kennel with the subdomain {{subdomain}}.zanav.io",
+                subdomain: params.subdomain,
+              })}
             </p>
             <p className="text-gray-500 mb-8">
               {t("publicSite.kennelMissing", "This kennel might not exist or may have been removed.")}
