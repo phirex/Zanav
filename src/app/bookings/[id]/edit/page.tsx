@@ -316,6 +316,7 @@ export default function EditBookingPage({
           </div>
         </form>
       </div>
+      </div>
     </ClientLayout>
   );
 }
