@@ -3,14 +3,9 @@ import { listSettings, updateSettings } from "@/services/settings";
 import { ApiError } from "@/lib/apiHandler";
 
 // GET /api/settings - Get all settings
-export const GET = createHandler(async ({ client, req }) => {
-  const tenantId = req.headers.get("x-tenant-id");
-
+export const GET = createHandler(async ({ client, tenantId }) => {
   if (!tenantId) {
-    console.warn(
-      "[SETTINGS_API] Missing tenant ID - user may not have completed setup yet",
-    );
-    // Return empty settings object instead of throwing error
+    console.warn("[SETTINGS_API] Missing tenant ID - returning empty settings");
     return {};
   }
 
@@ -20,7 +15,6 @@ export const GET = createHandler(async ({ client, req }) => {
   } catch (error: any) {
     console.error("[SETTINGS_API] Error in listSettings:", error);
 
-    // If it's a tenant context or settings not found error, return empty object
     if (
       error.message?.includes("tenant context") ||
       error.message?.includes("not found") ||
@@ -29,7 +23,6 @@ export const GET = createHandler(async ({ client, req }) => {
       return {};
     }
 
-    // Re-throw other errors
     throw error;
   }
 });
