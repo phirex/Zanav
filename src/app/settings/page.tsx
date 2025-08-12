@@ -82,6 +82,7 @@ function SettingsContent() {
 
   const [importing, setImporting] = useState(false);
   const [stripeStatus, setStripeStatus] = useState<{connected?: boolean, configured?: boolean, accountId?: string} | null>(null);
+  const [pricingSettings, setPricingSettings] = useState<{ pricePerDay: string; currency: string }>({ pricePerDay: "", currency: "usd" });
 
   const fetchRooms = useCallback(async () => {
     if (!initialized) return;
@@ -125,6 +126,11 @@ function SettingsContent() {
         ...prev,
         kennelName: data.kennelName || data.businessName || "",
       }));
+
+      setPricingSettings({
+        pricePerDay: data.default_price_per_day || "",
+        currency: (data.default_currency || "usd").toLowerCase(),
+      });
     } catch (error) {
       console.error("Error fetching settings:", error);
       if (error instanceof Error) {
@@ -413,6 +419,26 @@ function SettingsContent() {
     } catch {}
   };
 
+  const handlePricingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+    try {
+      const headers = createTenantHeaders({ "Content-Type": "application/json" });
+      const response = await fetch("/api/settings", { method: "POST", headers, body: JSON.stringify({
+        default_price_per_day: pricingSettings.pricePerDay,
+        default_currency: pricingSettings.currency,
+      }) });
+      if (!response.ok) throw new Error("Failed to update pricing settings");
+      setMessage({ type: "success", text: "Pricing settings saved" });
+      await fetchSettings();
+    } catch (e) {
+      setMessage({ type: "error", text: t("errorSavingSettings") });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="space-y-6">
@@ -507,6 +533,35 @@ function SettingsContent() {
               <button onClick={startStripeOnboarding} className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">{stripeStatus?.connected ? 'Reconnect' : 'Connect Stripe'}</button>
             </div>
             <p className="text-gray-600 text-sm">{stripeStatus?.configured === false ? 'Stripe not configured on platform' : stripeStatus?.connected ? `Connected (account ${stripeStatus.accountId})` : 'Not connected'}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm">
+          <div className="p-6">
+            <div className="flex items-center justify-between text-gray-700 mb-6">
+              <div className="flex items-center gap-2">
+                <SettingsIcon className="h-5 w-5" />
+                <h2 className="text-xl font-bold">Pricing</h2>
+              </div>
+            </div>
+            <form onSubmit={handlePricingSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600">Default Price / Day</label>
+                <input className="w-full border rounded-lg px-3 py-2" type="number" min="0" step="0.01" value={pricingSettings.pricePerDay} onChange={(e)=>setPricingSettings(s=>({...s, pricePerDay: e.target.value}))} />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600">Currency</label>
+                <select className="w-full border rounded-lg px-3 py-2" value={pricingSettings.currency} onChange={(e)=>setPricingSettings(s=>({...s, currency: e.target.value}))}>
+                  <option value="usd">USD</option>
+                  <option value="eur">EUR</option>
+                  <option value="ils">ILS</option>
+                  <option value="gbp">GBP</option>
+                </select>
+              </div>
+              <div className="flex items-end justify-end">
+                <button type="submit" disabled={loading} className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
+              </div>
+            </form>
           </div>
         </div>
 

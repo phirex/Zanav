@@ -73,15 +73,26 @@ export async function GET(
       .eq("website_id", websiteData.id)
       .order("sort_order");
 
+    // Pricing settings from Setting table
+    const { data: settingsRows } = await supabase
+      .from("Setting")
+      .select("key,value")
+      .eq("tenantId", websiteData.tenant_id);
+    const settings = new Map((settingsRows || []).map((r: any) => [r.key, r.value]));
+    const defaultPricePerDay = parseFloat(settings.get("default_price_per_day") || "0") || 0;
+    const defaultCurrency = (settings.get("default_currency") || "usd").toLowerCase();
+
     const result = {
       websiteData: websiteData || {},
       galleryImages: images || [],
       videos: videos || [],
       testimonials: testimonials || [],
       faqs: faqs || [],
+      pricing: { defaultPricePerDay, defaultCurrency },
+      tenantId: websiteData.tenant_id,
     };
 
-    console.log("Returning data:", result);
+    console.log("Returning data:", { ...result, galleryImages: undefined, videos: undefined, testimonials: undefined, faqs: undefined });
 
     return NextResponse.json(result);
   } catch (error) {

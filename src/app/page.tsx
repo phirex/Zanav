@@ -22,6 +22,7 @@ import { formatCurrency } from "@/lib/utils";
 import { formatDateLocale } from "@/lib/utils";
 import { fetchWithTenant } from "@/lib/client-tenant";
 import ClientLayout from "./components/ClientLayout";
+import { useMemo } from "react";
 
 interface MonthlyData {
   month: string;
@@ -79,6 +80,7 @@ function Home() {
   const [generatingDemo, setGeneratingDemo] = useState(false);
   const [headerLoaded, setHeaderLoaded] = useState(false);
   const router = useRouter();
+  const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -425,6 +427,10 @@ function Home() {
       );
       setRecentBookings(sortedBookings.slice(0, 5));
 
+      // Filter pending
+      const pending = bookings.filter((b: Booking) => b.status === "PENDING");
+      setPendingBookings(pending.slice(0, 5));
+
       // Fetch kennel settings (name) and user profile for greeting
       try {
         const [settings, profile] = await Promise.all([
@@ -659,6 +665,30 @@ function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="bg-white shadow-sm rounded-2xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Pending Bookings</h2>
+          <Link href="/bookings" className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+            Review <ArrowUpRight className="h-4 w-4 mr-1" />
+          </Link>
+        </div>
+        {pendingBookings.length === 0 ? (
+          <p className="text-gray-500">No pending bookings</p>
+        ) : (
+          <div className="space-y-3">
+            {pendingBookings.map((b) => (
+              <div key={b.id} className="flex items-center justify-between border border-gray-100 rounded-lg p-3">
+                <div>
+                  <div className="font-medium">{b.dog?.name} · {b.dog?.owner?.name || 'Owner'}</div>
+                  <div className="text-xs text-gray-500">{formatDate(b.startDate)} → {formatDate(b.endDate)}</div>
+                </div>
+                <Link href={`/bookings/${b.id}`} className="text-blue-600 text-sm">Open</Link>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bg-white shadow-sm rounded-2xl p-6">
