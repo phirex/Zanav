@@ -55,14 +55,18 @@ export async function middleware(request: NextRequest) {
 
     const isAuthed = !!foundAuthCookie;
 
-    // For unauthenticated users on any protected route (including '/') -> redirect to /landing
-    const isPublicPath = currentPath === "/landing" || currentPath.startsWith("/login") || currentPath.startsWith("/signup");
+    // Public paths
+    const isPublicPath =
+      currentPath === "/landing" ||
+      currentPath.startsWith("/login") ||
+      currentPath.startsWith("/signup") ||
+      currentPath.startsWith("/verify-email") ||
+      currentPath.startsWith("/auth/callback");
 
     if (!isAuthed && !isPublicPath) {
       return NextResponse.redirect(new URL("/landing", request.url));
     }
 
-    // Allow
     return NextResponse.next();
   }
 
