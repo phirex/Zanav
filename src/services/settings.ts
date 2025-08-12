@@ -12,14 +12,6 @@ export async function listSettings(
     return {};
   }
 
-  // Remove set_tenant RPC call; rely on explicit tenantId filtering
-  // try {
-  //   await client.rpc("set_tenant", { _tenant_id: tenantId });
-  // } catch (rpcError: any) {
-  //   console.error("[listSettings] RPC error:", rpcError);
-  //   // Don't throw here - try to proceed without RLS context
-  // }
-
   const { data, error } = await client
     .from("Setting")
     .select("key, value")
@@ -28,7 +20,6 @@ export async function listSettings(
   if (error) {
     console.error("[listSettings] Database error:", error);
 
-    // Handle specific error cases gracefully
     if (error.code === "PGRST116" || error.message?.includes("not found")) {
       return {};
     }
@@ -53,27 +44,49 @@ export async function updateSettings(
     throw new Error("Tenant ID is required for updating settings");
   }
 
-  // Remove set_tenant RPC call in updateSettings
-  // try {
-  //   await client.rpc("set_tenant", { _tenant_id: tenantId });
-  // } catch (rpcError: any) {
-  //   console.error("[updateSettings] RPC error:", rpcError);
-  //   throw new Error(`Failed to set tenant context: ${rpcError?.message || rpcError}`);
-  // }
-
-  const entries = Object.entries(payload);
   const now = new Date().toISOString();
-  const rows = entries.map(([key, value]) => ({
-    key,
-    value: value?.toString() || "",
-    tenantId,
-    updatedAt: now,
-    createdAt: now,
-  }));
-  const { error } = await client.from("Setting").upsert(rows, {
-    onConflict: "tenantId,key",
-    ignoreDuplicates: false,
-  });
-  if (error) throw new Error(error.message);
+  const entries = Object.entries(payload);
+
+  for (const [key, rawValue] of entries) {
+    const value = rawValue?.toString() ?? "";
+
+    // Check if setting exists
+    const { data: existing, error: fetchErr } = await client
+      .from("Setting")
+      .select("key")
+      .eq("tenantId", tenantId)
+      .eq("key", key)
+      .maybeSingle();
+
+    if (fetchErr && fetchErr.code !== "PGRST116") {
+      console.error("[updateSettings] fetch existing failed:", fetchErr);
+      throw new Error(fetchErr.message);
+    }
+
+    if (existing) {
+      const { error: updErr } = await client
+        .from("Setting")
+        .update({ value, updatedAt: now })
+        .eq("tenantId", tenantId)
+        .eq("key", key);
+      if (updErr) {
+        console.error("[updateSettings] update failed:", updErr);
+        throw new Error(updErr.message);
+      }
+    } else {
+      const { error: insErr } = await client.from("Setting").insert({
+        key,
+        value,
+        tenantId,
+        createdAt: now,
+        updatedAt: now,
+      });
+      if (insErr) {
+        console.error("[updateSettings] insert failed:", insErr);
+        throw new Error(insErr.message);
+      }
+    }
+  }
+
   return { success: true };
 }
