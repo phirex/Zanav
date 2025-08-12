@@ -112,6 +112,7 @@ export default function KennelWebsitePage({
   const [ownerPhone, setOwnerPhone] = useState("");
   const [dogs, setDogs] = useState<Array<{ name: string; breed: string }>>([{ name: "", breed: "" }]);
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [pricing, setPricing] = useState<{ defaultPricePerDay: number; defaultCurrency: string } | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
 
@@ -127,10 +128,21 @@ export default function KennelWebsitePage({
     if (!pricing) return 0;
     return pricing.defaultPricePerDay * days * dogs.length;
   }, [pricing, days, dogs.length]);
+  const currency = (pricing?.defaultCurrency || "usd").toUpperCase();
 
   const addDog = () => setDogs((d) => [...d, { name: "", breed: "" }]);
   const updateDog = (idx: number, key: "name" | "breed", value: string) => {
     setDogs((prev) => prev.map((d, i) => (i === idx ? { ...d, [key]: value } : d)));
+  };
+
+  const resetForm = () => {
+    setCheckIn("");
+    setCheckOut("");
+    setOwnerName("");
+    setOwnerEmail("");
+    setOwnerPhone("");
+    setDogs([{ name: "", breed: "" }]);
+    setSubmitSuccess(false);
   };
 
   const submitBooking = async () => {
@@ -155,8 +167,7 @@ export default function KennelWebsitePage({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to submit booking");
-      setShowBooking(false);
-      alert("Thank you! Your request was received and is pending confirmation.");
+      setSubmitSuccess(true);
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -633,73 +644,94 @@ export default function KennelWebsitePage({
       </footer>
 
       {showBooking && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Request a Booking</h3>
-              <button onClick={() => setShowBooking(false)} className="text-gray-500 hover:text-gray-700">✕</button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-gray-600">Check-in</label>
-                <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkIn} onChange={(e)=>setCheckIn(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">Check-out</label>
-                <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkOut} onChange={(e)=>setCheckOut(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm text-gray-600">Your Name</label>
-                <input className="w-full border rounded-lg px-3 py-2" value={ownerName} onChange={(e)=>setOwnerName(e.target.value)} placeholder="Full name" />
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">Email (optional)</label>
-                <input type="email" className="w-full border rounded-lg px-3 py-2" value={ownerEmail} onChange={(e)=>setOwnerEmail(e.target.value)} placeholder="you@example.com" />
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">Phone</label>
-                <input className="w-full border rounded-lg px-3 py-2" value={ownerPhone} onChange={(e)=>setOwnerPhone(e.target.value)} placeholder="+1 555 555 5555" />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Dogs</h4>
-                <button onClick={addDog} className="text-sm px-3 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">Add Dog</button>
-              </div>
-              <div className="space-y-3">
-                {dogs.map((d, i) => (
-                  <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input className="border rounded-lg px-3 py-2" placeholder="Dog name" value={d.name} onChange={(e)=>updateDog(i,'name',e.target.value)} />
-                    <input className="border rounded-lg px-3 py-2" placeholder="Breed" value={d.breed} onChange={(e)=>updateDog(i,'breed',e.target.value)} />
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl p-6 sm:p-6">
+            {!submitSuccess ? (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold">Request a Booking</h3>
+                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">✕</button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-600">Check-in</label>
+                    <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkIn} onChange={(e)=>setCheckIn(e.target.value)} />
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Check-out</label>
+                    <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkOut} onChange={(e)=>setCheckOut(e.target.value)} />
+                  </div>
+                </div>
 
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-gray-700 text-sm">
-                {pricing ? (
-                  <>
-                    <div>Price per day: {pricing.defaultPricePerDay} {pricing.defaultCurrency.toUpperCase()}</div>
-                    <div>Days: {days} · Dogs: {dogs.length}</div>
-                  </>
-                ) : (
-                  <div>Pricing not available</div>
-                )}
-              </div>
-              <div className="text-xl font-semibold">
-                Total: {total.toFixed(2)} {pricing?.defaultCurrency?.toUpperCase()}
-              </div>
-            </div>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-600">Your Name</label>
+                    <input className="w-full border rounded-lg px-3 py-2" value={ownerName} onChange={(e)=>setOwnerName(e.target.value)} placeholder="Full name" />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Email (optional)</label>
+                    <input type="email" className="w-full border rounded-lg px-3 py-2" value={ownerEmail} onChange={(e)=>setOwnerEmail(e.target.value)} placeholder="you@example.com" />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Phone</label>
+                    <input className="w-full border rounded-lg px-3 py-2" value={ownerPhone} onChange={(e)=>setOwnerPhone(e.target.value)} placeholder="+1 555 555 5555" />
+                  </div>
+                </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={()=>setShowBooking(false)} className="px-4 py-2 rounded-lg border">Cancel</button>
-              <button onClick={submitBooking} disabled={bookingSubmitting} className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50">{bookingSubmitting ? 'Submitting...' : 'Submit Request'}</button>
-            </div>
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">Dogs</h4>
+                    <button onClick={addDog} className="text-sm px-3 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">Add Dog</button>
+                  </div>
+                  <div className="space-y-3">
+                    {dogs.map((d, i) => (
+                      <div key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input className="border rounded-lg px-3 py-2" placeholder="Dog name" value={d.name} onChange={(e)=>updateDog(i,'name',e.target.value)} />
+                        <input className="border rounded-lg px-3 py-2" placeholder="Breed" value={d.breed} onChange={(e)=>updateDog(i,'breed',e.target.value)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="text-gray-700 text-sm">
+                    {pricing ? (
+                      <>
+                        <div>Price per day: {pricing.defaultPricePerDay} {currency}</div>
+                        <div>Days: {days} · Dogs: {dogs.length}</div>
+                      </>
+                    ) : (
+                      <div>Pricing not available</div>
+                    )}
+                  </div>
+                  <div className="text-xl font-semibold">
+                    Total: {total.toFixed(2)} {currency}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
+                  <button onClick={()=>{ setShowBooking(false); resetForm(); }} className="px-4 py-2 rounded-lg border w-full sm:w-auto">Cancel</button>
+                  <button onClick={submitBooking} disabled={bookingSubmitting} className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50 w-full sm:w-auto">{bookingSubmitting ? 'Submitting…' : 'Submit Request'}</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold">All set! 🐾</h3>
+                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">✕</button>
+                </div>
+                <p className="text-gray-700">Thank you! Your request was received and is pending confirmation. We’ll be in touch soon.</p>
+                <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-green-800">
+                  <div className="font-medium">Summary</div>
+                  <div className="text-sm mt-1">Dates: {checkIn} → {checkOut}</div>
+                  <div className="text-sm">Dogs: {dogs.map(d => d.name).join(', ')}</div>
+                  <div className="text-sm">Estimated total: {total.toFixed(2)} {currency}</div>
+                </div>
+                <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
+                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="px-5 py-2 rounded-lg bg-blue-600 text-white">Close</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
