@@ -34,25 +34,27 @@ interface DashboardStats {
 
 interface RecentActivity {
   id: string;
-  type: 'tenant_created' | 'user_promoted' | 'system_alert' | 'revenue_milestone';
+  type: 'tenant_created' | 'user_promoted' | 'system_alert' | 'revenue_milestone' | 'booking' | 'user';
   message: string;
   timestamp: string;
   severity?: 'info' | 'warning' | 'error' | 'success';
 }
 
+const defaultStats: DashboardStats = {
+  totalTenants: 0,
+  totalUsers: 0,
+  totalBookings: 0,
+  activeNotifications: 0,
+  monthlyRevenue: 0,
+  systemHealth: 'healthy',
+  activeTenants: 0,
+  pendingApprovals: 0
+};
+
 export default function GlobalAdminDashboard() {
   const { t } = useTranslation();
   const { supabase } = useSupabase();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalTenants: 0,
-    totalUsers: 0,
-    totalBookings: 0,
-    activeNotifications: 0,
-    monthlyRevenue: 0,
-    systemHealth: 'healthy',
-    activeTenants: 0,
-    pendingApprovals: 0
-  });
+  const [stats, setStats] = useState<DashboardStats>(defaultStats);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,54 +64,80 @@ export default function GlobalAdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Get the current session for authorization
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session?.access_token) {
         console.error('No access token available');
+        setStats(defaultStats);
+        setRecentActivity([]);
         return;
       }
 
-      // Fetch real data from our APIs with proper authorization
       const [statsResponse, activityResponse] = await Promise.all([
-        fetch('/api/admin/dashboard-stats', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }),
-        fetch('/api/admin/recent-activity', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        })
+        fetch('/api/admin/dashboard-stats', { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
+        fetch('/api/admin/recent-activity', { headers: { 'Authorization': `Bearer ${session.access_token}` } })
       ]);
 
+      // Stats
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
-        setStats(statsData);
+        setStats({
+          ...defaultStats,
+          ...statsData,
+          // ensure numeric defaults
+          totalTenants: Number(statsData?.totalTenants ?? 0),
+          totalUsers: Number(statsData?.totalUsers ?? 0),
+          totalBookings: Number(statsData?.totalBookings ?? 0),
+          activeNotifications: Number(statsData?.activeNotifications ?? 0),
+          monthlyRevenue: Number(statsData?.monthlyRevenue ?? 0),
+          activeTenants: Number(statsData?.activeTenants ?? 0),
+          pendingApprovals: Number(statsData?.pendingApprovals ?? 0),
+          systemHealth: (statsData?.systemHealth as any) || 'healthy'
+        });
       } else {
         console.error('Failed to fetch stats:', statsResponse.status, statsResponse.statusText);
+        setStats(defaultStats);
       }
 
+      // Activity
       if (activityResponse.ok) {
         const activityData = await activityResponse.json();
-        setRecentActivity(activityData);
+        // API currently returns { recentBookings:[], recentUsers:[] }
+        let items: RecentActivity[] = [];
+        if (Array.isArray(activityData)) {
+          items = activityData as RecentActivity[];
+        } else {
+          if (Array.isArray(activityData?.recentBookings)) {
+            items = items.concat(
+              activityData.recentBookings.map((b: any) => ({
+                id: String(b.id),
+                type: 'booking',
+                message: `Booking ${b.id} - ${b.status}`,
+                timestamp: b.createdAt || new Date().toISOString(),
+                severity: b.status === 'CANCELLED' ? 'warning' : 'success'
+              }))
+            );
+          }
+          if (Array.isArray(activityData?.recentUsers)) {
+            items = items.concat(
+              activityData.recentUsers.map((u: any) => ({
+                id: String(u.id),
+                type: 'user',
+                message: `User ${u.email || u.name || u.id} created`,
+                timestamp: u.createdAt || new Date().toISOString(),
+                severity: 'info'
+              }))
+            );
+          }
+        }
+        setRecentActivity(items.slice(0, 10));
       } else {
         console.error('Failed to fetch activity:', activityResponse.status, activityResponse.statusText);
+        setRecentActivity([]);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
-      // Set some demo data for now
-      setStats({
-        totalTenants: 15,
-        totalUsers: 120,
-        totalBookings: 5432,
-        activeNotifications: 50,
-        monthlyRevenue: 12500,
-        systemHealth: 'healthy',
-        activeTenants: 12,
-        pendingApprovals: 3
-      });
+      setStats(defaultStats);
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }
@@ -192,7 +220,7 @@ export default function GlobalAdminDashboard() {
         />
         <MetricCard
           title="Monthly Revenue"
-          value={`$${stats.monthlyRevenue.toLocaleString()}`}
+          value={`$${Number(stats.monthlyRevenue || 0).toLocaleString()}`}
           change="+12% vs last month"
           icon={<DollarSign className="h-6 w-6 text-yellow-500" />}
           color="yellow"
@@ -216,7 +244,7 @@ export default function GlobalAdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <SecondaryMetricCard
           title="Total Bookings"
-          value={stats.totalBookings.toLocaleString()}
+          value={Number(stats.totalBookings || 0).toLocaleString()}
           subtitle="All time"
           icon={<BarChart className="h-8 w-8 text-purple-500" />}
         />
@@ -294,30 +322,10 @@ export default function GlobalAdminDashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">System Status</h2>
           <div className="space-y-4">
-            <SystemStatusItem
-              service="Database"
-              status="operational"
-              uptime="99.9%"
-              responseTime="12ms"
-            />
-            <SystemStatusItem
-              service="Authentication"
-              status="operational"
-              uptime="99.8%"
-              responseTime="45ms"
-            />
-            <SystemStatusItem
-              service="File Storage"
-              status="operational"
-              uptime="99.7%"
-              responseTime="89ms"
-            />
-            <SystemStatusItem
-              service="Email Service"
-              status="operational"
-              uptime="99.5%"
-              responseTime="120ms"
-            />
+            <SystemStatusItem service="Database" status="operational" uptime="99.9%" responseTime="12ms" />
+            <SystemStatusItem service="Authentication" status="operational" uptime="99.8%" responseTime="45ms" />
+            <SystemStatusItem service="File Storage" status="operational" uptime="99.7%" responseTime="89ms" />
+            <SystemStatusItem service="Email Service" status="operational" uptime="99.5%" responseTime="120ms" />
           </div>
         </div>
       </div>
