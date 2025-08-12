@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 export async function listSettings(
   client: SupabaseClient<Database>,
@@ -36,7 +37,7 @@ export async function listSettings(
 }
 
 export async function updateSettings(
-  client: SupabaseClient<Database>,
+  _client: SupabaseClient<Database>,
   tenantId: string,
   payload: Record<string, any>,
 ) {
@@ -44,14 +45,14 @@ export async function updateSettings(
     throw new Error("Tenant ID is required for updating settings");
   }
 
+  const admin = supabaseAdmin();
   const now = new Date().toISOString();
   const entries = Object.entries(payload);
 
   for (const [key, rawValue] of entries) {
     const value = rawValue?.toString() ?? "";
 
-    // Check if setting exists
-    const { data: existing, error: fetchErr } = await client
+    const { data: existing, error: fetchErr } = await admin
       .from("Setting")
       .select("key")
       .eq("tenantId", tenantId)
@@ -64,7 +65,7 @@ export async function updateSettings(
     }
 
     if (existing) {
-      const { error: updErr } = await client
+      const { error: updErr } = await admin
         .from("Setting")
         .update({ value, updatedAt: now })
         .eq("tenantId", tenantId)
@@ -74,7 +75,7 @@ export async function updateSettings(
         throw new Error(updErr.message);
       }
     } else {
-      const { error: insErr } = await client.from("Setting").insert({
+      const { error: insErr } = await admin.from("Setting").insert({
         key,
         value,
         tenantId,
