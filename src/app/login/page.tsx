@@ -70,7 +70,7 @@ export default function Login() {
       setGoogleLoading(true);
       setError(null);
 
-      const redirectTo = new URL('/auth/callback', window.location.origin).toString();
+      const redirectTo = `https://www.zanav.io/auth/callback?next=/`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

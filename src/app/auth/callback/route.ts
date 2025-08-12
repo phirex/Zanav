@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
 
+  console.log("[Auth Callback] incoming", { url: request.url, hasCode: !!code, next });
+
   let response = NextResponse.redirect(`${origin}${next}`);
 
   if (code) {
@@ -19,12 +21,16 @@ export async function GET(request: NextRequest) {
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            const v = cookieStore.get(name)?.value;
+            console.log("[Auth Callback] get cookie", name, !!v);
+            return v;
           },
           set(name: string, value: string, options: CookieOptions) {
+            console.log("[Auth Callback] set cookie", name, !!value);
             response.cookies.set({ name, value, ...options });
           },
           remove(name: string, options: CookieOptions) {
+            console.log("[Auth Callback] remove cookie", name);
             response.cookies.delete({ name, ...options });
           },
         },
@@ -35,8 +41,9 @@ export async function GET(request: NextRequest) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) throw error;
 
+      console.log("[Auth Callback] exchanged", { hasUser: !!data.user, hasSession: !!data.session, email: data.user?.email });
+
       if (data.user) {
-        // Ensure user exists in our "User" table with current column names
         const { data: existingUser, error: userCheckError } = await supabase
           .from("User")
           .select("id")
@@ -44,6 +51,7 @@ export async function GET(request: NextRequest) {
           .maybeSingle();
 
         if (!existingUser && !userCheckError) {
+          console.log("[Auth Callback] creating app user row");
           await supabase
             .from("User")
             .insert({
@@ -54,13 +62,15 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      console.log("[Auth Callback] redirecting to", `${origin}${next}`);
       return response;
-    } catch (e) {
-      // fallthrough to error redirect
+    } catch (e: any) {
+      console.error("[Auth Callback] error", e?.message || e);
     }
   }
 
   const errorUrl = new URL("/login", origin);
   errorUrl.searchParams.set("error", "Could not authenticate user. Please try again.");
+  console.log("[Auth Callback] failing, redirecting to", errorUrl.toString());
   return NextResponse.redirect(errorUrl);
 } 

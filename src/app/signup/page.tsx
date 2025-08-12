@@ -45,9 +45,18 @@ export default function SignupPage() {
     try {
       setGoogleLoading(true);
       setError(null);
-      const redirectTo = new URL('/auth/callback', window.location.origin).toString();
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
-      if (error) throw error;
+
+      const redirectTo = `https://www.zanav.io/auth/callback?next=/kennel-setup`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // The redirect will happen automatically
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       setError("Failed to sign in with Google. Please try again.");
