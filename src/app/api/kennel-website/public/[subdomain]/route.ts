@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 export async function GET(
   request: NextRequest,
@@ -26,7 +27,6 @@ export async function GET(
       console.error("Error fetching website data by subdomain:", websiteError);
       console.error("Requested subdomain:", params.subdomain);
 
-      // Let's also check what subdomains exist in the kennel_websites table
       const { data: allWebsites } = await supabase
         .from("kennel_websites")
         .select("subdomain");
@@ -73,8 +73,9 @@ export async function GET(
       .eq("website_id", websiteData.id)
       .order("sort_order");
 
-    // Pricing settings from Setting table
-    const { data: settingsRows } = await supabase
+    // Pricing settings from Setting table (use admin to bypass RLS)
+    const admin = supabaseAdmin();
+    const { data: settingsRows } = await admin
       .from("Setting")
       .select("key,value")
       .eq("tenantId", websiteData.tenant_id);
