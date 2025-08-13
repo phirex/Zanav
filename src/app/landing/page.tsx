@@ -16,7 +16,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
 export default function LandingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isHebrew = typeof i18n?.language === "string" && i18n.language.startsWith("he");
   return (
     <div className="min-h-screen bg-white" suppressHydrationWarning>
       {/* Navigation */}
@@ -70,7 +71,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-between px-4 sm:px-6 lg:px-8 pt-8 pb-12 lg:pt-16 lg:pb-20">
           {/* Left: Hero Text */}
           <div className="w-full lg:w-1/2 flex flex-col items-start lg:pr-8">
-            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl" style={isHebrew ? { letterSpacing: "0.5px" } : undefined}>
               <span className="block">{t("boardingManagement")}</span>
               <span className="block text-blue-600">{t("makesTailsWag")}</span>
             </h1>
