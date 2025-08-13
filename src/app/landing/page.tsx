@@ -164,7 +164,7 @@ export default function LandingPage() {
           <div className="mt-10">
             <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
               {/* Feature 1 */}
-              <div className="relative">
+              <div className="relative rounded-2xl border-2 border-gray-200 bg-white p-4">
                 <div className="bg-blue-100 rounded-lg p-3 absolute -left-3 -top-3">
                   <Calendar
                     className="h-6 w-6 text-blue-600"
@@ -179,7 +179,7 @@ export default function LandingPage() {
                     {t("smartBookingDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <div className="mt-4 border border-gray-100 rounded-lg overflow-hidden bg-white">
                   <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
                     <Image
                       src="/images/calendar.png"
@@ -193,7 +193,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 2 */}
-              <div className="relative">
+              <div className="relative rounded-2xl border-2 border-gray-200 bg-white p-4">
                 <div className="bg-purple-100 rounded-lg p-3 absolute -left-3 -top-3">
                   <Users
                     className="h-6 w-6 text-purple-600"
@@ -208,7 +208,7 @@ export default function LandingPage() {
                     {t("customerPetCRMDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <div className="mt-4 border border-gray-100 rounded-lg overflow-hidden bg-white">
                   <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
                     <Image
                       src="/images/client.png"
@@ -222,7 +222,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 3 */}
-              <div className="relative">
+              <div className="relative rounded-2xl border-2 border-gray-200 bg-white p-4">
                 <div className="bg-pink-100 rounded-lg p-3 absolute -left-3 -top-3">
                   <CreditCard
                     className="h-6 w-6 text-pink-600"
@@ -237,7 +237,7 @@ export default function LandingPage() {
                     {t("paymentsInvoicingDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <div className="mt-4 border border-gray-100 rounded-lg overflow-hidden bg-white">
                   <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
                     <Image
                       src="/images/payments.png"
@@ -251,7 +251,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 4 */}
-              <div className="relative">
+              <div className="relative rounded-2xl border-2 border-gray-200 bg-white p-4">
                 <div className="bg-yellow-100 rounded-lg p-3 absolute -left-3 -top-3">
                   <BarChart2
                     className="h-6 w-6 text-yellow-600"
@@ -266,7 +266,7 @@ export default function LandingPage() {
                     {t("financialInsightsDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <div className="mt-4 border border-gray-100 rounded-lg overflow-hidden bg-white">
                   <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
                     <Image
                       src="/images/financial.png"
