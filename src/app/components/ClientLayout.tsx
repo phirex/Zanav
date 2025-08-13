@@ -63,8 +63,8 @@ export default function ClientLayout({
     );
   }
 
-  // Show sidebar if user is authenticated
-  const showSidebar = !!session;
+  // Always show sidebar in authenticated app pages. Middleware prevents unauthenticated access.
+  const showSidebar = true;
 
   return (
     <div className="flex h-screen bg-white">

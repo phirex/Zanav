@@ -180,7 +180,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
                   <Image
-                    src="/images/calendar-screenshot.png"
+                    src="/images/calendar.png"
                     alt="Calendar view"
                     width={600}
                     height={400}
@@ -207,7 +207,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
                   <Image
-                    src="/images/clients-screenshot.png"
+                    src="/images/client.png"
                     alt="Client profile"
                     width={600}
                     height={400}
@@ -234,7 +234,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
                   <Image
-                    src="/images/payments-screenshot.png"
+                    src="/images/payments.png"
                     alt="Payments view"
                     width={600}
                     height={400}
@@ -261,7 +261,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
                   <Image
-                    src="/images/financial-screenshot.png"
+                    src="/images/financial.png"
                     alt="Financial report"
                     width={600}
                     height={400}

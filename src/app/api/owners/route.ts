@@ -13,15 +13,18 @@ export const GET = createHandler(async ({ tenantId }) => {
   return await listOwners(adminClient, tenantId);
 });
 
-export const POST = createHandler(async ({ client, tenantId, body }) => {
-  return await createOwner(client, tenantId, body);
+export const POST = createHandler(async ({ tenantId, body }) => {
+  const adminClient = supabaseAdmin();
+  return await createOwner(adminClient, tenantId, body);
 });
 
-export const PUT = createHandler(async ({ client, tenantId, body }) => {
-  return await updateOwner(client, tenantId, body);
+export const PUT = createHandler(async ({ tenantId, body }) => {
+  const adminClient = supabaseAdmin();
+  return await updateOwner(adminClient, tenantId, body);
 });
 
-export const DELETE = createHandler(async ({ req, client }) => {
+export const DELETE = createHandler(async ({ req }) => {
+  const client = supabaseAdmin();
   const { searchParams } = new URL(req.url);
   const idParam =
     searchParams.get("id") || (req.method !== "GET" && (await req.json())?.id);

@@ -45,7 +45,7 @@ i18n
       transEmptyNodeValue: "",
     },
     // Ensure English is default if detection fails
-    lng: undefined as unknown as string,
+    lng: "en",
   })
   .then(() => {
     console.log("i18n initialized successfully");

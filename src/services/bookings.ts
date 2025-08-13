@@ -92,12 +92,14 @@ export async function listBookings(
     const numYear = parseInt(year);
 
     // Create date range for the specific month
-    const startDate = new Date(numYear, numMonth - 1, 1);
-    const endDate = new Date(numYear, numMonth, 0, 23, 59, 59, 999);
+    const monthStart = new Date(numYear, numMonth - 1, 1);
+    const monthEnd = new Date(numYear, numMonth, 0, 23, 59, 59, 999);
 
+    // Include bookings that overlap the month window:
+    // startDate <= monthEnd AND endDate >= monthStart
     query = query
-      .gte("startDate", startDate.toISOString())
-      .lte("startDate", endDate.toISOString());
+      .lte("startDate", monthEnd.toISOString())
+      .gte("endDate", monthStart.toISOString());
   }
 
   // No explicit tenant filter – RLS via set_tenant limits rows automatically

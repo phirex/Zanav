@@ -19,8 +19,8 @@ export function formatCurrency(amount: number, language?: string, currencyCode?:
 
   const lang =
     language ||
-    (typeof window !== "undefined" ? window.localStorage.getItem("i18nextLng") : "he") ||
-    "he";
+    (typeof window !== "undefined" ? (window.localStorage.getItem("i18nextLng") || document.cookie.match(/(?:^|; )i18nextLng=([^;]+)/)?.[1]) : "en") ||
+    "en";
 
   if (lang.startsWith("en")) {
     return `$${amount.toLocaleString("en-US")}`;
@@ -41,8 +41,8 @@ export function formatDateLocale(
   const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
   const lang =
     language ||
-    (typeof window !== "undefined" ? window.localStorage.getItem("i18nextLng") : "he") ||
-    "he";
+    (typeof window !== "undefined" ? (window.localStorage.getItem("i18nextLng") || document.cookie.match(/(?:^|; )i18nextLng=([^;]+)/)?.[1]) : "en") ||
+    "en";
 
   const locale = lang.startsWith("en") ? "en-US" : "he-IL";
   return date.toLocaleDateString(locale, options);

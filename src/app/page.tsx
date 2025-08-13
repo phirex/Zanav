@@ -701,7 +701,7 @@ function Home() {
       <div className="bg-white shadow-sm rounded-2xl p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">
-            {t("unpaidPayments", "Unpaid Payments")}
+            {t("unpaidPayments", "Unpaid Bookings")}
           </h2>
           <Link
             href="/payments"

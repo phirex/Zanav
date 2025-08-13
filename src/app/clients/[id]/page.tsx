@@ -155,13 +155,6 @@ export default function ClientDetailsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link
-              href="/clients"
-              className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700"
-            >
-              <ArrowRight className="h-5 w-5" />
-              {t("backToClients", "Back to Clients")}
-            </Link>
             <h1 className="text-3xl font-bold text-gray-900">{owner.name}</h1>
           </div>
           <div className="flex items-center gap-3">

@@ -113,12 +113,20 @@ export async function updateOwner(
   tenantId: string | null,
   body: any,
 ) {
-  if (!tenantId) {
-    throw new Error("Tenant ID is required for owner update");
-  }
-
   const { id, name, email, phone, address, dogs } = body;
   if (!id) throw new Error("Owner id is required");
+
+  // Resolve tenantId from existing owner record if not provided
+  let resolvedTenantId: string | null = tenantId;
+  if (!resolvedTenantId) {
+    const { data: ownerRow, error: ownerErr } = await client
+      .from("Owner")
+      .select("tenantId")
+      .eq("id", id)
+      .single();
+    if (ownerErr) throw new Error(ownerErr.message);
+    resolvedTenantId = ownerRow?.tenantId ?? null;
+  }
 
   const { error: updErr } = await client
     .from("Owner")
@@ -144,7 +152,7 @@ export async function updateOwner(
           breed: dog.breed,
           specialNeeds: dog.specialNeeds ?? null,
           ownerId: id,
-          tenantId,
+          tenantId: resolvedTenantId,
         });
         if (error) throw new Error(error.message);
       }

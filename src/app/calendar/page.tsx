@@ -38,6 +38,7 @@ interface Booking {
   roomId: number;
   startDate: string;
   endDate: string;
+  status: "PENDING" | "CONFIRMED" | "CANCELLED";
   dog: Dog;
 }
 
@@ -65,6 +66,7 @@ function MonthNavigator({
 }) {
   const { i18n, t } = useTranslation();
   const locale = i18n.language.startsWith("en") ? enUS : he;
+  const isRTL = !i18n.language.startsWith("en");
 
   const months = Array.from({ length: 12 }, (_, i) => {
     const date = new Date(currentDate.getFullYear(), i, 1);
@@ -89,7 +91,11 @@ function MonthNavigator({
           onClick={() => onNavigate(subMonths(currentDate, 1))}
           className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
         >
-          <ChevronRight className="h-6 w-6 text-gray-600" />
+          {isRTL ? (
+            <ChevronRight className="h-6 w-6 text-gray-600" />
+          ) : (
+            <ChevronLeft className="h-6 w-6 text-gray-600" />
+          )}
         </button>
 
         <div className="flex items-center gap-2">
@@ -130,7 +136,11 @@ function MonthNavigator({
           onClick={() => onNavigate(addMonths(currentDate, 1))}
           className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
         >
-          <ChevronLeft className="h-6 w-6 text-gray-600" />
+          {isRTL ? (
+            <ChevronLeft className="h-6 w-6 text-gray-600" />
+          ) : (
+            <ChevronRight className="h-6 w-6 text-gray-600" />
+          )}
         </button>
       </div>
 
@@ -236,6 +246,10 @@ function DayDetailsModal({
                             booking.endDate &&
                             booking.endDate.substring(0, 10) ===
                               selectedDateString;
+                          const isArrivingToday =
+                            booking.startDate &&
+                            booking.startDate.substring(0, 10) ===
+                              selectedDateString;
 
                           return (
                             <div
@@ -251,6 +265,16 @@ function DayDetailsModal({
                                     {isLeavingToday && (
                                       <span className="ml-2 text-xs font-medium px-1.5 py-0.5 bg-orange-100 text-orange-800 rounded">
                                         {t("leavingToday")}
+                                      </span>
+                                    )}
+                                    {isArrivingToday && (
+                                      <span className="ml-2 text-xs font-medium px-1.5 py-0.5 bg-green-100 text-green-800 rounded">
+                                        {t("arrivingToday")}
+                                      </span>
+                                    )}
+                                    {booking.status !== "CONFIRMED" && (
+                                      <span className="ml-2 text-xs font-medium px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded">
+                                        {t("statusPending", "Pending")}
                                       </span>
                                     )}
                                   </div>
@@ -309,7 +333,10 @@ function CalendarContent() {
       // Use fetchWithTenant to get rooms and bookings
       const [roomsData, bookingsData] = await Promise.all([
         fetchWithTenant<Room[]>("/api/rooms"),
-        fetchWithTenant<Booking[]>(
+        fetchWithTenant<
+          | Booking[]
+          | { all?: Booking[]; upcoming?: Booking[]; past?: Booking[] }
+        >(
           `/api/bookings?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`,
         ),
       ]);
@@ -324,6 +351,13 @@ function CalendarContent() {
 
       if (Array.isArray(bookingsData)) {
         setBookings(bookingsData);
+      } else if (
+        bookingsData &&
+        typeof bookingsData === "object" &&
+        "all" in bookingsData &&
+        Array.isArray((bookingsData as any).all)
+      ) {
+        setBookings((bookingsData as any).all as Booking[]);
       } else {
         console.error("Invalid bookings data format:", bookingsData);
         setBookings([]);
@@ -378,10 +412,14 @@ function CalendarContent() {
             : dateString < endDateStr ||
               (dateString === endDateStr &&
                 hasBookingTimeData(booking.endDate)))
-        ); // For counting
+        );
       });
 
-      const occupancy = dayBookings.length;
+      // Count only confirmed bookings for occupancy calculations
+      const confirmedDayBookings = dayBookings.filter(
+        (b) => b.status === "CONFIRMED",
+      );
+      const occupancy = confirmedDayBookings.length;
       const percentage = (occupancy / room.maxCapacity) * 100;
 
       let status: "green" | "yellow" | "red" = "green";
