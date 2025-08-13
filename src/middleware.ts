@@ -164,7 +164,9 @@ export async function middleware(request: NextRequest) {
       currentPath.startsWith("/login") ||
       currentPath.startsWith("/signup") ||
       currentPath.startsWith("/verify-email") ||
-      currentPath.startsWith("/auth/callback");
+      currentPath.startsWith("/auth/callback") ||
+      // Allow viewing public kennel pages locally without auth
+      currentPath.startsWith("/kennel/");
 
     if (!isAuthed && !isPublicPath) {
       return NextResponse.redirect(new URL("/landing", request.url));

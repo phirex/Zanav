@@ -659,7 +659,7 @@ export default function KennelWebsitePage({
 
       {showBooking && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl p-6 sm:p-6">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl p-6 sm:p-6 max-h-[90vh] overflow-y-auto">
             {!submitSuccess ? (
               <>
                 <div className="flex items-center justify-between mb-4">
