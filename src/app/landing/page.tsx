@@ -348,16 +348,14 @@ export default function LandingPage() {
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
-                      <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-500">
-                        <span className="text-white font-medium">JD</span>
-                      </span>
+                      <Image src="/images/testimonials/sarah-johnson.jpg" alt="Sarah Johnson" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
                     </div>
                     <div className="ml-4">
                       <p className="text-gray-700 italic">
                         {t("smallTestimonial")}
                       </p>
                       <p className="mt-1 text-sm font-medium text-gray-900">
-                        Jane Doe, Happy Tails Kennel
+                        Sarah Johnson, Happy Tails Kennel
                       </p>
                     </div>
                   </div>
@@ -418,16 +416,14 @@ export default function LandingPage() {
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
-                      <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-500">
-                        <span className="text-white font-medium">JS</span>
-                      </span>
+                      <Image src="/images/testimonials/michael-torres.jpg" alt="Michael Torres" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
                     </div>
                     <div className="ml-4">
                       <p className="text-gray-700 italic">
                         {t("largeTestimonial")}
                       </p>
                       <p className="mt-1 text-sm font-medium text-gray-900">
-                        John Smith, PetResort Group
+                        Michael Torres, PetResort Group
                       </p>
                     </div>
                   </div>
