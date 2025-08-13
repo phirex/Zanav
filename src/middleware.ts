@@ -155,16 +155,9 @@ export async function middleware(request: NextRequest) {
       });
     }
 
-    const base = "sb-nlpsmauwwlnblgwtawbs-auth-token";
-    const foundAuthCookie =
-      request.cookies.get(base) ||
-      request.cookies.get(`${base}.0`) ||
-      request.cookies.get(`${base}.1`) ||
-      request.cookies.get(`${base}.2`) ||
-      request.cookies.get(`${base}.3`) ||
-      request.cookies.get(`${base}.4`);
-
-    const isAuthed = !!foundAuthCookie;
+    // Detect Supabase auth token cookie for any project (works for local/remote)
+    const cookieNames = request.cookies.getAll().map((c) => c.name);
+    const isAuthed = cookieNames.some((name) => /^sb-.*-auth-token(?:\.\d+)?$/.test(name));
 
     const isPublicPath =
       currentPath === "/landing" ||

@@ -3,10 +3,11 @@ import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  // Check if this is a kennel website request
-  const hostname = request.headers.get("host") || "";
-  const isKennelWebsite = hostname !== "www.zanav.io" && hostname !== "zanav.io" && !hostname.startsWith("www.");
-  
+  // Check if this is a kennel website request (only real subdomains on *.zanav.io)
+  const rawHost = request.headers.get("host") || "";
+  const hostname = rawHost.split(":")[0];
+  const isKennelWebsite = hostname.endsWith(".zanav.io") && hostname !== "www.zanav.io";
+
   if (isKennelWebsite) {
     // This is a kennel website request - allow public access
     // Return basic tenant info without requiring authentication

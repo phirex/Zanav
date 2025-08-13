@@ -124,9 +124,10 @@ function SettingsContent() {
         whatsappEnabled: data.whatsappEnabled === "true",
       });
 
+      // Only override kennelName if present in settings; otherwise keep tenant-derived value
       setKennelSettings((prev) => ({
         ...prev,
-        kennelName: data.kennelName || data.businessName || "",
+        kennelName: data.kennelName || data.businessName || prev.kennelName,
       }));
 
       setPricingSettings({
@@ -150,30 +151,25 @@ function SettingsContent() {
 
   const fetchTenantName = useCallback(async () => {
     try {
-      // Use the tenant context from the API instead of localStorage
       const headers = createTenantHeaders();
-      const response = await fetch("/api/tenants/current", {
-        headers,
-      });
+      const response = await fetch("/api/tenants/current", { headers });
 
       if (response.ok) {
         const tenantData = await response.json();
         setKennelSettings((prev) => ({
           ...prev,
-          kennelName: tenantData.name || "",
-          tenantId: tenantData.id || "",
+          kennelName: tenantData.name || prev.kennelName || "",
+          tenantId: tenantData.id || prev.tenantId || "",
         }));
       } else {
-        console.warn("Could not fetch tenant name, using empty value");
-        setKennelSettings((prev) => ({
-          ...prev,
-          kennelName: "",
-          tenantId: "",
-        }));
+        console.warn("/api/tenants/current not OK (", response.status, ") — preserving existing kennel name");
+        // Preserve existing values on failure to avoid UI blanking
+        setKennelSettings((prev) => ({ ...prev }));
       }
     } catch (error) {
       console.error("Error fetching tenant name:", error);
-      setKennelSettings((prev) => ({ ...prev, kennelName: "", tenantId: "" }));
+      // Preserve existing values on error too
+      setKennelSettings((prev) => ({ ...prev }));
     }
   }, []);
 
@@ -185,10 +181,10 @@ function SettingsContent() {
   }, []);
 
   useEffect(() => {
-    // Immediately fetch rooms & settings in single-tenant mode
+    // Load tenant first to avoid intermediate blanking, then settings/rooms
     (async () => {
-      await Promise.all([fetchRooms(), fetchSettings()]);
       await fetchTenantName();
+      await Promise.all([fetchSettings(), fetchRooms()]);
       loadStripeStatus();
     })();
   }, [fetchRooms, fetchSettings, fetchTenantName, loadStripeStatus]);

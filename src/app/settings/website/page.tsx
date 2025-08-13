@@ -90,28 +90,32 @@ export default function WebsiteSettingsPage() {
 
   const resolveTenantId = async (): Promise<string | null> => {
     try {
-      let tenantId = localStorage.getItem("tenantId");
-      if (!tenantId || tenantId === DEFAULT_TENANT_ID || tenantId.length !== 36) {
-        console.log("Tenant ID not valid in localStorage, fetching from API /api/tenants/current...");
-        const res = await fetch("/api/tenants/current");
-        if (res.ok) {
-          const data = await res.json();
-          tenantId = data?.id || null;
-          if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
-            localStorage.setItem("tenantId", tenantId);
-          } else {
-            console.warn("/api/tenants/current did not return a valid tenantId", data);
-            return null;
+      // Always prefer server truth to avoid stale localStorage
+      const res = await fetch("/api/tenants/current");
+      if (res.ok) {
+        const data = await res.json();
+        const current = data?.id || null;
+        if (current && current !== DEFAULT_TENANT_ID && current.length === 36) {
+          const stored = localStorage.getItem("tenantId");
+          if (stored !== current) {
+            console.log("Updating localStorage tenantId to current:", current);
+            localStorage.setItem("tenantId", current);
           }
-        } else {
-          console.warn("/api/tenants/current request failed:", res.status);
-          return null;
+          return current;
         }
+      } else {
+        console.warn("/api/tenants/current request failed:", res.status);
       }
-      return tenantId || null;
+      // Fallback to localStorage only if server lookup failed
+      const fallback = localStorage.getItem("tenantId");
+      if (fallback && fallback !== DEFAULT_TENANT_ID && fallback.length === 36) {
+        return fallback;
+      }
+      return null;
     } catch (e) {
       console.error("resolveTenantId error:", e);
-      return null;
+      const fallback = localStorage.getItem("tenantId");
+      return fallback && fallback !== DEFAULT_TENANT_ID && fallback.length === 36 ? fallback : null;
     }
   };
 
@@ -127,14 +131,8 @@ export default function WebsiteSettingsPage() {
         return;
       }
 
-      // First try with header
-      let response = await fetch("/api/kennel-website", { headers: { "x-tenant-id": tenantId } });
-
-      // If backend rejects (e.g., 400 because header was bad), retry without header so API can fall back to cookie
-      if (!response.ok && response.status === 400) {
-        console.warn("Retrying /api/kennel-website without header after 400...");
-        response = await fetch("/api/kennel-website");
-      }
+      // Request with resolved tenant header (authoritative), API will also fall back to auth if missing
+      const response = await fetch("/api/kennel-website", { headers: { "x-tenant-id": tenantId } });
 
       console.log("Fetch response status:", response.status);
 

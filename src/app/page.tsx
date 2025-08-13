@@ -89,18 +89,12 @@ function Home() {
 
   // Fetch data on component mount
   useEffect(() => {
-    // Initialize page data
+    // Initialize page data: fetch tenant name first to avoid header flashing
     const initializePage = async () => {
       try {
-        console.log('✅ Initializing dashboard page');
-        await fetchData();
         await fetchTenantName();
-      } catch (error) {
-        console.error('Error initializing page:', error);
-        // Fallback: try to fetch data anyway
-        await fetchData();
-        await fetchTenantName();
-      }
+      } catch {}
+      await fetchData();
     };
 
     initializePage();
@@ -136,7 +130,7 @@ function Home() {
 
       if (response.ok) {
         const tenantData = await response.json();
-        setKennelName(tenantData.name || "");
+        setKennelName((prev) => tenantData.name || prev || "");
         setHeaderLoaded(true);
       } else {
         console.error("Error fetching tenant name:", response.statusText);
@@ -667,7 +661,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-2xl p-6">
+      <div className="bg-white shadow-sm rounded-2xl p-5">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">{t("pendingBookings", "Pending Bookings")}</h2>
           <Link href="/bookings" className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
@@ -704,7 +698,7 @@ function Home() {
             <ArrowUpRight className="h-4 w-4 mr-1" />
           </Link>
         </div>
-        <UnpaidBookings />
+        <UnpaidBookings limit={4} />
       </div>
 
       <div className="mt-8">

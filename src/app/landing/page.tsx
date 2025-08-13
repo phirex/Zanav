@@ -16,15 +16,11 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
 export default function LandingPage() {
-  const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === "he";
+  const { t } = useTranslation();
   return (
-    <div
-      className="min-h-screen bg-white"
-      style={{ direction: isRTL ? "rtl" : "ltr" }}
-    >
+    <div className="min-h-screen bg-white" suppressHydrationWarning>
       {/* Navigation */}
-      <nav className="border-b border-gray-100">
+      <nav className="border-b border-gray-100" suppressHydrationWarning>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">

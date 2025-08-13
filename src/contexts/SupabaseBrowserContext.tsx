@@ -105,21 +105,13 @@ export function SupabaseBrowserProvider({
     };
   }, [supabase, user]); // Only re-run if supabase client changes or user state changes
 
-  // Public routes shouldn't block on auth checks
-  const isPublicRoute = typeof window !== 'undefined' && (
-    window.location.pathname === '/landing' ||
-    window.location.pathname.startsWith('/login') ||
-    window.location.pathname.startsWith('/signup') ||
-    window.location.pathname.startsWith('/verify-email')
-  );
-
-  // Show loading or prevent rendering while redirecting (except public routes)
-  if ((loading && !isPublicRoute) || isRedirecting) {
+  // Do not block rendering on auth loading; only block while actively redirecting
+  if (isRedirecting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Setting up your account...</p>
+          <p className="text-gray-600">Loading…</p>
         </div>
       </div>
     );

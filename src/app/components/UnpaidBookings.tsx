@@ -43,7 +43,7 @@ interface UnpaidBookingWithAmounts extends UnpaidBooking {
   remainingAmount: number;
 }
 
-export function UnpaidBookings() {
+export function UnpaidBookings({ limit = 4 }: { limit?: number } = {}) {
   const { t, i18n } = useTranslation();
   const [unpaidBookings, setUnpaidBookings] = useState<
     UnpaidBookingWithAmounts[]
@@ -193,33 +193,33 @@ export function UnpaidBookings() {
         </button>
       </div>
 
-      <div className="space-y-3">
-        {unpaidBookings.map((booking) => (
+      <div className="space-y-2">
+        {unpaidBookings.slice(0, limit).map((booking) => (
           <div
             key={booking.id}
-            className="bg-red-50 border border-red-200 rounded-xl p-4 cursor-pointer hover:bg-red-100 transition-colors"
+            className="bg-red-50 border border-red-200 rounded-lg p-3 cursor-pointer hover:bg-red-100 transition-colors"
             onClick={() => router.push(`/bookings/${booking.id}`)}
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               {/* Client & Booking Info */}
               <div className="flex items-start">
                 <AlertTriangle className="h-5 w-5 text-red-500 mt-1 ml-3 rtl:ml-3 rtl:mr-0" />
                 <div className="flex-1">
-                  <div className="font-medium text-base">
+                  <div className="font-medium text-sm md:text-base">
                     {booking.dog.owner.name} - {booking.dog.name}
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    <span className="inline-flex items-center bg-blue-50 text-blue-700 rounded-md px-2 py-1">
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">
+                    <span className="inline-flex items-center bg-blue-50 text-blue-700 rounded px-2 py-0.5">
                       {formatDate(booking.startDate)} -{" "}
                       {formatDate(booking.endDate)}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-2 flex flex-wrap gap-2">
-                    <span className="inline-block bg-gray-100 rounded-md px-2 py-1">
+                  <div className="text-[11px] md:text-xs text-gray-500 mt-2 flex flex-wrap gap-2">
+                    <span className="inline-block bg-gray-100 rounded px-2 py-0.5">
                       <span className="font-medium">{t("bookingAmount")}:</span>{" "}
                       {formatCurrency(booking.totalAmount, i18n.language)}
                     </span>
-                    <span className="inline-block bg-green-100 rounded-md px-2 py-1">
+                    <span className="inline-block bg-green-100 rounded px-2 py-0.5">
                       <span className="font-medium">{t("paid")}:</span>{" "}
                       {formatCurrency(booking.paidAmount, i18n.language)}
                     </span>
@@ -228,18 +228,18 @@ export function UnpaidBookings() {
               </div>
 
               {/* Payment Details & Action */}
-              <div className="flex flex-col md:flex-row items-center gap-3 mt-2 md:mt-0">
-                <div className="bg-red-100 rounded-lg px-4 py-2 text-center md:text-right">
-                  <div className="text-xs text-red-800 font-medium">
+              <div className="flex flex-col md:flex-row items-center gap-2 mt-2 md:mt-0">
+                <div className="bg-red-100 rounded px-3 py-1.5 text-center md:text-right">
+                  <div className="text-[11px] text-red-800 font-medium">
                     {t("remainingBalance")}:
                   </div>
-                  <div className="font-bold text-xl text-red-700">
+                  <div className="font-bold text-lg md:text-xl text-red-700">
                     {formatCurrency(booking.remainingAmount, i18n.language)}
                   </div>
                 </div>
                 <Link
                   href={`/payments/new?bookingId=${booking.id}`}
-                  className="w-full md:w-auto px-5 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 whitespace-nowrap transition-colors flex items-center justify-center gap-1"
+                  className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 whitespace-nowrap transition-colors flex items-center justify-center gap-1"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <span>{t("payment", "תשלום")}</span>
