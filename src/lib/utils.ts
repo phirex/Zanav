@@ -22,10 +22,12 @@ export function formatCurrency(amount: number, language?: string, currencyCode?:
     (typeof window !== "undefined" ? (window.localStorage.getItem("i18nextLng") || document.cookie.match(/(?:^|; )i18nextLng=([^;]+)/)?.[1]) : "en") ||
     "en";
 
+  // No decimals; use max 0 fraction digits to avoid trailing fractions like .548
+  const options: Intl.NumberFormatOptions = { maximumFractionDigits: 0 };
   if (lang.startsWith("en")) {
-    return `$${amount.toLocaleString("en-US")}`;
+    return `$${amount.toLocaleString("en-US", options)}`;
   } else {
-    return `₪${amount.toLocaleString("he-IL")}`;
+    return `₪${amount.toLocaleString("he-IL", options)}`;
   }
 }
 

@@ -71,6 +71,9 @@ export async function listBookings(
       startDate,
       endDate,
       status,
+      priceType,
+      pricePerDay,
+      totalPrice,
       exemptLastDay,
       createdAt,
       updatedAt,
@@ -78,7 +81,8 @@ export async function listBookings(
       room:Room(id, name, displayName, capacity),
       dog:Dog(id, name, breed,
         owner:Owner(id, name, phone)
-      )
+      ),
+      payments:Payment(amount, createdAt)
     `,
     )
     // Added explicit tenant isolation now that we removed the connection-level GUC

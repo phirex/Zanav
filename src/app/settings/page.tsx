@@ -10,6 +10,8 @@ import {
   Plus,
   Building,
   Upload,
+  Database,
+  Globe,
 } from "lucide-react";
 import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
@@ -85,6 +87,7 @@ function SettingsContent() {
   const [importing, setImporting] = useState(false);
   const [stripeStatus, setStripeStatus] = useState<{connected?: boolean, configured?: boolean, accountId?: string} | null>(null);
   const [pricingSettings, setPricingSettings] = useState<{ pricePerDay: string; currency: string }>({ pricePerDay: "", currency: "usd" });
+  const [demoBusy, setDemoBusy] = useState(false);
 
   const fetchRooms = useCallback(async () => {
     if (!initialized) return;
@@ -179,6 +182,34 @@ function SettingsContent() {
       if (res.ok) setStripeStatus(await res.json());
     } catch {}
   }, []);
+
+  const generateDemoData = async () => {
+    if (demoBusy) return;
+    setDemoBusy(true);
+    try {
+      const res = await fetchWithTenant("/api/generate-demo-data", { method: "POST" });
+      const ok = (res as any)?.success !== false;
+      setMessage({ type: ok ? "success" : "error", text: ok ? t("demoGenerated", "Demo data generated") : t("demoFailed", "Failed to generate demo data") });
+    } catch (e) {
+      setMessage({ type: "error", text: t("demoFailed", "Failed to generate demo data") });
+    } finally {
+      setDemoBusy(false);
+    }
+  };
+
+  const restoreWebsiteContent = async () => {
+    if (demoBusy) return;
+    setDemoBusy(true);
+    try {
+      const res = await fetchWithTenant("/api/restore-website-content", { method: "POST" });
+      const ok = (res as any)?.success !== false;
+      setMessage({ type: ok ? "success" : "error", text: ok ? t("websiteRestored", "Website content restored") : t("websiteRestoreFailed", "Failed to restore website content") });
+    } catch (e) {
+      setMessage({ type: "error", text: t("websiteRestoreFailed", "Failed to restore website content") });
+    } finally {
+      setDemoBusy(false);
+    }
+  };
 
   useEffect(() => {
     // Load tenant first to avoid intermediate blanking, then settings/rooms
@@ -545,6 +576,24 @@ function SettingsContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+
+        {/* Data & Demo tools */}
+        <div className="bg-white rounded-2xl shadow-sm">
+          <div className="p-6">
+            <div className="flex items-center gap-2 text-gray-700 mb-6">
+              <Database className="h-5 w-5" />
+              <h2 className="text-xl font-bold">{t("dataAndDemo", "Data & Demo Tools")}</h2>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button onClick={generateDemoData} disabled={demoBusy} className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 disabled:opacity-50">
+                {demoBusy ? t("working", "Working…") : t("generateDemoData", "Generate Demo Data")}
+              </button>
+              <button onClick={restoreWebsiteContent} disabled={demoBusy} className="px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 disabled:opacity-50 inline-flex items-center gap-2">
+                <Globe className="h-4 w-4" /> {demoBusy ? t("working", "Working…") : t("restoreWebsite", "Restore Website Content")}
+              </button>
+            </div>
           </div>
         </div>
 

@@ -81,6 +81,8 @@
   "viewCalendar": "View Calendar",
   "noUpcomingDogs": "No dogs arriving soon",
   "arrivingToday": "Arriving Today",
+  "vsYesterday": "vs yesterday",
+  "dogsArrivingToday": "Dogs Arriving Today",
   "recentBookings": "Recent Bookings",
   "viewAllBookings": "View All Bookings",
   "dogName": "Dog Name",

@@ -1,22 +1,12 @@
 "use client";
 
-import {
-  Calendar,
-  Users,
-  Dog,
-  DollarSign,
-  ArrowUpRight,
-  Search,
-  Plus,
-  Phone,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MonthlyFinancialReport } from "./components/MonthlyFinancialReport";
 import { UnpaidBookings } from "./components/UnpaidBookings";
 import { format } from "date-fns";
-import { createBrowserClient } from "@supabase/ssr";
 import { useTranslation } from "react-i18next";
 import { formatCurrency } from "@/lib/utils";
 import { formatDateLocale } from "@/lib/utils";
@@ -67,25 +57,20 @@ interface Booking {
 function Home() {
   const { t, i18n } = useTranslation();
   const [activeClients, setActiveClients] = useState(0);
-  const [projectedIncome, setProjectedIncome] = useState(0);
   const [actualIncome, setActualIncome] = useState(0);
   const [dogsInPension, setDogsInPension] = useState(0);
   const [todayBookings, setTodayBookings] = useState(0);
+  const [yesterdayDogsInPension, setYesterdayDogsInPension] = useState(0);
+  const [yesterdayArrivals, setYesterdayArrivals] = useState(0);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [upcomingDogs, setUpcomingDogs] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [kennelName, setKennelName] = useState<string>("");
   const [userName, setUserName] = useState<string>("User");
-  const [generatingDemo, setGeneratingDemo] = useState(false);
-  const [headerLoaded, setHeaderLoaded] = useState(false);
+  
   const router = useRouter();
   const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
 
   // Fetch data on component mount
   useEffect(() => {
@@ -131,7 +116,7 @@ function Home() {
       if (response.ok) {
         const tenantData = await response.json();
         setKennelName((prev) => tenantData.name || prev || "");
-        setHeaderLoaded(true);
+        
       } else {
         console.error("Error fetching tenant name:", response.statusText);
       }
@@ -140,130 +125,7 @@ function Home() {
     }
   };
 
-  // Function to generate demo data
-  const generateDemoData = async () => {
-    if (generatingDemo) return;
-
-    setGeneratingDemo(true);
-    try {
-      const response = await fetchWithTenant<{
-        success: boolean;
-        message: string;
-        summary: {
-          bookings: number;
-          owners: number;
-          rooms: number;
-          dogs: number;
-          payments: number;
-          templates: number;
-        };
-        error?: string;
-      }>("/api/generate-demo-data", {
-        method: "POST",
-      });
-
-      if (response.success) {
-        console.log(
-          "[HOME] Demo data generated successfully:",
-          response.summary,
-        );
-        alert(
-          `Demo data generated successfully! Created ${response.summary.bookings} bookings, ${response.summary.owners} clients, and more.`,
-        );
-        window.location.reload();
-      } else {
-        throw new Error(response.error || "Failed to generate demo data");
-      }
-    } catch (error: any) {
-      console.error("[HOME] Error generating demo data:", error);
-      alert(`Error generating demo data: ${error.message}`);
-    } finally {
-      setGeneratingDemo(false);
-    }
-  };
-
-  // Function to regenerate demo data (clears existing data first)
-  const regenerateDemoData = async () => {
-    if (generatingDemo) return;
-
-    if (!confirm("This will clear all existing data and create new demo data. Are you sure?")) {
-      return;
-    }
-
-    setGeneratingDemo(true);
-    try {
-      const response = await fetchWithTenant<{
-        success: boolean;
-        message: string;
-        summary: {
-          bookings: number;
-          owners: number;
-          rooms: number;
-          dogs: number;
-          payments: number;
-          templates: number;
-        };
-        error?: string;
-      }>("/api/regenerate-demo-data", {
-        method: "POST",
-      });
-
-      if (response.success) {
-        console.log(
-          "[HOME] Demo data regenerated successfully:",
-          response.summary,
-        );
-        alert(
-          `Demo data regenerated successfully! Created ${response.summary.bookings} bookings, ${response.summary.owners} clients, and more.`,
-        );
-        window.location.reload();
-      } else {
-        throw new Error(response.error || "Failed to regenerate demo data");
-      }
-    } catch (error: any) {
-      console.error("[HOME] Error regenerating demo data:", error);
-      alert(`Error regenerating demo data: ${error.message}`);
-    } finally {
-      setGeneratingDemo(false);
-    }
-  };
-
-  const restoreWebsiteContent = async () => {
-    if (generatingDemo) return;
-
-    setGeneratingDemo(true);
-    try {
-      const response = await fetchWithTenant<{
-        success: boolean;
-        message: string;
-        summary: {
-          testimonials: number;
-          faqs: number;
-          gallery: number;
-        };
-        error?: string;
-      }>("/api/restore-website-content", {
-        method: "POST",
-      });
-
-      if (response.success) {
-        console.log(
-          "[HOME] Website content restored successfully:",
-          response.summary,
-        );
-        alert(
-          `Website content restored successfully! Created ${response.summary.testimonials} testimonials, ${response.summary.faqs} FAQ items, and ${response.summary.gallery} gallery images.`,
-        );
-      } else {
-        throw new Error(response.error || "Failed to restore website content");
-      }
-    } catch (error: any) {
-      console.error("[HOME] Error restoring website content:", error);
-      alert(`Error restoring website content: ${error.message}`);
-    } finally {
-      setGeneratingDemo(false);
-    }
-  };
+  // Demo/restore tools moved to Settings page
 
   // Function to fetch dashboard data
   const fetchData = async () => {
@@ -326,6 +188,8 @@ function Home() {
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
 
       const dogsInPensionCount = bookings.filter((booking: Booking) => {
         if (!booking.startDate || !booking.endDate || !booking.dog)
@@ -341,6 +205,20 @@ function Home() {
       }).length;
       setDogsInPension(dogsInPensionCount);
 
+      // Yesterday dogs in pension
+      const yDogs = bookings.filter((booking: Booking) => {
+        if (!booking.startDate || !booking.endDate || !booking.dog) return false;
+        const startDate = new Date(booking.startDate);
+        const endDate = new Date(booking.endDate);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        return (
+          startDate.getTime() <= yesterday.getTime() &&
+          endDate.getTime() > yesterday.getTime()
+        );
+      }).length;
+      setYesterdayDogsInPension(yDogs);
+
       const todayBookingsCount = bookings.filter((booking: Booking) => {
         if (!booking.startDate || !booking.dog) return false;
         const startDate = new Date(booking.startDate);
@@ -348,6 +226,15 @@ function Home() {
         return startDate.getTime() === today.getTime();
       }).length;
       setTodayBookings(todayBookingsCount);
+
+      // Yesterday arrivals
+      const yesterdayArrivalsCount = bookings.filter((booking: Booking) => {
+        if (!booking.startDate || !booking.dog) return false;
+        const startDate = new Date(booking.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        return startDate.getTime() === yesterday.getTime();
+      }).length;
+      setYesterdayArrivals(yesterdayArrivalsCount);
 
       // Get upcoming dogs
       const todayString = format(today, "yyyy-MM-dd");
@@ -362,23 +249,17 @@ function Home() {
       setUpcomingDogs(sortedUpcoming.slice(0, 5));
 
       // Calculate monthly income - bookings that occur in current month (any year)
-      // For demo data, look at July 2025 (where we have data)
       const currentMonth = today.getMonth();
-      const demoYear = 2025; // Use 2025 for demo data
-      const monthStart = new Date(demoYear, currentMonth, 1);
-      const monthEnd = new Date(demoYear, currentMonth + 1, 0);
+      const currentYear = today.getFullYear();
+      const monthStart = new Date(currentYear, currentMonth, 1);
+      const monthEnd = new Date(currentYear, currentMonth + 1, 0);
 
       const monthlyBookings = bookings.filter((booking: Booking) => {
         if (!booking.startDate || !booking.endDate) return false;
         const bookingStart = new Date(booking.startDate);
         const bookingEnd = new Date(booking.endDate);
-        
-        // Check if booking overlaps with current month in demo year
-        return (
-          (bookingStart.getMonth() === currentMonth && bookingStart.getFullYear() === demoYear) ||
-          (bookingEnd.getMonth() === currentMonth && bookingEnd.getFullYear() === demoYear) ||
-          (bookingStart <= monthStart && bookingEnd >= monthEnd)
-        );
+        // Overlaps current month
+        return bookingStart <= monthEnd && bookingEnd >= monthStart;
       });
 
       const monthlyTotal = monthlyBookings.reduce((total, booking) => {
@@ -400,18 +281,6 @@ function Home() {
         return total;
       }, 0);
       
-      console.log("[DASHBOARD] Monthly calculation:", {
-        currentMonth,
-        demoYear,
-        monthlyBookings: monthlyBookings.length,
-        monthlyTotal,
-        bookingsSample: monthlyBookings.slice(0, 2).map(b => ({
-          id: b.id,
-          startDate: b.startDate,
-          endDate: b.endDate,
-          totalPrice: b.totalPrice
-        }))
-      });
       setActualIncome(monthlyTotal);
 
       // Sort bookings by date for recent bookings
@@ -480,6 +349,10 @@ function Home() {
     }
   };
 
+  const kpiBase = "p-6 rounded-xl shadow-sm min-h-[122px] flex flex-col justify-between";
+  const iconWrap = "w-10 h-10 flex items-center justify-center rounded-full";
+  const kpiTitle = "text-sm font-medium text-gray-500 leading-tight min-h-[40px]";
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -511,207 +384,179 @@ function Home() {
 
   return (
     <div className="space-y-8 pb-10">
-      {/* Fancy Kennel Name Header */}
-      <div
-        className={`relative mb-8 transition-all duration-1000 ${headerLoaded ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-4"}`}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300"></div>
-        <div className="relative py-8 pl-8 pr-4">
-          {kennelName ? (
-            <div className="w-full flex flex-col items-start">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-2xl">🏠</span>
-                </div>
-                <div>
-                  <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                    {kennelName}
-                  </h1>
-                  <p className="text-xl text-gray-600 font-medium">
-                    {t("dashboardOverview", "Dashboard Overview")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-6 text-sm text-gray-500">
-                <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="font-medium">{t("systemOnline", "System Online")}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium">{t("readyForBookings", "Ready for Bookings")}</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full flex flex-col items-start">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-lg animate-pulse">
-                  <span className="text-white text-2xl">🏠</span>
-                </div>
-                <div>
-                  <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent mb-2">
-                    {t("dashboardOverview", "Dashboard Overview")}
-                  </h1>
-                  <p className="text-xl text-gray-500 font-medium">
-                    {t("loadingKennelName", "Loading kennel information...")}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-              <span className="text-lg">👋</span>
+      {/* Colorful slim header */}
+      <div className="relative mb-4">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl shadow-lg"></div>
+        <div className="relative px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+              <span className="text-white text-xl">🏠</span>
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-700">
-                {t("dashboardGreeting", { name: userName })}
-              </h2>
-              <p className="text-sm text-gray-500">
-                {t("welcomeBack", "Welcome back to your dashboard")}
-              </p>
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-800 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {kennelName || t("dashboardOverview", "Dashboard Overview")}
+              </h1>
+              <div className="mt-1 flex items-center gap-3 text-xs text-gray-600">
+                <span className="flex items-center gap-2 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                  {t("systemOnline", "System Online")}
+                </span>
+                <span className="flex items-center gap-2 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                  {t("readyForBookings", "Ready for Bookings")}
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={generateDemoData}
-              disabled={generatingDemo}
-              className="text-sm px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-blue-700 disabled:text-gray-500 border border-blue-200 hover:border-blue-300 transition-all duration-200"
-              title={t("demoDataTooltip", "Generate demo data") as string}
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white/70 backdrop-blur border border-gray-200 rounded-full text-gray-700">
+              <span>👋</span> {userName}
+            </span>
+            <Link
+              href="/bookings/new"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
             >
-              {generatingDemo ? t("generatingDemo", "⏳ Generating...") : t("demoDataButton", "🎭 Demo Data")}
-            </button>
-            <button
-              onClick={regenerateDemoData}
-              disabled={generatingDemo}
-              className="text-sm px-3 py-2 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-orange-700 disabled:text-gray-500 border border-orange-200 hover:border-orange-300 transition-all duration-200"
-              title={t("regenerateTooltip", "Regenerate demo data (clears existing data)") as string}
-            >
-              {generatingDemo ? t("regeneratingDemo", "⏳ Regenerating...") : t("regenerateButton", "🔄 Regenerate")}
-            </button>
-            <button
-              onClick={restoreWebsiteContent}
-              disabled={generatingDemo}
-              className="text-sm px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed rounded-lg text-green-700 disabled:text-gray-500 border border-green-200 hover:border-green-300 transition-all duration-200"
-              title={t("restoreWebsiteTooltip", "Restore website content (testimonials, FAQ, gallery)") as string}
-            >
-              {generatingDemo ? t("restoringWebsite", "⏳ Restoring...") : t("restoreWebsite", "🌐 Restore Website")}
-            </button>
+              <span className="font-medium">{t("newBooking")}</span>
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
-        <Link
-          href="/bookings/new"
-          className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          <span className="font-medium">{t("newBooking")}</span>
-          <ArrowUpRight className="h-4 w-4" />
-        </Link>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm">
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className={`bg-blue-50/50 border border-blue-100 ${kpiBase}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">
+              <p className={kpiTitle}>
                 {t("dogsInPension", "Dogs in Kennel")}
               </p>
               <p className="text-2xl font-bold mt-2">{dogsInPension}</p>
+              <p className={`mt-1 text-xs ${dogsInPension - yesterdayDogsInPension > 0 ? 'text-green-600' : dogsInPension - yesterdayDogsInPension < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                {(dogsInPension - yesterdayDogsInPension > 0 ? '▲' : dogsInPension - yesterdayDogsInPension < 0 ? '▼' : '—')} {Math.abs(dogsInPension - yesterdayDogsInPension)} {t('vsYesterday','vs yesterday')}
+              </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
+            <div className={`${iconWrap} bg-blue-100`}>
               <span className="text-blue-600 text-xl">🐕</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm">
+        <div className={`bg-purple-50/50 border border-purple-100 ${kpiBase}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">
+              <p className={kpiTitle}>
                 {t("activeClients", "Active Clients")}
               </p>
               <p className="text-2xl font-bold mt-2">{activeClients}</p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
+            <div className={`${iconWrap} bg-purple-100`}>
               <span className="text-purple-600 text-xl">👥</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm">
+        <div className={`bg-green-50/50 border border-green-100 ${kpiBase}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">
+              <p className={kpiTitle}>
                 {t("todayBookings", "Today's Arrivals")}
               </p>
               <p className="text-2xl font-bold mt-2">{todayBookings}</p>
+              <p className={`mt-1 text-xs ${todayBookings - yesterdayArrivals > 0 ? 'text-green-600' : todayBookings - yesterdayArrivals < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                {(todayBookings - yesterdayArrivals > 0 ? '▲' : todayBookings - yesterdayArrivals < 0 ? '▼' : '—')} {Math.abs(todayBookings - yesterdayArrivals)} {t('vsYesterday','vs yesterday')}
+              </p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
+            <div className={`${iconWrap} bg-green-100`}>
               <span className="text-green-600 text-xl">📅</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm">
+        <div className={`bg-yellow-50/50 border border-yellow-100 ${kpiBase}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">
+              <p className={kpiTitle}>
+                {t("pendingBookings", "Pending Bookings")}
+              </p>
+              <p className="text-2xl font-bold mt-2">{pendingBookings.length}</p>
+            </div>
+            <div className={`${iconWrap} bg-yellow-100`}>
+              <span className="text-yellow-600 text-xl">📝</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`bg-indigo-50/50 border border-indigo-100 ${kpiBase}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={kpiTitle}>
+                {t("dogsArrivingToday", "Dogs Arriving Today")}
+              </p>
+              <p className="text-2xl font-bold mt-2">{todayBookings}</p>
+            </div>
+            <div className={`${iconWrap} bg-indigo-100`}>
+              <span className="text-indigo-600 text-xl">⏭️</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`bg-amber-50/50 border border-amber-100 ${kpiBase}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={kpiTitle}>
                 {t("monthlyIncome", "Monthly Income")}
               </p>
               <p className="text-2xl font-bold mt-2">
-                {formatCurrency(projectedIncome, i18n.language)}
+                {formatCurrency(actualIncome, i18n.language)}
               </p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
+            <div className={`${iconWrap} bg-yellow-100`}>
               <span className="text-yellow-600 text-xl">💰</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-2xl p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">{t("pendingBookings", "Pending Bookings")}</h2>
-          <Link href="/bookings" className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
-            {t("review", "Review")} <ArrowUpRight className="h-4 w-4 mr-1" />
-          </Link>
-        </div>
-        {pendingBookings.length === 0 ? (
-          <p className="text-gray-500">{t("noPendingBookings", "No pending bookings")}</p>
-        ) : (
-          <div className="space-y-3">
-            {pendingBookings.map((b: any) => (
-              <div key={b.id} className="flex items-center justify-between border border-gray-100 rounded-lg p-3">
-                <div>
-                  <div className="font-medium">{(b.dogs && b.dogs.length > 1) ? `${b.dogs[0]} +${b.dogs.length-1}` : b.dog?.name} · {b.dog?.owner?.name || 'Owner'}</div>
-                  <div className="text-xs text-gray-500">{formatDate(b.startDate)} → {formatDate(b.endDate)}</div>
-                </div>
-                <Link href={`/bookings/${b.id}`} className="text-blue-600 text-sm">{t("open", "Open")}</Link>
-              </div>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white shadow-sm rounded-2xl p-5">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900">{t("pendingBookings", "Pending Bookings")}</h2>
+            <Link href="/bookings" className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+              {t("review", "Review")} <ArrowUpRight className="h-4 w-4 mr-1" />
+            </Link>
           </div>
-        )}
-      </div>
-
-      <div className="bg-white shadow-sm rounded-2xl p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">
-            {t("unpaidPayments", "Unpaid Bookings")}
-          </h2>
-          <Link
-            href="/payments"
-            className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-          >
-            {t("viewAllPayments", "View All Payments")}{" "}
-            <ArrowUpRight className="h-4 w-4 mr-1" />
-          </Link>
+          {pendingBookings.length === 0 ? (
+            <p className="text-gray-500">{t("noPendingBookings", "No pending bookings")}</p>
+          ) : (
+            <div className="space-y-3">
+              {pendingBookings.map((b: any) => (
+                <div key={b.id} className="flex items-center justify-between border border-gray-100 rounded-lg p-3">
+                  <div>
+                    <div className="font-medium">{(b.dogs && b.dogs.length > 1) ? `${b.dogs[0]} +${b.dogs.length-1}` : b.dog?.name} · {b.dog?.owner?.name || 'Owner'}</div>
+                    <div className="text-xs text-gray-500">{formatDate(b.startDate)} → {formatDate(b.endDate)}</div>
+                  </div>
+                  <Link href={`/bookings/${b.id}`} className="text-blue-600 text-sm">{t("open", "Open")}</Link>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <UnpaidBookings limit={4} />
+
+        <div className="bg-white shadow-sm rounded-2xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              {t("unpaidPayments", "Unpaid Bookings")}
+            </h2>
+            <Link
+              href="/payments"
+              className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+            >
+              {t("viewAllPayments", "View All Payments")} {" "}
+              <ArrowUpRight className="h-4 w-4 mr-1" />
+            </Link>
+          </div>
+          <UnpaidBookings limit={4} />
+        </div>
       </div>
 
       <div className="mt-8">
