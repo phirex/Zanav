@@ -430,36 +430,35 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Product tour section */}
+      {/* Kennel Website section */}
       <div className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">
-              {t("productTour")}
+              {t("kennelWebsiteSection")}
             </h2>
             <p className="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              {t("seeInAction")}
+              {t("kennelWebsiteHeadline")}
             </p>
             <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              {t("guidedTour")}
+              {t("kennelWebsiteSubhead")}
             </p>
           </div>
 
           <div className="mt-12 border border-gray-200 rounded-xl overflow-hidden shadow-lg">
             <Image
-              src="/images/dashboard-full.png"
-              alt="Product tour"
+              src="/images/website.png"
+              alt="Kennel Website"
               width={1200}
               height={800}
               className="w-full"
             />
-            {/* Here you would implement a carousel, but for now just showing one image */}
             <div className="p-6 bg-gray-50">
               <p className="text-lg font-medium text-gray-900">
-                {t("dashboardOverview")}
+                {t("kennelWebsiteCaptionTitle")}
               </p>
               <p className="mt-1 text-sm text-gray-500">
-                {t("dashboardOverviewDesc")}
+                {t("kennelWebsiteCaptionDesc")}
               </p>
             </div>
           </div>
