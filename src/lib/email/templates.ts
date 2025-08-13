@@ -7,8 +7,8 @@ export function baseEmailTemplate({
   preview?: string;
   contentHtml: string;
 }) {
-  // Brand logo used in email header
-  const logoUrl = "https://www.zanav.io/images/logo-white.svg";
+  // Use PNG because many email clients (e.g., Gmail) block SVG images
+  const logoUrl = "https://www.zanav.io/android-chrome-192x192.png";
   return `<!doctype html>
 <html lang="en">
   <head>
