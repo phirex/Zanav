@@ -421,9 +421,22 @@ function Home() {
       );
       setRecentBookings(sortedBookings.slice(0, 5));
 
-      // Filter pending
-      const pending = bookings.filter((b: Booking) => b.status === "PENDING");
-      setPendingBookings(pending.slice(0, 5));
+      // Filter pending and group multi-dog reservations by owner+dates
+      const pendingRaw = bookings.filter((b: Booking) => b.status === "PENDING");
+      const groupMap = new Map<string, Booking & { dogs: string[] }>();
+      for (const b of pendingRaw) {
+        const ownerId = (b as any)?.dog?.owner?.id ?? (b as any)?.dog?.owner?.phone ?? (b as any)?.dog?.owner?.name;
+        const key = `${ownerId}::${b.startDate}::${b.endDate}`;
+        const existing = groupMap.get(key);
+        if (!existing) {
+          (b as any).dogs = [(b as any).dog?.name];
+          groupMap.set(key, b as any);
+        } else {
+          (existing as any).dogs.push((b as any).dog?.name);
+        }
+      }
+      const pendingGrouped = Array.from(groupMap.values());
+      setPendingBookings(pendingGrouped.slice(0, 5));
 
       // Fetch kennel settings (name) and user profile for greeting
       try {
@@ -672,10 +685,10 @@ function Home() {
           <p className="text-gray-500">{t("noPendingBookings", "No pending bookings")}</p>
         ) : (
           <div className="space-y-3">
-            {pendingBookings.map((b) => (
+            {pendingBookings.map((b: any) => (
               <div key={b.id} className="flex items-center justify-between border border-gray-100 rounded-lg p-3">
                 <div>
-                  <div className="font-medium">{b.dog?.name} · {b.dog?.owner?.name || 'Owner'}</div>
+                  <div className="font-medium">{(b.dogs && b.dogs.length > 1) ? `${b.dogs[0]} +${b.dogs.length-1}` : b.dog?.name} · {b.dog?.owner?.name || 'Owner'}</div>
                   <div className="text-xs text-gray-500">{formatDate(b.startDate)} → {formatDate(b.endDate)}</div>
                 </div>
                 <Link href={`/bookings/${b.id}`} className="text-blue-600 text-sm">{t("open", "Open")}</Link>

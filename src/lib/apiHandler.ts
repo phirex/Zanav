@@ -137,7 +137,10 @@ export function createHandler(handler: ApiHandler) {
         }
       }
 
-      const result = await handler({ req, client, tenantId, body, params });
+      // Normalize Next.js route params which sometimes arrive nested under `params`
+      const normalizedParams = (params as any)?.params || params;
+
+      const result = await handler({ req, client, tenantId, body, params: normalizedParams });
 
       // If handler already returned a Response
       if (result instanceof Response) return result;

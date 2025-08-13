@@ -13,7 +13,9 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { formatDateLocale } from "@/lib/utils";
+import { formatDateLocale, formatCurrency } from "@/lib/utils";
+import ClientLayout from "@/app/components/ClientLayout";
+import { useTranslation } from "react-i18next";
 
 interface Dog {
   id: number;
@@ -60,6 +62,7 @@ export default function ClientDetailsPage() {
   const router = useRouter();
   const [owner, setOwner] = useState<Owner | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const fetchOwner = async () => {
@@ -111,24 +114,24 @@ export default function ClientDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center py-12">טוען...</div>
+      <ClientLayout>
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="text-center py-12">{t("loading", "Loading...")}</div>
         </div>
-      </div>
+      </ClientLayout>
     );
   }
 
   if (!owner) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center py-12 text-red-600">לא ניתן לטעון את פרטי הלקוח</div>
+      <ClientLayout>
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="text-center py-12 text-red-600">{t("errorLoadingClientDetails", "Unable to load client details")}</div>
           <div className="text-center">
-            <Link href="/clients" className="text-blue-600 hover:text-blue-700">חזרה לרשימת הלקוחות</Link>
+            <Link href="/clients" className="text-blue-600 hover:text-blue-700">{t("backToClients", "Back to Clients")}</Link>
           </div>
         </div>
-      </div>
+      </ClientLayout>
     );
   }
 
@@ -147,8 +150,8 @@ export default function ClientDetailsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <ClientLayout>
+      <div className="max-w-6xl mx-auto space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -157,7 +160,7 @@ export default function ClientDetailsPage() {
               className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700"
             >
               <ArrowRight className="h-5 w-5" />
-              חזרה ללקוחות
+              {t("backToClients", "Back to Clients")}
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">{owner.name}</h1>
           </div>
@@ -166,21 +169,21 @@ export default function ClientDetailsPage() {
               href={`/clients/${owner.id}/edit`}
               className="px-4 py-2 text-blue-600 hover:text-blue-700"
             >
-              ערוך פרטים
+              {t("editClient", "Edit Client")}
             </Link>
             <Link
               href={`/bookings/new?owner=${owner.id}`}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-5 w-5" />
-              הזמנה חדשה
+              {t("newBooking", "New Booking")}
             </Link>
           </div>
         </div>
 
         {/* Client Info */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">פרטי לקוח</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">{t("clientInformation", "Client Information")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-2 text-gray-600">
               <Phone className="h-5 w-5" />
@@ -204,12 +207,12 @@ export default function ClientDetailsPage() {
         {/* Dogs */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">כלבים</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t("dogs", "Dogs")}</h2>
             <Link
               href={`/clients/${owner.id}/edit?addDog=true`}
               className="text-blue-600 hover:text-blue-700"
             >
-              הוסף כלב
+              {t("addDog", "Add Dog")}
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -222,15 +225,15 @@ export default function ClientDetailsPage() {
                   <DogIcon className="h-5 w-5 text-gray-400" />
                   <h3 className="font-medium">{dog.name}</h3>
                 </div>
-                <p className="text-sm text-gray-500">גזע: {dog.breed}</p>
+                <p className="text-sm text-gray-500">{t("breed", "Breed")}: {dog.breed}</p>
                 {dog.specialNeeds && (
                   <p className="text-sm text-gray-500">
-                    צרכים מיוחדים: {dog.specialNeeds}
+                    {t("specialNeeds", "Special Needs")}: {dog.specialNeeds}
                   </p>
                 )}
                 {dog.currentRoom && (
                   <p className="text-sm text-gray-500">
-                    חדר נוכחי: {dog.currentRoom.name}
+                    {t("currentRoom", "Current Room")}: {dog.currentRoom.name}
                   </p>
                 )}
               </div>
@@ -240,11 +243,9 @@ export default function ClientDetailsPage() {
 
         {/* Upcoming Bookings */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            הזמנות קרובות
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">{t("upcomingBookingsTitle", "Upcoming Bookings")}</h2>
           {upcomingBookings.length === 0 ? (
-            <p className="text-gray-500">אין הזמנות קרובות</p>
+            <p className="text-gray-500">{t("noUpcomingBookings", "No upcoming bookings")}</p>
           ) : (
             <div className="space-y-4">
               {upcomingBookings.map((booking) => (
@@ -268,8 +269,8 @@ export default function ClientDetailsPage() {
                     </div>
                     <div className="text-sm text-gray-500">
                       {booking.priceType === "DAILY"
-                        ? `${booking.pricePerDay}₪ ליום`
-                        : `${booking.totalPrice}₪ סה״כ`}
+                        ? `${formatCurrency(booking.pricePerDay || 0, i18n.language)} ${t("perDay", "per day")}`
+                        : `${formatCurrency(booking.totalPrice || 0, i18n.language)} ${t("total", "Total")}`}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -277,13 +278,13 @@ export default function ClientDetailsPage() {
                       href={`/bookings/${booking.id}/edit`}
                       className="text-blue-600 hover:text-blue-700"
                     >
-                      ערוך
+                      {t("edit", "Edit")}
                     </Link>
                     <button
                       onClick={() => handleDeleteBooking(booking.id)}
                       className="text-red-600 hover:text-red-700"
                     >
-                      מחק
+                      {t("delete", "Delete")}
                     </button>
                   </div>
                 </div>
@@ -294,11 +295,9 @@ export default function ClientDetailsPage() {
 
         {/* Past Bookings */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            הזמנות קודמות
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">{t("pastBookingsTitle", "Past Bookings")}</h2>
           {pastBookings.length === 0 ? (
-            <p className="text-gray-500">אין הזמנות קודמות</p>
+            <p className="text-gray-500">{t("noPastBookings", "No past bookings")}</p>
           ) : (
             <div className="space-y-4">
               {pastBookings.map((booking) => (
@@ -317,16 +316,15 @@ export default function ClientDetailsPage() {
                     <div className="flex items-center gap-2 text-gray-500">
                       <DogIcon className="h-5 w-5" />
                       <span>
-                        {booking.dog.name} בחדר{" "}
-                        {booking.room.displayName || booking.room.name}
+                        {booking.dog.name} {t("inRoom", "in room")} {booking.room.displayName || booking.room.name}
                       </span>
                     </div>
                     <div className="text-gray-500">
                       {booking.priceType === "FIXED" && booking.totalPrice
-                        ? `מחיר קבוע: ${booking.totalPrice.toLocaleString()} ₪`
+                        ? `${t("fixedPrice", "Fixed Price")}: ${formatCurrency(booking.totalPrice, i18n.language)}`
                         : booking.pricePerDay
-                          ? `מחיר ליום: ${booking.pricePerDay.toLocaleString()} ₪`
-                          : "לא הוגדר מחיר"}
+                          ? `${t("dailyRate", "Daily Rate")}: ${formatCurrency(booking.pricePerDay, i18n.language)}`
+                          : t("priceNotSet", "Price not set")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -334,13 +332,13 @@ export default function ClientDetailsPage() {
                       href={`/bookings/${booking.id}/edit`}
                       className="text-blue-600 hover:text-blue-700"
                     >
-                      ערוך
+                      {t("edit", "Edit")}
                     </Link>
                     <button
                       onClick={() => handleDeleteBooking(booking.id)}
                       className="text-red-600 hover:text-red-700"
                     >
-                      מחק
+                      {t("delete", "Delete")}
                     </button>
                   </div>
                 </div>
@@ -349,6 +347,6 @@ export default function ClientDetailsPage() {
           )}
         </div>
       </div>
-    </div>
+    </ClientLayout>
   );
 }
