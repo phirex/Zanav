@@ -82,6 +82,7 @@ export async function GET(
     const settings = new Map((settingsRows || []).map((r: any) => [r.key, r.value]));
     const defaultPricePerDay = parseFloat(settings.get("default_price_per_day") || "0") || 0;
     const defaultCurrency = (settings.get("default_currency") || "usd").toLowerCase();
+    const defaultLanguage = (settings.get("default_language") || "").toLowerCase();
 
     const result = {
       websiteData: websiteData || {},
@@ -90,6 +91,7 @@ export async function GET(
       testimonials: testimonials || [],
       faqs: faqs || [],
       pricing: { defaultPricePerDay, defaultCurrency },
+      defaultLanguage,
       tenantId: websiteData.tenant_id,
     };
 

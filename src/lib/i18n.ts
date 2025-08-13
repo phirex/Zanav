@@ -26,7 +26,7 @@ i18n
     },
     resources,
     detection: {
-      order: ["localStorage", "cookie", "navigator", "htmlTag"],
+      order: ["cookie", "localStorage", "navigator", "htmlTag"],
       lookupLocalStorage: "i18nextLng",
       lookupCookie: "i18nextLng",
       caches: ["localStorage", "cookie"],
@@ -44,8 +44,8 @@ i18n
       bindI18nStore: "added removed",
       transEmptyNodeValue: "",
     },
-    // Ensure English is default
-    lng: "en",
+    // Ensure English is default if detection fails
+    lng: undefined as unknown as string,
   })
   .then(() => {
     console.log("i18n initialized successfully");

@@ -40,6 +40,7 @@ interface WhatsAppSettings {
 interface KennelSettings {
   kennelName: string;
   tenantId: string;
+  defaultLanguage?: string;
 }
 
 // New room form state
@@ -78,6 +79,7 @@ function SettingsContent() {
   const [kennelSettings, setKennelSettings] = useState<KennelSettings>({
     kennelName: "",
     tenantId: "",
+    defaultLanguage: "",
   });
 
   const [importing, setImporting] = useState(false);
@@ -131,6 +133,11 @@ function SettingsContent() {
         pricePerDay: data.default_price_per_day || "",
         currency: (data.default_currency || "usd").toLowerCase(),
       });
+
+      setKennelSettings((prev) => ({
+        ...prev,
+        defaultLanguage: (data.default_language || "").toLowerCase(),
+      }));
     } catch (error) {
       console.error("Error fetching settings:", error);
       if (error instanceof Error) {
@@ -349,6 +356,7 @@ function SettingsContent() {
           headers,
           body: JSON.stringify({
             kennelName: kennelSettings.kennelName,
+            default_language: (kennelSettings.defaultLanguage || "").toLowerCase(),
           }),
         }),
         fetch("/api/tenants/current", {
@@ -492,6 +500,28 @@ function SettingsContent() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t("enterKennelName", "Enter your kennel name")}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {t("defaultLanguage", "Default language")}
+                  </label>
+                  <select
+                    value={kennelSettings.defaultLanguage || ""}
+                    onChange={(e) =>
+                      setKennelSettings((prev) => ({
+                        ...prev,
+                        defaultLanguage: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">{t("systemDefault", "System default")}</option>
+                    <option value="en">English</option>
+                    <option value="he">עברית</option>
+                  </select>
+                </div>
               </div>
 
               {message && (

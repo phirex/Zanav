@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
+import I18nProviderComponent from "@/components/I18nProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,8 +17,10 @@ export default function LandingLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div dir="ltr" style={{ direction: "ltr" }}>
-      {children}
-    </div>
+    <I18nProviderComponent>
+      <div>
+        {children}
+      </div>
+    </I18nProviderComponent>
   );
 }
