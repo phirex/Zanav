@@ -11,13 +11,16 @@ import {
   CreditCard,
   BarChart2,
 } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
 export default function LandingPage() {
   const { t, i18n } = useTranslation();
-  const isHebrew = typeof i18n?.language === "string" && i18n.language.startsWith("he");
+  const isHebrew =
+    typeof i18n?.language === "string" && i18n.language.startsWith("he");
+  const [mobileOpen, setMobileOpen] = React.useState(false);
   return (
     <div className="min-h-screen bg-white" suppressHydrationWarning>
       {/* Navigation */}
@@ -62,8 +65,61 @@ export default function LandingPage() {
                 <LanguageSwitcher />
               </div>
             </div>
+            <div className="flex items-center md:hidden">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                aria-controls="mobile-menu"
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen((v) => !v)}
+              >
+                <span className="sr-only">Open main menu</span>
+                {mobileOpen ? (
+                  <X className="h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <Menu className="h-6 w-6" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
+        {mobileOpen ? (
+          <div className="md:hidden border-t border-gray-100" id="mobile-menu">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link
+                href="#features"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("features", "Features")}
+              </Link>
+              <Link
+                href="#pricing"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("pricing", "Pricing")}
+              </Link>
+              <Link
+                href="#faq"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("faq", "FAQ")}
+              </Link>
+              <Link
+                href="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("signIn", "Sign in")}
+              </Link>
+              <div className="px-3 py-2">
+                <LanguageSwitcher />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </nav>
 
       {/* Hero Section */}
@@ -71,7 +127,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-between px-4 sm:px-6 lg:px-8 pt-8 pb-12 lg:pt-16 lg:pb-20">
           {/* Left: Hero Text */}
           <div className="w-full lg:w-1/2 flex flex-col items-start lg:pr-8">
-            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl" style={isHebrew ? { letterSpacing: "0.5px" } : undefined}>
+            <h1
+              className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl"
+              style={isHebrew ? { letterSpacing: "0.5px" } : undefined}
+            >
               <span className="block">{t("boardingManagement")}</span>
               <span className="block text-blue-600">{t("makesTailsWag")}</span>
             </h1>
@@ -128,16 +187,40 @@ export default function LandingPage() {
           </p>
           <div className="mt-6 grid grid-cols-2 gap-10 md:grid-cols-4 items-center">
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/pawsco.svg" alt="PawsCo" width={240} height={72} className="h-16 w-auto opacity-80" />
+              <Image
+                src="/images/logos/pawsco.svg"
+                alt="PawsCo"
+                width={240}
+                height={72}
+                className="h-16 w-auto opacity-80"
+              />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/furify.svg" alt="Furify" width={240} height={72} className="h-16 w-auto opacity-80" />
+              <Image
+                src="/images/logos/furify.svg"
+                alt="Furify"
+                width={240}
+                height={72}
+                className="h-16 w-auto opacity-80"
+              />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/tailwind-kennels.svg" alt="Tailwind Kennels" width={240} height={72} className="h-16 w-auto opacity-80" />
+              <Image
+                src="/images/logos/tailwind-kennels.svg"
+                alt="Tailwind Kennels"
+                width={240}
+                height={72}
+                className="h-16 w-auto opacity-80"
+              />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/puppalabs.svg" alt="PuppaLabs" width={240} height={72} className="h-16 w-auto opacity-80" />
+              <Image
+                src="/images/logos/puppalabs.svg"
+                alt="PuppaLabs"
+                width={240}
+                height={72}
+                className="h-16 w-auto opacity-80"
+              />
             </div>
           </div>
           <p className="mt-8 text-center text-lg text-gray-600">
@@ -349,7 +432,13 @@ export default function LandingPage() {
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
-                      <Image src="/images/testimonials/sarah-johnson.jpg" alt="Sarah Johnson" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                      <Image
+                        src="/images/testimonials/sarah-johnson.jpg"
+                        alt="Sarah Johnson"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
                     </div>
                     <div className="ml-4">
                       <p className="text-gray-700 italic">
@@ -417,7 +506,13 @@ export default function LandingPage() {
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
-                      <Image src="/images/testimonials/michael-torres.jpg" alt="Michael Torres" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                      <Image
+                        src="/images/testimonials/michael-torres.jpg"
+                        alt="Michael Torres"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
                     </div>
                     <div className="ml-4">
                       <p className="text-gray-700 italic">
@@ -487,7 +582,13 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <Image src="/images/testimonials/alex-brown.jpg" alt="Alex Brown" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                  <Image
+                    src="/images/testimonials/alex-brown.jpg"
+                    alt="Alex Brown"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">
@@ -510,7 +611,13 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <Image src="/images/testimonials/sarah-johnson.jpg" alt="Sarah Johnson" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                  <Image
+                    src="/images/testimonials/sarah-johnson.jpg"
+                    alt="Sarah Johnson"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">
@@ -533,7 +640,13 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <Image src="/images/testimonials/michael-torres.jpg" alt="Michael Torres" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                  <Image
+                    src="/images/testimonials/michael-torres.jpg"
+                    alt="Michael Torres"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">
