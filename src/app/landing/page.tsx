@@ -125,18 +125,18 @@ export default function LandingPage() {
           <p className="text-center text-base font-semibold uppercase text-gray-600 tracking-wider">
             {t("trustedBy")}
           </p>
-          <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-4 items-center">
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <div className="text-gray-400 h-12">Client Logo 1</div>
+              <Image src="/images/logos/pawsco.svg" alt="PawsCo" width={160} height={48} className="h-12 w-auto opacity-70" />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <div className="text-gray-400 h-12">Client Logo 2</div>
+              <Image src="/images/logos/furify.svg" alt="Furify" width={160} height={48} className="h-12 w-auto opacity-70" />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <div className="text-gray-400 h-12">Client Logo 3</div>
+              <Image src="/images/logos/tailwind-kennels.svg" alt="Tailwind Kennels" width={160} height={48} className="h-12 w-auto opacity-70" />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <div className="text-gray-400 h-12">Client Logo 4</div>
+              <Image src="/images/logos/puppalabs.svg" alt="PuppaLabs" width={160} height={48} className="h-12 w-auto opacity-70" />
             </div>
           </div>
           <p className="mt-8 text-center text-lg text-gray-600">
