@@ -430,6 +430,7 @@
   "readyToGetStarted": "Ready to get started?",
   "startYourFreeTrial": "Start your free trial today.",
   "contactSales": "Contact sales",
+  "copyright": "© {{year}} Zanav.io. All rights reserved.",
   "websiteLink": "Website",
   "notifications": {
     "historyTitle": "Notification History",

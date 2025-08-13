@@ -1,11 +1,11 @@
-<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PuppaLabs">
+<svg width="320" height="80" viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PuppaLabs">
   <g>
-    <circle cx="28" cy="30" r="14" fill="#f59e0b"/>
-    <circle cx="20" cy="24" r="3" fill="#fde68a"/>
-    <circle cx="28" cy="22" r="3" fill="#fde68a"/>
-    <circle cx="36" cy="24" r="3" fill="#fde68a"/>
-    <rect x="18" y="36" width="20" height="6" rx="3" fill="#fcd34d"/>
-    <text x="70" y="36" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#f59e0b">PuppaLabs</text>
+    <circle cx="44" cy="40" r="20" fill="#f59e0b"/>
+    <circle cx="30" cy="30" r="5" fill="#fde68a"/>
+    <circle cx="44" cy="26" r="5" fill="#fde68a"/>
+    <circle cx="58" cy="30" r="5" fill="#fde68a"/>
+    <rect x="28" y="52" width="32" height="8" rx="4" fill="#fcd34d"/>
+    <text x="98" y="50" font-family="Inter, Arial, Helvetica, sans-serif" font-size="26" fill="#f59e0b">PuppaLabs</text>
   </g>
 </svg>
 

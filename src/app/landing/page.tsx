@@ -125,18 +125,18 @@ export default function LandingPage() {
           <p className="text-center text-base font-semibold uppercase text-gray-600 tracking-wider">
             {t("trustedBy")}
           </p>
-          <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-4 items-center">
+          <div className="mt-6 grid grid-cols-2 gap-10 md:grid-cols-4 items-center">
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/pawsco.svg" alt="PawsCo" width={160} height={48} className="h-12 w-auto opacity-70" />
+              <Image src="/images/logos/pawsco.svg" alt="PawsCo" width={240} height={72} className="h-16 w-auto opacity-80" />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/furify.svg" alt="Furify" width={160} height={48} className="h-12 w-auto opacity-70" />
+              <Image src="/images/logos/furify.svg" alt="Furify" width={240} height={72} className="h-16 w-auto opacity-80" />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/tailwind-kennels.svg" alt="Tailwind Kennels" width={160} height={48} className="h-12 w-auto opacity-70" />
+              <Image src="/images/logos/tailwind-kennels.svg" alt="Tailwind Kennels" width={240} height={72} className="h-16 w-auto opacity-80" />
             </div>
             <div className="col-span-1 flex justify-center md:col-span-1">
-              <Image src="/images/logos/puppalabs.svg" alt="PuppaLabs" width={160} height={48} className="h-12 w-auto opacity-70" />
+              <Image src="/images/logos/puppalabs.svg" alt="PuppaLabs" width={240} height={72} className="h-16 w-auto opacity-80" />
             </div>
           </div>
           <p className="mt-8 text-center text-lg text-gray-600">
@@ -848,7 +848,7 @@ export default function LandingPage() {
               {t("startYourFreeTrial")}
             </span>
           </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+          <div className="mt-8 flex gap-3 lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
               <Link
                 href="/signup"
@@ -857,7 +857,7 @@ export default function LandingPage() {
                 {t("startFreeTrialLower")}
               </Link>
             </div>
-            <div className="ml-3 inline-flex rounded-md shadow">
+            <div className="inline-flex rounded-md shadow">
               <Link
                 href="/contact"
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500"
@@ -889,7 +889,7 @@ export default function LandingPage() {
             </div>
             <div className="mt-8 md:mt-0 md:order-1">
               <p className="text-center text-base text-gray-400">
-                &copy; 2023 Zanav.io. All rights reserved.
+                {t("copyright", { year: new Date().getFullYear() })}
               </p>
             </div>
           </div>
