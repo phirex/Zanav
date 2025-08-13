@@ -106,7 +106,7 @@ export default function LandingPage() {
               </div>
               <div className="p-2 sm:p-4">
                 <Image
-                  src="/images/dashboard.jpg"
+                  src="/images/dashboard.png"
                   alt="Dashboard screenshot"
                   width={900}
                   height={600}
