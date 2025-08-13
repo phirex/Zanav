@@ -13,6 +13,7 @@ interface Dog {
   name: string;
   breed: string;
   owner: {
+    id?: number;
     name: string;
     phone: string;
   };
@@ -71,6 +72,76 @@ export default function BookingsPage() {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  // Group multi-dog reservations by owner + date range
+  const groupedBookings = (() => {
+    const map = new Map<string, {
+      id: number; // primary booking id
+      startDate: string;
+      endDate: string;
+      status: Booking["status"];
+      dog: Dog; // first dog for columns that expect a Dog shape
+      room: Room;
+      totalPrice: number | null;
+      priceType: Booking["priceType"];
+      pricePerDay: number | null;
+      exemptLastDay: boolean;
+      dogs: string[];
+      owner: { id?: number; name: string; phone: string };
+    }>();
+
+    const calcPerBookingTotal = (b: Booking) => {
+      if (b.totalPrice) return b.totalPrice;
+      if (b.priceType === "DAILY" && b.pricePerDay) {
+        const start = new Date(b.startDate);
+        const end = new Date(b.endDate);
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+        const endOnly = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+        const days = Math.round((endOnly - startOnly) / msPerDay) + 1 - (b.exemptLastDay ? 1 : 0);
+        return b.pricePerDay * Math.max(0, days);
+      }
+      return 0;
+    };
+
+    for (const b of bookings) {
+      const ownerId = b.dog?.owner?.id ?? b.dog?.owner?.phone ?? b.dog?.owner?.name;
+      const key = `${ownerId}::${b.startDate}::${b.endDate}`;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, {
+          id: b.id,
+          startDate: b.startDate,
+          endDate: b.endDate,
+          status: b.status,
+          dog: b.dog,
+          room: b.room,
+          totalPrice: calcPerBookingTotal(b),
+          priceType: b.priceType,
+          pricePerDay: b.pricePerDay,
+          exemptLastDay: b.exemptLastDay,
+          dogs: [b.dog?.name],
+          owner: { id: b.dog?.owner?.id, name: b.dog?.owner?.name, phone: b.dog?.owner?.phone },
+        });
+      } else {
+        existing.dogs.push(b.dog?.name);
+        // Aggregate status: Pending wins, then Cancelled, else Confirmed
+        if (b.status === "PENDING") existing.status = "PENDING";
+        else if (existing.status !== "PENDING" && b.status === "CANCELLED") existing.status = "CANCELLED";
+
+        // Aggregate room display (Multiple if differs)
+        const existingRoom = existing.room?.displayName || existing.room?.name;
+        const currentRoom = b.room?.displayName || b.room?.name;
+        if (existingRoom && currentRoom && existingRoom !== currentRoom) {
+          existing.room = { ...existing.room, id: existing.room.id, name: "Multiple", displayName: "Multiple" } as Room;
+        }
+
+        existing.totalPrice = (existing.totalPrice || 0) + calcPerBookingTotal(b);
+      }
+    }
+
+    return Array.from(map.values());
+  })();
 
   const handleDelete = async (bookingId: number) => {
     if (!confirm(t("confirmDeleteBooking"))) {
@@ -157,16 +228,16 @@ export default function BookingsPage() {
       : "-";
   };
 
-  const filteredBookings = Array.isArray(bookings)
-    ? bookings.filter(
+  const filteredBookings = Array.isArray(groupedBookings)
+    ? groupedBookings.filter(
         (booking) =>
-          booking.dog?.name
+          (booking.dog?.name || "")
             ?.toLowerCase()
             ?.includes(searchQuery.toLowerCase()) ||
-          booking.dog?.owner?.name
+          (booking.owner?.name || "")
             ?.toLowerCase()
             ?.includes(searchQuery.toLowerCase()) ||
-          booking.dog?.owner?.phone?.includes(searchQuery) ||
+          (booking.owner?.phone || "")?.includes(searchQuery) ||
           formatDate(booking.startDate).includes(searchQuery) ||
           formatDate(booking.endDate).includes(searchQuery) ||
           (booking.room?.displayName || booking.room?.name || "")
@@ -259,22 +330,22 @@ export default function BookingsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredBookings.map((booking) => (
+                     {filteredBookings.map((booking) => (
                       <tr
                         key={booking.id}
                         className="border-b border-gray-200 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
                         onClick={() => router.push(`/bookings/${booking.id}`)}
                       >
                         <td className="py-4 px-4 text-right">
-                          {booking.dog.name}
+                          {booking.dogs && booking.dogs.length > 1 ? `${booking.dogs[0]} +${booking.dogs.length - 1}` : booking.dog.name}
                         </td>
                         <td className="py-4 px-4 text-right">
                           <div>
                             <div className="font-medium">
-                              {booking.dog.owner.name}
+                              {booking.owner?.name || booking.dog.owner.name}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {booking.dog.owner.phone}
+                              {booking.owner?.phone || booking.dog.owner.phone}
                             </div>
                           </div>
                         </td>
@@ -291,7 +362,10 @@ export default function BookingsPage() {
                           {getStatusDisplay(booking.status)}
                         </td>
                         <td className="py-4 px-4 text-right">
-                          {getPriceDisplay(booking)}
+                          {/* Show aggregated total price if available; fall back to per-booking display */}
+                          {booking.totalPrice != null
+                            ? formatCurrency(booking.totalPrice, i18n.language)
+                            : getPriceDisplay(booking as unknown as Booking)}
                         </td>
                         <td
                           className="py-4 px-4 text-right"

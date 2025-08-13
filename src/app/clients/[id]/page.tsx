@@ -66,13 +66,15 @@ export default function ClientDetailsPage() {
       try {
         const response = await fetch(`/api/owners/${params.id}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch owner");
+          const errorPayload = await response.json().catch(() => null);
+          const message = errorPayload?.error?.message || `Failed to fetch owner (${response.status})`;
+          throw new Error(message);
         }
         const data = await response.json();
         setOwner(data);
       } catch (error) {
         console.error("Error fetching owner:", error);
-        router.push("/clients");
+        setOwner(null);
       } finally {
         setLoading(false);
       }
@@ -81,7 +83,7 @@ export default function ClientDetailsPage() {
     if (params.id) {
       fetchOwner();
     }
-  }, [params.id, router]);
+  }, [params.id]);
 
   const handleDeleteBooking = async (bookingId: number) => {
     if (!confirm("האם אתה בטוח שברצונך למחוק הזמנה זו?")) {
@@ -118,7 +120,16 @@ export default function ClientDetailsPage() {
   }
 
   if (!owner) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center py-12 text-red-600">לא ניתן לטעון את פרטי הלקוח</div>
+          <div className="text-center">
+            <Link href="/clients" className="text-blue-600 hover:text-blue-700">חזרה לרשימת הלקוחות</Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const upcomingBookings = owner.bookings
