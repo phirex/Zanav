@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
 
     const { data: website } = await admin
       .from("kennel_websites")
-      .select("id, tenant_id, contact_email, subdomain")
+      .select("id, tenant_id, contact_email, subdomain, hero_title")
       .eq("subdomain", params.subdomain)
       .single();
     if (!website) return NextResponse.json({ error: "Kennel not found" }, { status: 404 });
@@ -92,8 +92,10 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
     const totalFormatted = `${totalAll.toFixed(2)} ${currency}`;
     const dateFmt = (d: string) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
+    const kennelName = (website as any).hero_title || params.subdomain;
+
     const customerHtml = bookingRequestCustomerEmail({
-      kennelName: params.subdomain,
+      kennelName,
       subdomain: params.subdomain,
       customerName: ownerName,
       dogs: insertedDogs!.map((d:any)=>d.name),
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest, { params }: { params: { subdoma
     });
 
     const ownerHtml = bookingNotificationOwnerEmail({
-      kennelName: params.subdomain,
+      kennelName,
       customerName: ownerName,
       customerEmail: ownerEmail || null,
       customerPhone: ownerPhone,

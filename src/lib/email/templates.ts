@@ -1,5 +1,6 @@
 export function baseEmailTemplate({ title, preview, contentHtml }: { title: string; preview?: string; contentHtml: string }) {
-  const logoUrl = "https://www.zanav.io/images/logo-white.svg";
+  // Use PNG for broader email client support
+  const logoUrl = "https://www.zanav.io/images/logo-white.png";
   return `<!doctype html>
 <html lang="en">
   <head>

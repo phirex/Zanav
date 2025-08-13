@@ -126,6 +126,26 @@ export default function KennelWebsitePage({
     return diff > 0 ? diff : 0;
   }, [checkIn, checkOut]);
 
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const minCheckoutStr = useMemo(() => {
+    if (!checkIn) return "";
+    const d = new Date(checkIn);
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split("T")[0];
+  }, [checkIn]);
+
+  const handleCheckInChange = (value: string) => {
+    setCheckIn(value);
+    if (value) {
+      const d = new Date(value);
+      d.setDate(d.getDate() + 1);
+      const minStr = d.toISOString().split("T")[0];
+      if (checkOut && checkOut < minStr) setCheckOut(minStr);
+    } else {
+      setCheckOut("");
+    }
+  };
+
   const total = useMemo(() => {
     if (!pricing) return 0;
     return pricing.defaultPricePerDay * days * dogs.length;
@@ -151,6 +171,10 @@ export default function KennelWebsitePage({
     if (!tenantId) return alert(t("publicSite.unableToBook", "Unable to book right now"));
     if (!checkIn || !checkOut || !ownerName || !ownerPhone || dogs.some((d) => !d.name)) {
       return alert(t("publicSite.completeForm", "Please fill dates, your details, and all dog names"));
+    }
+    // Ensure at least one night between check-in and check-out
+    if (days < 1) {
+      return alert(t("publicSite.invalidDates", "Please choose a check-out date at least one day after check-in"));
     }
     setBookingSubmitting(true);
     try {
@@ -673,13 +697,13 @@ export default function KennelWebsitePage({
                     <label className="text-sm text-gray-600">
                       {t("publicSite.checkIn", "Check-in")}
                     </label>
-                    <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkIn} onChange={(e)=>setCheckIn(e.target.value)} />
+                    <input type="date" className="w-full border rounded-lg px-3 py-2" min={todayStr} value={checkIn} onChange={(e)=>handleCheckInChange(e.target.value)} />
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">
                       {t("publicSite.checkOut", "Check-out")}
                     </label>
-                    <input type="date" className="w-full border rounded-lg px-3 py-2" value={checkOut} onChange={(e)=>setCheckOut(e.target.value)} />
+                    <input type="date" className="w-full border rounded-lg px-3 py-2" min={minCheckoutStr} value={checkOut} onChange={(e)=>setCheckOut(e.target.value)} />
                   </div>
                 </div>
 
