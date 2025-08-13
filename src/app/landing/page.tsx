@@ -178,14 +178,16 @@ export default function LandingPage() {
                     {t("smartBookingDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
-                  <Image
-                    src="/images/calendar.png"
-                    alt="Calendar view"
-                    width={600}
-                    height={400}
-                    className="w-full"
-                  />
+                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
+                    <Image
+                      src="/images/calendar.png"
+                      alt="Calendar view"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain p-2"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -205,14 +207,16 @@ export default function LandingPage() {
                     {t("customerPetCRMDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
-                  <Image
-                    src="/images/client.png"
-                    alt="Client profile"
-                    width={600}
-                    height={400}
-                    className="w-full"
-                  />
+                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
+                    <Image
+                      src="/images/client.png"
+                      alt="Client profile"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain p-2"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -232,14 +236,16 @@ export default function LandingPage() {
                     {t("paymentsInvoicingDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
-                  <Image
-                    src="/images/payments.png"
-                    alt="Payments view"
-                    width={600}
-                    height={400}
-                    className="w-full"
-                  />
+                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
+                    <Image
+                      src="/images/payments.png"
+                      alt="Payments view"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain p-2"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -259,14 +265,16 @@ export default function LandingPage() {
                     {t("financialInsightsDesc")}
                   </p>
                 </div>
-                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
-                  <Image
-                    src="/images/financial.png"
-                    alt="Financial report"
-                    width={600}
-                    height={400}
-                    className="w-full"
-                  />
+                <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <div className="w-full h-64 sm:h-72 md:h-80 lg:h-72 xl:h-80 relative">
+                    <Image
+                      src="/images/financial.png"
+                      alt="Financial report"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain p-2"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -482,7 +490,7 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <Image src="https://randomuser.me/api/portraits/men/32.jpg" alt="Alex Brown" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                  <Image src="/images/testimonials/alex-brown.jpg" alt="Alex Brown" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">
@@ -505,7 +513,7 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <Image src="https://randomuser.me/api/portraits/women/44.jpg" alt="Sarah Johnson" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                  <Image src="/images/testimonials/sarah-johnson.jpg" alt="Sarah Johnson" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">
@@ -528,7 +536,7 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <Image src="https://randomuser.me/api/portraits/men/65.jpg" alt="Michael Torres" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                  <Image src="/images/testimonials/michael-torres.jpg" alt="Michael Torres" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">
