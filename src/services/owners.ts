@@ -28,8 +28,12 @@ export async function listOwners(
   return data;
 }
 
-export async function getOwner(client: SupabaseClient<Database>, id: number) {
-  const { data, error } = await client
+export async function getOwner(
+  client: SupabaseClient<Database>,
+  id: number,
+  tenantId?: string | null,
+) {
+  let query = client
     .from("Owner")
     .select(
       `*,
@@ -40,8 +44,13 @@ export async function getOwner(client: SupabaseClient<Database>, id: number) {
       bookings:Booking(*, dog:Dog(*), room:Room(*), payments:Payment(*))
     `,
     )
-    .eq("id", id)
-    .single();
+    .eq("id", id);
+
+  if (tenantId) {
+    query = query.eq("tenantId", tenantId);
+  }
+
+  const { data, error } = await query.single();
   if (error) throw new Error(error.message);
 
   // sort bookings by startDate desc
@@ -96,7 +105,7 @@ export async function createOwner(
     if (dogErr) throw new Error(dogErr.message);
   }
 
-  return await getOwner(client, ownerRow.id);
+  return await getOwner(client, ownerRow.id, tenantId);
 }
 
 export async function updateOwner(
@@ -142,7 +151,7 @@ export async function updateOwner(
     }
   }
 
-  return await getOwner(client, id);
+  return await getOwner(client, id, tenantId);
 }
 
 export async function deleteOwner(

@@ -53,8 +53,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Handle kennel subdomains FIRST with explicit rewrite to public site
-  if (hostname !== "www.zanav.io" && hostname !== "zanav.io") {
+  const isProdMain = hostname === "www.zanav.io" || hostname === "zanav.io";
+  const isLocalMain = hostname === "localhost" || hostname === "127.0.0.1";
+
+  // Handle kennel subdomains FIRST with explicit rewrite to public site (exclude localhost and main domains)
+  if (!isProdMain && !isLocalMain) {
     const subdomain = hostname.split(".")[0];
 
     if (isApiRoute) {
@@ -126,8 +129,8 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Main domain logic (www)
-  if (hostname === "www.zanav.io") {
+  // Main domain logic (www or localhost)
+  if (isProdMain || isLocalMain) {
     if (isApiRoute) {
       return NextResponse.next();
     }
