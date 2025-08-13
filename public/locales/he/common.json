@@ -449,7 +449,10 @@
   "remaining": "יתרה",
   "confirmToggleLastDay": "האם אתה בטוח שברצונך {{action}} את היום האחרון מהתמחור?",
   "actionRemove": "להסיר",
-  "actionAdd": "להוסיף"
+  "actionAdd": "להוסיף",
+  "confirmBooking": "אישור הזמנה",
+  "confirming": "מאשר...",
+  "multiDogInfo": "ההזמנה כוללת {{count}} כלבים: {{names}}"
   ,
   "publicSite": {
     "kennelNotFound": "הפנסיון לא נמצא",

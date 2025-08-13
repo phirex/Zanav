@@ -456,6 +456,9 @@
   "confirmToggleLastDay": "Are you sure you want to {{action}} the last day from pricing?",
   "actionRemove": "remove",
   "actionAdd": "add",
+  "confirmBooking": "Confirm Booking",
+  "confirming": "Confirming...",
+  "multiDogInfo": "This reservation includes {{count}} dogs: {{names}}",
   "publicSite": {
     "kennelNotFound": "Kennel Not Found",
     "subdomainNotFound": "Sorry, we couldn't find a kennel with the subdomain {{subdomain}}.zanav.io",

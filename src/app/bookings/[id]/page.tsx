@@ -32,6 +32,7 @@ interface Booking {
   };
   payments: Payment[];
   exemptLastDay?: boolean;
+  group?: { count: number; ids: number[]; dogs: string[]; anyPending: boolean };
 }
 
 interface Payment {
@@ -52,6 +53,7 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState(false);
   const [tenantCurrency, setTenantCurrency] = useState<string>("ILS");
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     fetchTenantCurrency().then(setTenantCurrency).catch(() => setTenantCurrency("ILS"));
@@ -164,7 +166,39 @@ export default function BookingPage() {
       <div className="max-w-3xl mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{t("bookingDetailsTitle", "Booking Details")}</h1>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
+            {booking.status === "PENDING" && (
+              <button
+                onClick={async () => {
+                  setConfirming(true);
+                  try {
+                    const ids = booking.group?.ids?.length ? booking.group.ids : [booking.id];
+                    for (const id of ids) {
+                      const res = await fetch(`/api/bookings/${id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          ...booking,
+                          status: "CONFIRMED",
+                        }),
+                      });
+                      if (!res.ok) throw new Error("Failed to confirm booking");
+                    }
+                    // Refetch primary booking
+                    const refreshed = await fetch(`/api/bookings/${booking.id}`).then(r=>r.json());
+                    setBooking(refreshed);
+                  } catch (e) {
+                    alert(t("errorUpdatingBooking", "Failed to update booking"));
+                  } finally {
+                    setConfirming(false);
+                  }
+                }}
+                disabled={confirming}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                {confirming ? t("confirming", "Confirming...") : t("confirmBooking", "Confirm Booking")}
+              </button>
+            )}
             <Link
               href={`/bookings/${booking.id}/edit`}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
@@ -181,6 +215,16 @@ export default function BookingPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+          {booking.status === "PENDING" && (
+            <div className="mb-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm font-medium">
+              {t("statusAwaitingApproval", "Awaiting Approval")} – {t("confirmBooking", "Confirm Booking")}?
+            </div>
+          )}
+          {booking.group && booking.group.count > 1 && (
+            <div className="mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+              {t("multiDogInfo", { defaultValue: "This reservation includes {{count}} dogs: {{names}}", count: booking.group.count, names: booking.group.dogs.join(", ") }) as unknown as string}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-6">
             <div>
               <h2 className="text-lg font-medium text-gray-900 mb-4">{t("clientAndDog", "Client & Dog")}</h2>
@@ -209,7 +253,9 @@ export default function BookingPage() {
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">{t("status", "Status")}</dt>
-                  <dd className="text-base font-medium text-gray-900">{booking.status}</dd>
+                  <dd>
+                    <span className={`${booking.status === "PENDING" ? "bg-yellow-100 text-yellow-800" : booking.status === "CONFIRMED" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"} inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-semibold`}>{booking.status}</span>
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">{t("created", "Created")}</dt>
