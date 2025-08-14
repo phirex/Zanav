@@ -7,8 +7,8 @@ export function baseEmailTemplate({
   preview?: string;
   contentHtml: string;
 }) {
-  // Use PNG because many email clients (e.g., Gmail) block SVG images
-  const logoUrl = "https://www.zanav.io/android-chrome-192x192.png";
+  // Use full white logo PNG hosted under /public/images
+  const logoUrl = "https://www.zanav.io/images/logo-white.png";
   return `<!doctype html>
 <html lang="en">
   <head>
