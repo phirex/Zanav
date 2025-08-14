@@ -11,7 +11,8 @@ function extractId(params?: Record<string, any>): number {
 
 export const GET = createHandler(async ({ params, tenantId }) => {
   const id = extractId(params);
-  if (Number.isNaN(id)) throw new ApiError("invalid_booking_id", "Invalid booking id");
+  if (Number.isNaN(id))
+    throw new ApiError("invalid_booking_id", "Invalid booking id");
   if (!tenantId) throw new ApiError("missing_tenant", "No tenant context");
 
   const admin = supabaseAdmin();
@@ -38,19 +39,29 @@ export const GET = createHandler(async ({ params, tenantId }) => {
         dogs: siblings.map((b) => b.dog?.name).filter(Boolean),
         anyPending: siblings.some((b) => b.status === "PENDING"),
       }
-    : { count: 1, ids: [data.id], dogs: [data.dog?.name].filter(Boolean), anyPending: data.status === "PENDING" };
+    : {
+        count: 1,
+        ids: [data.id],
+        dogs: [data.dog?.name].filter(Boolean),
+        anyPending: data.status === "PENDING",
+      };
 
   return { ...data, group };
 });
 
 export const PUT = createHandler(async ({ params, client, body, tenantId }) => {
   const id = extractId(params);
-  if (Number.isNaN(id)) throw new ApiError("invalid_booking_id", "Invalid booking id");
-  return await updateBooking(client, id, body, tenantId);
+  if (Number.isNaN(id))
+    throw new ApiError("invalid_booking_id", "Invalid booking id");
+  // Use admin client for the mutation to bypass RLS, after createHandler has
+  // already ensured an authenticated user and tenant context
+  const admin = supabaseAdmin();
+  return await updateBooking(admin as any, id, body, tenantId);
 });
 
 export const DELETE = createHandler(async ({ params, client }) => {
   const id = extractId(params);
-  if (Number.isNaN(id)) throw new ApiError("invalid_booking_id", "Invalid booking id");
+  if (Number.isNaN(id))
+    throw new ApiError("invalid_booking_id", "Invalid booking id");
   return await deleteBooking(client, id);
 });
