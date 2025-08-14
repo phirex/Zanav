@@ -430,11 +430,6 @@ export async function updateBooking(
   body: any,
   tenantId?: string | null,
 ) {
-  // Basic validation
-  if (!body.startDate || !body.endDate || !body.roomId) {
-    throw new Error("Missing required fields");
-  }
-
   // Fetch current booking status to detect changes
   const { data: currentBooking } = await client
     .from("Booking")
@@ -442,9 +437,14 @@ export async function updateBooking(
     .eq("id", id)
     .single();
 
-  // Price calculation
+  // Price calculation (only if price fields provided)
   let totalPrice = body.totalPrice;
-  if (body.priceType === "DAILY" && body.pricePerDay) {
+  if (
+    body.priceType === "DAILY" &&
+    body.pricePerDay &&
+    body.startDate &&
+    body.endDate
+  ) {
     const days = Math.ceil(
       (new Date(body.endDate).getTime() - new Date(body.startDate).getTime()) /
         (1000 * 60 * 60 * 24),
@@ -452,12 +452,19 @@ export async function updateBooking(
     totalPrice = body.pricePerDay * days;
   }
 
-  const updateData = {
-    ...body,
-    startDate: new Date(body.startDate).toISOString(),
-    endDate: new Date(body.endDate).toISOString(),
-    totalPrice,
-  };
+  // Whitelist only updatable columns; allow partial updates
+  const updateData: any = {};
+  if ("roomId" in body) updateData.roomId = body.roomId;
+  if ("status" in body) updateData.status = body.status;
+  if ("priceType" in body) updateData.priceType = body.priceType;
+  if ("pricePerDay" in body) updateData.pricePerDay = body.pricePerDay;
+  if ("exemptLastDay" in body) updateData.exemptLastDay = !!body.exemptLastDay;
+  if ("startDate" in body && body.startDate)
+    updateData.startDate = new Date(body.startDate).toISOString();
+  if ("endDate" in body && body.endDate)
+    updateData.endDate = new Date(body.endDate).toISOString();
+  if (typeof totalPrice === "number" && !Number.isNaN(totalPrice))
+    updateData.totalPrice = totalPrice;
 
   const { data: updated, error } = await client
     .from("Booking")
