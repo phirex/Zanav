@@ -164,6 +164,69 @@ export function bookingNotificationOwnerEmail(params: {
   });
 }
 
+export function bookingConfirmedCustomerEmail(params: {
+  kennelName: string;
+  customerName: string;
+  dogs: string[];
+  startDate: string;
+  endDate: string;
+  totalFormatted?: string;
+}) {
+  const { kennelName, customerName, dogs, startDate, endDate, totalFormatted } =
+    params;
+  const content = `
+    <p>Hi ${escapeHtml(customerName)} 🐶</p>
+    <p>Your booking at <strong>${escapeHtml(kennelName)}</strong> is confirmed.</p>
+    <div style="margin-top:20px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr>
+          <td class="muted">Check‑in</td>
+          <td align="right">${escapeHtml(startDate)}</td>
+        </tr>
+        <tr>
+          <td class="muted">Check‑out</td>
+          <td align="right">${escapeHtml(endDate)}</td>
+        </tr>
+        <tr>
+          <td class="muted">Dogs</td>
+          <td align="right">${escapeHtml(dogs.join(", "))}</td>
+        </tr>
+        ${totalFormatted ? `<tr><td class="muted">Estimated total</td><td align="right" class="price">${escapeHtml(totalFormatted)}</td></tr>` : ""}
+      </table>
+    </div>
+    <p style="margin-top:12px" class="muted">If you need to change anything, just reply to this email.</p>
+  `;
+  return baseEmailTemplate({
+    title: "Booking confirmed ✅",
+    preview: `Confirmed at ${kennelName}`,
+    contentHtml: content,
+  });
+}
+
+export function bookingCancelledCustomerEmail(params: {
+  kennelName: string;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+  reason?: string;
+}) {
+  const { kennelName, customerName, startDate, endDate, reason } = params;
+  const content = `
+    <p>Hi ${escapeHtml(customerName)}</p>
+    <p>We’re sorry—your booking at <strong>${escapeHtml(kennelName)}</strong> was cancelled.</p>
+    <div style="margin-top:12px" class="muted">
+      <div>Dates: ${escapeHtml(startDate)} → ${escapeHtml(endDate)}</div>
+      ${reason ? `<div>Reason: ${escapeHtml(reason)}</div>` : ""}
+    </div>
+    <p style="margin-top:12px" class="muted">If this was a mistake, reply and we’ll help.</p>
+  `;
+  return baseEmailTemplate({
+    title: "Booking cancelled",
+    preview: `Cancelled at ${kennelName}`,
+    contentHtml: content,
+  });
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")

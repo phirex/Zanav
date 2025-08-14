@@ -261,10 +261,14 @@ export async function createBooking(
     await client.from("Dog").update({ currentRoomId: roomId }).eq("id", dogId);
   }
 
-  // ---------------- Notifications & WhatsApp ----------------
+  // ---------------- Notifications & WhatsApp + Emails ----------------
   try {
     const { NotificationScheduler } = await import(
       "@/lib/services/notification-scheduler"
+    );
+    const { sendEmail } = await import("@/lib/email/resend");
+    const { bookingConfirmedCustomerEmail } = await import(
+      "@/lib/email/templates"
     );
     const scheduler = new NotificationScheduler(safeTenantId);
     for (const b of createdBookings ?? []) {
@@ -273,6 +277,63 @@ export async function createBooking(
 
     if (createdBookings && createdBookings.length > 0) {
       await sendBookingConfirmation(client, createdBookings[0].id);
+
+      // Send confirmation email if owner has email and booking is confirmed
+      const first = createdBookings[0];
+      const { data: ownerRow } = await client
+        .from("Owner")
+        .select("name,email")
+        .eq("id", first.ownerId)
+        .single();
+      if (ownerRow?.email) {
+        // Fetch settings for kennel name & currency
+        const { data: settingsRows } = await client
+          .from("Setting")
+          .select("key,value")
+          .eq("tenantId", safeTenantId);
+        const settings = new Map(
+          (settingsRows || []).map((r: any) => [r.key, r.value]),
+        );
+        const kennelName =
+          settings.get("kennelName") ||
+          settings.get("businessName") ||
+          "Your Kennel";
+
+        const { data: dogNames } = await client
+          .from("Dog")
+          .select("name")
+          .in(
+            "id",
+            createdBookings.map((b: any) => b.dogId),
+          );
+
+        const startDateStr = new Date(first.startDate).toLocaleDateString(
+          "en-US",
+          {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          },
+        );
+        const endDateStr = new Date(first.endDate).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+
+        const html = bookingConfirmedCustomerEmail({
+          kennelName,
+          customerName: ownerRow.name,
+          dogs: (dogNames || []).map((d: any) => d.name),
+          startDate: startDateStr,
+          endDate: endDateStr,
+        });
+        await sendEmail({
+          to: ownerRow.email,
+          subject: "Your booking is confirmed",
+          html,
+        });
+      }
     }
   } catch (e) {
     console.error("Post-booking side effects failed", e);
@@ -409,10 +470,15 @@ export async function updateBooking(
   // Side effects if status became CONFIRMED
   const statusChanged = currentBooking && currentBooking.status !== body.status;
   const becameConfirmed = statusChanged && body.status === "CONFIRMED";
+  const becameCancelled = statusChanged && body.status === "CANCELLED";
   if (becameConfirmed) {
     try {
       const { NotificationScheduler } = await import(
         "@/lib/services/notification-scheduler"
+      );
+      const { sendEmail } = await import("@/lib/email/resend");
+      const { bookingConfirmedCustomerEmail } = await import(
+        "@/lib/email/templates"
       );
       const scheduler = new NotificationScheduler(tenantId || null);
       await scheduler.scheduleNotificationsForBooking(
@@ -422,8 +488,94 @@ export async function updateBooking(
       await scheduler.scheduleNotificationsForBooking(id, "CHECK_IN_REMINDER");
       await scheduler.scheduleNotificationsForBooking(id, "CHECK_OUT_REMINDER");
       await sendBookingConfirmation(client, id);
+
+      // Email notify customer
+      const { data: bookingRow } = await client
+        .from("Booking")
+        .select("*, owner:Owner(*), dog:Dog(*)")
+        .eq("id", id)
+        .single();
+      if (bookingRow?.owner?.email) {
+        const { data: settingsRows } = await client
+          .from("Setting")
+          .select("key,value")
+          .eq("tenantId", bookingRow.tenantId);
+        const settings = new Map(
+          (settingsRows || []).map((r: any) => [r.key, r.value]),
+        );
+        const kennelName =
+          settings.get("kennelName") ||
+          settings.get("businessName") ||
+          "Your Kennel";
+        const html = bookingConfirmedCustomerEmail({
+          kennelName,
+          customerName: bookingRow.owner.name,
+          dogs: [bookingRow.dog?.name].filter(Boolean) as string[],
+          startDate: new Date(bookingRow.startDate).toLocaleDateString(
+            "en-US",
+            { year: "numeric", month: "short", day: "numeric" },
+          ),
+          endDate: new Date(bookingRow.endDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+        });
+        await sendEmail({
+          to: bookingRow.owner.email,
+          subject: "Your booking is confirmed",
+          html,
+        });
+      }
     } catch (e) {
       console.error("updateBooking side-effects failed", e);
+    }
+  }
+
+  if (becameCancelled) {
+    try {
+      const { sendEmail } = await import("@/lib/email/resend");
+      const { bookingCancelledCustomerEmail } = await import(
+        "@/lib/email/templates"
+      );
+      const { data: bookingRow } = await client
+        .from("Booking")
+        .select("*, owner:Owner(*), dog:Dog(*), tenantId")
+        .eq("id", id)
+        .single();
+      if (bookingRow?.owner?.email) {
+        const { data: settingsRows } = await client
+          .from("Setting")
+          .select("key,value")
+          .eq("tenantId", bookingRow.tenantId);
+        const settings = new Map(
+          (settingsRows || []).map((r: any) => [r.key, r.value]),
+        );
+        const kennelName =
+          settings.get("kennelName") ||
+          settings.get("businessName") ||
+          "Your Kennel";
+        const html = bookingCancelledCustomerEmail({
+          kennelName,
+          customerName: bookingRow.owner.name,
+          startDate: new Date(bookingRow.startDate).toLocaleDateString(
+            "en-US",
+            { year: "numeric", month: "short", day: "numeric" },
+          ),
+          endDate: new Date(bookingRow.endDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+        });
+        await sendEmail({
+          to: bookingRow.owner.email,
+          subject: "Your booking was cancelled",
+          html,
+        });
+      }
+    } catch (e) {
+      console.error("updateBooking cancellation email failed", e);
     }
   }
 
