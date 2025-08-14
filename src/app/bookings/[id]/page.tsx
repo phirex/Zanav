@@ -12,6 +12,7 @@ type PaymentMethod = Database["public"]["Enums"]["PaymentMethod"];
 import { formatDateLocale } from "@/lib/utils";
 import ClientLayout from "@/app/components/ClientLayout";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Booking {
   id: number;
@@ -49,6 +50,7 @@ export default function BookingPage() {
   const params = useParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState(false);
@@ -56,7 +58,9 @@ export default function BookingPage() {
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
-    fetchTenantCurrency().then(setTenantCurrency).catch(() => setTenantCurrency("ILS"));
+    fetchTenantCurrency()
+      .then(setTenantCurrency)
+      .catch(() => setTenantCurrency("ILS"));
   }, []);
 
   useEffect(() => {
@@ -84,10 +88,13 @@ export default function BookingPage() {
     if (!booking) return;
 
     const shouldExempt = !booking.exemptLastDay;
-    const actionText = shouldExempt ? t("actionRemove", "remove") : t("actionAdd", "add");
+    const actionText = shouldExempt
+      ? t("actionRemove", "remove")
+      : t("actionAdd", "add");
 
     const confirmMessage = t("confirmToggleLastDay", {
-      defaultValue: "Are you sure you want to {{action}} the last day from pricing?",
+      defaultValue:
+        "Are you sure you want to {{action}} the last day from pricing?",
       action: actionText as string,
     }) as unknown as string;
 
@@ -124,7 +131,11 @@ export default function BookingPage() {
   }
 
   if (!booking) {
-    return <div className="text-center py-8">{t("bookingNotFound", "Booking not found")}</div>;
+    return (
+      <div className="text-center py-8">
+        {t("bookingNotFound", "Booking not found")}
+      </div>
+    );
   }
 
   const calculateDays = (
@@ -146,7 +157,8 @@ export default function BookingPage() {
     const millisecondsPerDay = 1000 * 60 * 60 * 24;
     const startDateOnly = new Date(startYear, startMonth, startDay).getTime();
     const endDateOnly = new Date(endYear, endMonth, endDay).getTime();
-    const days = Math.round((endDateOnly - startDateOnly) / millisecondsPerDay) + 1;
+    const days =
+      Math.round((endDateOnly - startDateOnly) / millisecondsPerDay) + 1;
 
     return exemptLastDay ? days - 1 : days;
   };
@@ -158,21 +170,28 @@ export default function BookingPage() {
         calculateDays(booking.startDate, booking.endDate, booking.exemptLastDay)
       : 0);
 
-  const paidAmount = booking.payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const paidAmount = booking.payments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0,
+  );
   const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
   return (
     <ClientLayout>
       <div className="max-w-3xl mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t("bookingDetailsTitle", "Booking Details")}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {t("bookingDetailsTitle", "Booking Details")}
+          </h1>
           <div className="flex gap-3">
             {booking.status === "PENDING" && (
               <button
                 onClick={async () => {
                   setConfirming(true);
                   try {
-                    const ids = booking.group?.ids?.length ? booking.group.ids : [booking.id];
+                    const ids = booking.group?.ids?.length
+                      ? booking.group.ids
+                      : [booking.id];
                     for (const id of ids) {
                       const res = await fetch(`/api/bookings/${id}`, {
                         method: "PUT",
@@ -185,10 +204,26 @@ export default function BookingPage() {
                       if (!res.ok) throw new Error("Failed to confirm booking");
                     }
                     // Refetch primary booking
-                    const refreshed = await fetch(`/api/bookings/${booking.id}`).then(r=>r.json());
+                    const refreshed = await fetch(
+                      `/api/bookings/${booking.id}`,
+                    ).then((r) => r.json());
                     setBooking(refreshed);
+                    toast({
+                      title: t("bookingConfirmedTitle", "Booking confirmed"),
+                      description: t(
+                        "bookingConfirmedDesc",
+                        "The reservation is now confirmed.",
+                      ),
+                    });
                   } catch (e) {
-                    alert(t("errorUpdatingBooking", "Failed to update booking"));
+                    toast({
+                      title: t(
+                        "errorUpdatingBooking",
+                        "Failed to update booking",
+                      ),
+                      description: e instanceof Error ? e.message : String(e),
+                      variant: "destructive",
+                    });
                   } finally {
                     setConfirming(false);
                   }
@@ -196,7 +231,9 @@ export default function BookingPage() {
                 disabled={confirming}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
-                {confirming ? t("confirming", "Confirming...") : t("confirmBooking", "Confirm Booking")}
+                {confirming
+                  ? t("confirming", "Confirming...")
+                  : t("confirmBooking", "Confirm Booking")}
               </button>
             )}
             <Link
@@ -217,49 +254,83 @@ export default function BookingPage() {
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
           {booking.status === "PENDING" && (
             <div className="mb-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm font-medium">
-              {t("statusAwaitingApproval", "Awaiting Approval")} – {t("confirmBooking", "Confirm Booking")}?
+              {t("statusAwaitingApproval", "Awaiting Approval")} –{" "}
+              {t("confirmBooking", "Confirm Booking")}?
             </div>
           )}
           {booking.group && booking.group.count > 1 && (
             <div className="mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm">
-              {t("multiDogInfo", { defaultValue: "This reservation includes {{count}} dogs: {{names}}", count: booking.group.count, names: booking.group.dogs.join(", ") }) as unknown as string}
+              {
+                t("multiDogInfo", {
+                  defaultValue:
+                    "This reservation includes {{count}} dogs: {{names}}",
+                  count: booking.group.count,
+                  names: booking.group.dogs.join(", "),
+                }) as unknown as string
+              }
             </div>
           )}
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">{t("clientAndDog", "Client & Dog")}</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">
+                {t("clientAndDog", "Client & Dog")}
+              </h2>
               <dl className="space-y-2">
                 <div>
-                  <dt className="text-sm text-gray-500">{t("owner", "Owner")}</dt>
-                  <dd className="text-base font-medium text-gray-900">{booking.dog.owner.name}</dd>
+                  <dt className="text-sm text-gray-500">
+                    {t("owner", "Owner")}
+                  </dt>
+                  <dd className="text-base font-medium text-gray-900">
+                    {booking.dog.owner.name}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">{t("dog", "Dog")}</dt>
-                  <dd className="text-base font-medium text-gray-900">{booking.dog.name}</dd>
+                  <dd className="text-base font-medium text-gray-900">
+                    {booking.dog.name}
+                  </dd>
                 </div>
               </dl>
             </div>
 
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">{t("bookingSection", "Booking")}</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">
+                {t("bookingSection", "Booking")}
+              </h2>
               <dl className="space-y-2">
                 <div>
-                  <dt className="text-sm text-gray-500">{t("start", "Start")}</dt>
-                  <dd className="text-base font-medium text-gray-900">{formatDateLocale(booking.startDate)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-gray-500">{t("end", "End")}</dt>
-                  <dd className="text-base font-medium text-gray-900">{formatDateLocale(booking.endDate)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-gray-500">{t("status", "Status")}</dt>
-                  <dd>
-                    <span className={`${booking.status === "PENDING" ? "bg-yellow-100 text-yellow-800" : booking.status === "CONFIRMED" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"} inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-semibold`}>{booking.status}</span>
+                  <dt className="text-sm text-gray-500">
+                    {t("start", "Start")}
+                  </dt>
+                  <dd className="text-base font-medium text-gray-900">
+                    {formatDateLocale(booking.startDate)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-gray-500">{t("created", "Created")}</dt>
-                  <dd className="text-base font-medium text-gray-900">{formatDateLocale(booking.createdAt)}</dd>
+                  <dt className="text-sm text-gray-500">{t("end", "End")}</dt>
+                  <dd className="text-base font-medium text-gray-900">
+                    {formatDateLocale(booking.endDate)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-gray-500">
+                    {t("status", "Status")}
+                  </dt>
+                  <dd>
+                    <span
+                      className={`${booking.status === "PENDING" ? "bg-yellow-100 text-yellow-800" : booking.status === "CONFIRMED" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"} inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-semibold`}
+                    >
+                      {booking.status}
+                    </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-gray-500">
+                    {t("created", "Created")}
+                  </dt>
+                  <dd className="text-base font-medium text-gray-900">
+                    {formatDateLocale(booking.createdAt)}
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -267,12 +338,16 @@ export default function BookingPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">{t("paymentSection", "Payment")}</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            {t("paymentSection", "Payment")}
+          </h2>
 
           {booking.priceType === "DAILY" && (
             <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
               <div>
-                <h3 className="font-medium text-gray-900">{t("lastDayExemptTitle", "Last day exempt:")}</h3>
+                <h3 className="font-medium text-gray-900">
+                  {t("lastDayExemptTitle", "Last day exempt:")}
+                </h3>
                 <p className="text-sm text-gray-600">
                   {booking.exemptLastDay
                     ? t("lastDayNotCharged", "The last day is not charged")
@@ -287,8 +362,8 @@ export default function BookingPage() {
                 {toggleLoading
                   ? t("updating", "Updating…")
                   : booking.exemptLastDay
-                  ? t("includeLastDay", "Include last day")
-                  : t("excludeLastDay", "Exclude last day")}
+                    ? t("includeLastDay", "Include last day")
+                    : t("excludeLastDay", "Exclude last day")}
               </button>
             </div>
           )}
@@ -296,15 +371,23 @@ export default function BookingPage() {
           <dl className="grid grid-cols-3 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-xl">
               <dt className="text-sm text-gray-500">{t("total", "Total")}</dt>
-              <dd className="text-lg font-medium text-gray-900">{formatCurrencyIntl(totalAmount, tenantCurrency)}</dd>
+              <dd className="text-lg font-medium text-gray-900">
+                {formatCurrencyIntl(totalAmount, tenantCurrency)}
+              </dd>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-xl">
               <dt className="text-sm text-gray-500">{t("paid", "Paid")}</dt>
-              <dd className="text-lg font-medium text-green-600">{formatCurrencyIntl(paidAmount, tenantCurrency)}</dd>
+              <dd className="text-lg font-medium text-green-600">
+                {formatCurrencyIntl(paidAmount, tenantCurrency)}
+              </dd>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-xl">
-              <dt className="text-sm text-gray-500">{t("remaining", "Remaining")}</dt>
-              <dd className="text-lg font-medium text-blue-600">{formatCurrencyIntl(remainingAmount, tenantCurrency)}</dd>
+              <dt className="text-sm text-gray-500">
+                {t("remaining", "Remaining")}
+              </dt>
+              <dd className="text-lg font-medium text-blue-600">
+                {formatCurrencyIntl(remainingAmount, tenantCurrency)}
+              </dd>
             </div>
           </dl>
         </div>
@@ -316,6 +399,16 @@ export default function BookingPage() {
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <NotificationsHistory bookingId={booking.id} />
         </div>
+        {confirming && (
+          <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
+            <div className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-3">
+              <div className="h-6 w-6 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+              <div className="text-gray-800 font-medium">
+                {t("confirming", "Confirming...")}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ClientLayout>
   );
