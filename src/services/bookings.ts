@@ -527,6 +527,7 @@ export async function updateBooking(
             month: "short",
             day: "numeric",
           }),
+          note: typeof body.note === "string" ? body.note : undefined,
         });
         await sendEmail({
           to: bookingRow.owner.email,
@@ -574,6 +575,7 @@ export async function updateBooking(
             month: "short",
             day: "numeric",
           }),
+          reason: typeof body.note === "string" ? body.note : undefined,
         });
         await sendEmail({
           to: bookingRow.owner.email,

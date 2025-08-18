@@ -56,6 +56,11 @@ export default function BookingPage() {
   const [toggleLoading, setToggleLoading] = useState(false);
   const [tenantCurrency, setTenantCurrency] = useState<string>("ILS");
   const [confirming, setConfirming] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmNote, setConfirmNote] = useState("");
+  const [declining, setDeclining] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [declineNote, setDeclineNote] = useState("");
 
   useEffect(() => {
     fetchTenantCurrency()
@@ -186,54 +191,24 @@ export default function BookingPage() {
           <div className="flex gap-3">
             {booking.status === "PENDING" && (
               <button
-                onClick={async () => {
-                  setConfirming(true);
-                  try {
-                    const ids = booking.group?.ids?.length
-                      ? booking.group.ids
-                      : [booking.id];
-                    for (const id of ids) {
-                      const res = await fetch(`/api/bookings/${id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          ...booking,
-                          status: "CONFIRMED",
-                        }),
-                      });
-                      if (!res.ok) throw new Error("Failed to confirm booking");
-                    }
-                    // Refetch primary booking
-                    const refreshed = await fetch(
-                      `/api/bookings/${booking.id}`,
-                    ).then((r) => r.json());
-                    setBooking(refreshed);
-                    toast({
-                      title: t("bookingConfirmedTitle", "Booking confirmed"),
-                      description: t(
-                        "bookingConfirmedDesc",
-                        "The reservation is now confirmed.",
-                      ),
-                    });
-                  } catch (e) {
-                    toast({
-                      title: t(
-                        "errorUpdatingBooking",
-                        "Failed to update booking",
-                      ),
-                      description: e instanceof Error ? e.message : String(e),
-                      variant: "destructive",
-                    });
-                  } finally {
-                    setConfirming(false);
-                  }
-                }}
+                onClick={() => setShowConfirmModal(true)}
                 disabled={confirming}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 {confirming
                   ? t("confirming", "Confirming...")
                   : t("confirmBooking", "Confirm Booking")}
+              </button>
+            )}
+            {booking.status === "PENDING" && (
+              <button
+                onClick={() => setShowDeclineModal(true)}
+                disabled={declining}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                {declining
+                  ? t("declining", "Declining...")
+                  : t("decline", "Decline")}
               </button>
             )}
             <Link
@@ -399,12 +374,186 @@ export default function BookingPage() {
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <NotificationsHistory bookingId={booking.id} />
         </div>
-        {confirming && (
+        {(confirming || declining) && (
           <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
             <div className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-3">
               <div className="h-6 w-6 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
               <div className="text-gray-800 font-medium">
-                {t("confirming", "Confirming...")}
+                {confirming
+                  ? t("confirming", "Confirming...")
+                  : t("declining", "Declining...")}
+              </div>
+            </div>
+          </div>
+        )}
+        {showConfirmModal && (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+              <h3 className="text-lg font-semibold mb-2">
+                {t("confirmBooking", "Confirm Booking")}
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                {t(
+                  "addNoteOptional",
+                  "Add a note to include in the confirmation email (optional)",
+                )}
+              </p>
+              <textarea
+                className="w-full border rounded-lg px-3 py-2 min-h-[120px]"
+                value={confirmNote}
+                onChange={(e) => setConfirmNote(e.target.value)}
+                placeholder={
+                  t(
+                    "notePlaceholder",
+                    "E.g., Check-in after 9am, bring vaccine card",
+                  ) as string
+                }
+              />
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 rounded-lg border"
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    setConfirmNote("");
+                  }}
+                >
+                  {t("cancel", "Cancel")}
+                </button>
+                <button
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white"
+                  onClick={async () => {
+                    setShowConfirmModal(false);
+                    setConfirming(true);
+                    try {
+                      const ids = booking!.group?.ids?.length
+                        ? booking!.group!.ids
+                        : [booking!.id];
+                      for (const id of ids) {
+                        const res = await fetch(`/api/bookings/${id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            status: "CONFIRMED",
+                            note: confirmNote,
+                          }),
+                        });
+                        if (!res.ok)
+                          throw new Error("Failed to confirm booking");
+                      }
+                      const refreshed = await fetch(
+                        `/api/bookings/${booking!.id}`,
+                      ).then((r) => r.json());
+                      setBooking(refreshed);
+                      toast({
+                        title: t("bookingConfirmedTitle", "Booking confirmed"),
+                        description: t(
+                          "bookingConfirmedDesc",
+                          "The reservation is now confirmed.",
+                        ),
+                      });
+                    } catch (e: any) {
+                      toast({
+                        title: t(
+                          "errorUpdatingBooking",
+                          "Failed to update booking",
+                        ),
+                        description: e?.message || String(e),
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setConfirming(false);
+                      setConfirmNote("");
+                    }
+                  }}
+                >
+                  {t("confirm", "Confirm")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showDeclineModal && (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+              <h3 className="text-lg font-semibold mb-2">
+                {t("decline", "Decline")}
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                {t(
+                  "declineNoteOptional",
+                  "Add a note for the customer (optional)",
+                )}
+              </p>
+              <textarea
+                className="w-full border rounded-lg px-3 py-2 min-h-[120px]"
+                value={declineNote}
+                onChange={(e) => setDeclineNote(e.target.value)}
+                placeholder={
+                  t(
+                    "notePlaceholder",
+                    "E.g., No availability in requested dates",
+                  ) as string
+                }
+              />
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 rounded-lg border"
+                  onClick={() => {
+                    setShowDeclineModal(false);
+                    setDeclineNote("");
+                  }}
+                >
+                  {t("cancel", "Cancel")}
+                </button>
+                <button
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white"
+                  onClick={async () => {
+                    setShowDeclineModal(false);
+                    setDeclining(true);
+                    try {
+                      const ids = booking!.group?.ids?.length
+                        ? booking!.group!.ids
+                        : [booking!.id];
+                      for (const id of ids) {
+                        const res = await fetch(`/api/bookings/${id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            status: "CANCELLED",
+                            note: declineNote,
+                          }),
+                        });
+                        if (!res.ok)
+                          throw new Error("Failed to decline booking");
+                      }
+                      const refreshed = await fetch(
+                        `/api/bookings/${booking!.id}`,
+                      ).then((r) => r.json());
+                      setBooking(refreshed);
+                      toast({
+                        title: t("declined", "Declined"),
+                        description: t(
+                          "bookingDeclinedDesc",
+                          "We notified the customer.",
+                        ),
+                      });
+                    } catch (e: any) {
+                      toast({
+                        title: t(
+                          "errorUpdatingBooking",
+                          "Failed to update booking",
+                        ),
+                        description: e?.message || String(e),
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setDeclining(false);
+                      setDeclineNote("");
+                    }
+                  }}
+                >
+                  {t("decline", "Decline")}
+                </button>
               </div>
             </div>
           </div>

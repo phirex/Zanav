@@ -76,22 +76,28 @@ export default function KennelWebsitePage({
     console.log("[KENNEL] Loading kennel website for:", params.subdomain);
     console.log("[KENNEL] Current URL:", window.location.href);
     console.log("[KENNEL] Component loaded successfully");
-    
+
     // Prevent any dashboard initialization
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Override any global dashboard functions
       (window as any).initializeDashboard = () => {
-        console.log("[KENNEL] Dashboard initialization blocked on kennel website");
+        console.log(
+          "[KENNEL] Dashboard initialization blocked on kennel website",
+        );
         return false;
       };
-      
+
       // Block any fetch calls to /api/bookings
       const originalFetch = window.fetch;
-      window.fetch = function(input: RequestInfo | URL, init?: RequestInit) {
-        const url = typeof input === 'string' ? input : input.toString();
-        if (url.includes('/api/bookings')) {
-          console.log("[KENNEL] Blocked fetch to /api/bookings on kennel website");
-          return Promise.reject(new Error('Bookings API blocked on kennel website'));
+      window.fetch = function (input: RequestInfo | URL, init?: RequestInit) {
+        const url = typeof input === "string" ? input : input.toString();
+        if (url.includes("/api/bookings")) {
+          console.log(
+            "[KENNEL] Blocked fetch to /api/bookings on kennel website",
+          );
+          return Promise.reject(
+            new Error("Bookings API blocked on kennel website"),
+          );
         }
         return originalFetch.call(this, input, init);
       };
@@ -112,17 +118,25 @@ export default function KennelWebsitePage({
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPhone, setOwnerPhone] = useState("");
-  const [dogs, setDogs] = useState<Array<{ name: string; breed: string }>>([{ name: "", breed: "" }]);
+  const [note, setNote] = useState("");
+  const [dogs, setDogs] = useState<Array<{ name: string; breed: string }>>([
+    { name: "", breed: "" },
+  ]);
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [pricing, setPricing] = useState<{ defaultPricePerDay: number; defaultCurrency: string } | null>(null);
+  const [pricing, setPricing] = useState<{
+    defaultPricePerDay: number;
+    defaultCurrency: string;
+  } | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
 
   const days = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil(
+      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+    );
     return diff > 0 ? diff : 0;
   }, [checkIn, checkOut]);
 
@@ -154,7 +168,9 @@ export default function KennelWebsitePage({
 
   const addDog = () => setDogs((d) => [...d, { name: "", breed: "" }]);
   const updateDog = (idx: number, key: "name" | "breed", value: string) => {
-    setDogs((prev) => prev.map((d, i) => (i === idx ? { ...d, [key]: value } : d)));
+    setDogs((prev) =>
+      prev.map((d, i) => (i === idx ? { ...d, [key]: value } : d)),
+    );
   };
 
   const resetForm = () => {
@@ -165,16 +181,34 @@ export default function KennelWebsitePage({
     setOwnerPhone("");
     setDogs([{ name: "", breed: "" }]);
     setSubmitSuccess(false);
+    setNote("");
   };
 
   const submitBooking = async () => {
-    if (!tenantId) return alert(t("publicSite.unableToBook", "Unable to book right now"));
-    if (!checkIn || !checkOut || !ownerName || !ownerPhone || dogs.some((d) => !d.name)) {
-      return alert(t("publicSite.completeForm", "Please fill dates, your details, and all dog names"));
+    if (!tenantId)
+      return alert(t("publicSite.unableToBook", "Unable to book right now"));
+    if (
+      !checkIn ||
+      !checkOut ||
+      !ownerName ||
+      !ownerPhone ||
+      dogs.some((d) => !d.name)
+    ) {
+      return alert(
+        t(
+          "publicSite.completeForm",
+          "Please fill dates, your details, and all dog names",
+        ),
+      );
     }
     // Ensure at least one night between check-in and check-out
     if (days < 1) {
-      return alert(t("publicSite.invalidDates", "Please choose a check-out date at least one day after check-in"));
+      return alert(
+        t(
+          "publicSite.invalidDates",
+          "Please choose a check-out date at least one day after check-in",
+        ),
+      );
     }
     setBookingSubmitting(true);
     try {
@@ -189,6 +223,7 @@ export default function KennelWebsitePage({
           ownerEmail,
           ownerPhone,
           dogs,
+          note,
         }),
       });
       const data = await res.json();
@@ -297,15 +332,19 @@ export default function KennelWebsitePage({
             </h1>
             <p className="text-lg text-gray-600 mb-6">
               {t("publicSite.subdomainNotFound", {
-                defaultValue: "Sorry, we couldn't find a kennel with the subdomain {{subdomain}}.zanav.io",
+                defaultValue:
+                  "Sorry, we couldn't find a kennel with the subdomain {{subdomain}}.zanav.io",
                 subdomain: params.subdomain,
               })}
             </p>
             <p className="text-gray-500 mb-8">
-              {t("publicSite.kennelMissing", "This kennel might not exist or may have been removed.")}
+              {t(
+                "publicSite.kennelMissing",
+                "This kennel might not exist or may have been removed.",
+              )}
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <a
               href="https://zanav.io"
@@ -326,9 +365,14 @@ export default function KennelWebsitePage({
               </svg>
               {t("publicSite.goHome", "Go to Zanav Homepage")}
             </a>
-            
+
             <div className="text-sm text-gray-500">
-              <p>{t("publicSite.findKennel", "Looking for a kennel? Visit our main site to find one.")}</p>
+              <p>
+                {t(
+                  "publicSite.findKennel",
+                  "Looking for a kennel? Visit our main site to find one.",
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -352,10 +396,15 @@ export default function KennelWebsitePage({
         <div className="relative z-10 flex items-center justify-center h-full text-center text-white">
           <div className="max-w-4xl mx-auto px-4">
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
-              {websiteData.hero_title || t("publicSite.heroTitle", "Welcome to Our Kennel")}
+              {websiteData.hero_title ||
+                t("publicSite.heroTitle", "Welcome to Our Kennel")}
             </h1>
             <p className="text-xl md:text-2xl mb-8">
-              {websiteData.hero_tagline || t("publicSite.heroTagline", "Where your furry friends feel at home")}
+              {websiteData.hero_tagline ||
+                t(
+                  "publicSite.heroTagline",
+                  "Where your furry friends feel at home",
+                )}
             </p>
             {websiteData.allow_direct_booking && (
               <button
@@ -427,18 +476,24 @@ export default function KennelWebsitePage({
               {videos.map((video, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-6">
                   <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                    {video.video_url.includes('youtube.com') || video.video_url.includes('youtu.be') ? (
+                    {video.video_url.includes("youtube.com") ||
+                    video.video_url.includes("youtu.be") ? (
                       <iframe
-                        src={video.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                        src={video.video_url
+                          .replace("watch?v=", "embed/")
+                          .replace("youtu.be/", "youtube.com/embed/")}
                         title={video.caption || `Video ${index + 1}`}
                         className="w-full h-full"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
-                    ) : video.video_url.includes('vimeo.com') ? (
+                    ) : video.video_url.includes("vimeo.com") ? (
                       <iframe
-                        src={video.video_url.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                        src={video.video_url.replace(
+                          "vimeo.com/",
+                          "player.vimeo.com/video/",
+                        )}
                         title={video.caption || `Video ${index + 1}`}
                         className="w-full h-full"
                         frameBorder="0"
@@ -676,7 +731,9 @@ export default function KennelWebsitePage({
       <footer className="bg-gray-900 text-white py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p>
-            &copy; 2025 {websiteData.hero_title || t("publicSite.kennel", "Kennel")} {t("publicSite.allRights", "All rights reserved.")}
+            &copy; 2025{" "}
+            {websiteData.hero_title || t("publicSite.kennel", "Kennel")}{" "}
+            {t("publicSite.allRights", "All rights reserved.")}
           </p>
         </div>
       </footer>
@@ -690,20 +747,40 @@ export default function KennelWebsitePage({
                   <h3 className="text-xl font-semibold">
                     {t("publicSite.requestBooking", "Request a Booking")}
                   </h3>
-                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">✕</button>
+                  <button
+                    onClick={() => {
+                      setShowBooking(false);
+                      resetForm();
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-gray-600">
                       {t("publicSite.checkIn", "Check-in")}
                     </label>
-                    <input type="date" className="w-full border rounded-lg px-3 py-2" min={todayStr} value={checkIn} onChange={(e)=>handleCheckInChange(e.target.value)} />
+                    <input
+                      type="date"
+                      className="w-full border rounded-lg px-3 py-2"
+                      min={todayStr}
+                      value={checkIn}
+                      onChange={(e) => handleCheckInChange(e.target.value)}
+                    />
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">
                       {t("publicSite.checkOut", "Check-out")}
                     </label>
-                    <input type="date" className="w-full border rounded-lg px-3 py-2" min={minCheckoutStr} value={checkOut} onChange={(e)=>setCheckOut(e.target.value)} />
+                    <input
+                      type="date"
+                      className="w-full border rounded-lg px-3 py-2"
+                      min={minCheckoutStr}
+                      value={checkOut}
+                      onChange={(e) => setCheckOut(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -712,36 +789,85 @@ export default function KennelWebsitePage({
                     <label className="text-sm text-gray-600">
                       {t("publicSite.yourName", "Your Name")}
                     </label>
-                    <input className="w-full border rounded-lg px-3 py-2" value={ownerName} onChange={(e)=>setOwnerName(e.target.value)} placeholder={t("publicSite.fullName", "Full name")} />
+                    <input
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={ownerName}
+                      onChange={(e) => setOwnerName(e.target.value)}
+                      placeholder={t("publicSite.fullName", "Full name")}
+                    />
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">
                       {t("publicSite.emailOptional", "Email (optional)")}
                     </label>
-                    <input type="email" className="w-full border rounded-lg px-3 py-2" value={ownerEmail} onChange={(e)=>setOwnerEmail(e.target.value)} placeholder="you@example.com" />
+                    <input
+                      type="email"
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={ownerEmail}
+                      onChange={(e) => setOwnerEmail(e.target.value)}
+                      placeholder="you@example.com"
+                    />
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">
                       {t("publicSite.phone", "Phone")}
                     </label>
-                    <input className="w-full border rounded-lg px-3 py-2" value={ownerPhone} onChange={(e)=>setOwnerPhone(e.target.value)} placeholder="+1 555 555 5555" />
+                    <input
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={ownerPhone}
+                      onChange={(e) => setOwnerPhone(e.target.value)}
+                      placeholder="+1 555 555 5555"
+                    />
                   </div>
                 </div>
 
                 <div className="mt-6">
+                  <label className="text-sm text-gray-600">
+                    {t("publicSite.notesOptional", "Notes (optional)")}
+                  </label>
+                  <textarea
+                    className="w-full border rounded-lg px-3 py-2 min-h-[90px]"
+                    placeholder={t(
+                      "publicSite.notesPlaceholder",
+                      "Anything we should know about your dog(s)?",
+                    )}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                  />
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">
                       {t("publicSite.dogs", "Dogs")}
                     </h4>
-                    <button onClick={addDog} className="text-sm px-3 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                    <button
+                      onClick={addDog}
+                      className="text-sm px-3 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200"
+                    >
                       {t("publicSite.addDog", "Add Dog")}
                     </button>
                   </div>
                   <div className="space-y-3">
                     {dogs.map((d, i) => (
-                      <div key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input className="border rounded-lg px-3 py-2" placeholder={t("publicSite.dogName", "Dog name")} value={d.name} onChange={(e)=>updateDog(i,'name',e.target.value)} />
-                        <input className="border rounded-lg px-3 py-2" placeholder={t("publicSite.breed", "Breed")} value={d.breed} onChange={(e)=>updateDog(i,'breed',e.target.value)} />
+                      <div
+                        key={i}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                      >
+                        <input
+                          className="border rounded-lg px-3 py-2"
+                          placeholder={t("publicSite.dogName", "Dog name")}
+                          value={d.name}
+                          onChange={(e) => updateDog(i, "name", e.target.value)}
+                        />
+                        <input
+                          className="border rounded-lg px-3 py-2"
+                          placeholder={t("publicSite.breed", "Breed")}
+                          value={d.breed}
+                          onChange={(e) =>
+                            updateDog(i, "breed", e.target.value)
+                          }
+                        />
                       </div>
                     ))}
                   </div>
@@ -752,10 +878,12 @@ export default function KennelWebsitePage({
                     {pricing ? (
                       <>
                         <div>
-                          {t("publicSite.pricePerDay", "Price per day:")} {pricing.defaultPricePerDay} {currency}
+                          {t("publicSite.pricePerDay", "Price per day:")}{" "}
+                          {pricing.defaultPricePerDay} {currency}
                         </div>
                         <div>
-                          {t("publicSite.daysDogs", "Days:")} {days} · {t("publicSite.dogsLabel", "Dogs:")} {dogs.length}
+                          {t("publicSite.daysDogs", "Days:")} {days} ·{" "}
+                          {t("publicSite.dogsLabel", "Dogs:")} {dogs.length}
                         </div>
                       </>
                     ) : (
@@ -765,16 +893,29 @@ export default function KennelWebsitePage({
                     )}
                   </div>
                   <div className="text-xl font-semibold">
-                    {t("publicSite.total", "Total:")} {total.toFixed(2)} {currency}
+                    {t("publicSite.total", "Total:")} {total.toFixed(2)}{" "}
+                    {currency}
                   </div>
                 </div>
 
                 <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
-                  <button onClick={()=>{ setShowBooking(false); resetForm(); }} className="px-4 py-2 rounded-lg border w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      setShowBooking(false);
+                      resetForm();
+                    }}
+                    className="px-4 py-2 rounded-lg border w-full sm:w-auto"
+                  >
                     {t("cancel", "Cancel")}
                   </button>
-                  <button onClick={submitBooking} disabled={bookingSubmitting} className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50 w-full sm:w-auto">
-                    {bookingSubmitting ? t("publicSite.submitting", "Submitting…") : t("publicSite.submitRequest", "Submit Request")}
+                  <button
+                    onClick={submitBooking}
+                    disabled={bookingSubmitting}
+                    className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50 w-full sm:w-auto"
+                  >
+                    {bookingSubmitting
+                      ? t("publicSite.submitting", "Submitting…")
+                      : t("publicSite.submitRequest", "Submit Request")}
                   </button>
                 </div>
               </>
@@ -784,10 +925,21 @@ export default function KennelWebsitePage({
                   <h3 className="text-xl font-semibold">
                     {t("publicSite.allSet", "All set! 🐾")}
                   </h3>
-                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">✕</button>
+                  <button
+                    onClick={() => {
+                      setShowBooking(false);
+                      resetForm();
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
                 </div>
                 <p className="text-gray-700">
-                  {t("publicSite.thankYouPending", "Thank you! Your request was received and is pending confirmation. We’ll be in touch soon.")}
+                  {t(
+                    "publicSite.thankYouPending",
+                    "Thank you! Your request was received and is pending confirmation. We’ll be in touch soon.",
+                  )}
                 </p>
                 <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-green-800">
                   <div className="font-medium">
@@ -797,14 +949,22 @@ export default function KennelWebsitePage({
                     {t("publicSite.dates", "Dates:")} {checkIn} → {checkOut}
                   </div>
                   <div className="text-sm">
-                    {t("publicSite.dogsLabel", "Dogs:")} {dogs.map(d => d.name).join(', ')}
+                    {t("publicSite.dogsLabel", "Dogs:")}{" "}
+                    {dogs.map((d) => d.name).join(", ")}
                   </div>
                   <div className="text-sm">
-                    {t("publicSite.estimatedTotal", "Estimated total:")} {total.toFixed(2)} {currency}
+                    {t("publicSite.estimatedTotal", "Estimated total:")}{" "}
+                    {total.toFixed(2)} {currency}
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
-                  <button onClick={() => { setShowBooking(false); resetForm(); }} className="px-5 py-2 rounded-lg bg-blue-600 text-white">
+                  <button
+                    onClick={() => {
+                      setShowBooking(false);
+                      resetForm();
+                    }}
+                    className="px-5 py-2 rounded-lg bg-blue-600 text-white"
+                  >
                     {t("publicSite.close", "Close")}
                   </button>
                 </div>

@@ -34,8 +34,15 @@ export async function POST(
 
     const tenantId = website.tenant_id;
 
-    const { startDate, endDate, ownerName, ownerEmail, ownerPhone, dogs } =
-      body || {};
+    const {
+      startDate,
+      endDate,
+      ownerName,
+      ownerEmail,
+      ownerPhone,
+      dogs,
+      note,
+    } = body || {};
     if (
       !startDate ||
       !endDate ||
@@ -175,6 +182,7 @@ export async function POST(
       startDate: dateFmt(startDate),
       endDate: dateFmt(endDate),
       totalFormatted,
+      requestNote: typeof note === "string" ? note : undefined,
     });
 
     try {

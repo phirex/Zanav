@@ -118,6 +118,7 @@ export function bookingNotificationOwnerEmail(params: {
   startDate: string;
   endDate: string;
   totalFormatted: string;
+  requestNote?: string;
 }) {
   const {
     kennelName,
@@ -128,6 +129,7 @@ export function bookingNotificationOwnerEmail(params: {
     startDate,
     endDate,
     totalFormatted,
+    requestNote,
   } = params;
   const contact = [customerPhone, customerEmail].filter(Boolean).join(" · ");
   const content = `
@@ -152,6 +154,14 @@ export function bookingNotificationOwnerEmail(params: {
         </tr>
       </table>
     </div>
+    ${
+      requestNote
+        ? `<div style="margin-top:16px">
+      <div style="font-weight:700;margin-bottom:6px">Customer note</div>
+      <div style="white-space:pre-wrap" class="muted">${escapeHtml(requestNote)}</div>
+    </div>`
+        : ""
+    }
     <div style="margin-top:24px">
       <a href="https://www.zanav.io" class="btn">Open Dashboard</a>
     </div>
@@ -171,9 +181,17 @@ export function bookingConfirmedCustomerEmail(params: {
   startDate: string;
   endDate: string;
   totalFormatted?: string;
+  note?: string;
 }) {
-  const { kennelName, customerName, dogs, startDate, endDate, totalFormatted } =
-    params;
+  const {
+    kennelName,
+    customerName,
+    dogs,
+    startDate,
+    endDate,
+    totalFormatted,
+    note,
+  } = params;
   const content = `
     <p>Hi ${escapeHtml(customerName)} 🐶</p>
     <p>Your booking at <strong>${escapeHtml(kennelName)}</strong> is confirmed.</p>
@@ -194,6 +212,14 @@ export function bookingConfirmedCustomerEmail(params: {
         ${totalFormatted ? `<tr><td class="muted">Estimated total</td><td align="right" class="price">${escapeHtml(totalFormatted)}</td></tr>` : ""}
       </table>
     </div>
+    ${
+      note
+        ? `<div style="margin-top:16px">
+      <div style="font-weight:700;margin-bottom:6px">Note from ${escapeHtml(kennelName)}</div>
+      <div style=\"white-space:pre-wrap\" class=\"muted\">${escapeHtml(note)}</div>
+    </div>`
+        : ""
+    }
     <p style="margin-top:12px" class="muted">If you need to change anything, just reply to this email.</p>
   `;
   return baseEmailTemplate({
