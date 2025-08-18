@@ -365,6 +365,37 @@ export function checkOutReminderCustomerEmail(params: {
   });
 }
 
+export function bookingUpdatedCustomerEmail(params: {
+  kennelName: string;
+  customerName: string;
+  changes: string[]; // humanized lines
+  dogs: string[];
+  startDate: string;
+  endDate: string;
+}) {
+  const { kennelName, customerName, changes, dogs, startDate, endDate } =
+    params;
+  const content = `
+    <p>Hi ${escapeHtml(customerName)}</p>
+    <p>Your booking at <strong>${escapeHtml(kennelName)}</strong> was updated:</p>
+    <ul>
+      ${changes.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}
+    </ul>
+    <div style="margin-top:12px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr><td class="muted">Check‑in</td><td align="right">${escapeHtml(startDate)}</td></tr>
+        <tr><td class="muted">Check‑out</td><td align="right">${escapeHtml(endDate)}</td></tr>
+        <tr><td class="muted">Dogs</td><td align="right">${escapeHtml(dogs.join(", "))}</td></tr>
+      </table>
+    </div>
+  `;
+  return baseEmailTemplate({
+    title: "Booking updated",
+    preview: `Your booking details were changed`,
+    contentHtml: content,
+  });
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")

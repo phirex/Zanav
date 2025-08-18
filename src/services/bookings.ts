@@ -478,6 +478,7 @@ export async function updateBooking(
   const statusChanged = currentBooking && currentBooking.status !== body.status;
   const becameConfirmed = statusChanged && body.status === "CONFIRMED";
   const becameCancelled = statusChanged && body.status === "CANCELLED";
+  const detailsChanged = !becameConfirmed && !becameCancelled;
   if (becameConfirmed) {
     try {
       const { NotificationScheduler } = await import(
@@ -585,6 +586,68 @@ export async function updateBooking(
       }
     } catch (e) {
       console.error("updateBooking cancellation email failed", e);
+    }
+  }
+
+  // Notify customer about non-status changes (dates/dogs/price)
+  if (detailsChanged) {
+    try {
+      const { sendEmail } = await import("@/lib/email/resend");
+      const { bookingUpdatedCustomerEmail } = await import(
+        "@/lib/email/templates"
+      );
+      const { data: row } = await client
+        .from("Booking")
+        .select("*, owner:Owner(*), dog:Dog(*), tenantId")
+        .eq("id", id)
+        .single();
+      if (row?.owner?.email) {
+        const { data: settingsRows } = await client
+          .from("Setting")
+          .select("key,value")
+          .eq("tenantId", row.tenantId);
+        const settings = new Map(
+          (settingsRows || []).map((r: any) => [r.key, r.value]),
+        );
+        const kennelName =
+          settings.get("kennelName") ||
+          settings.get("businessName") ||
+          "Your Kennel";
+        const changes: string[] = [];
+        if ("startDate" in body)
+          changes.push(
+            `New check‑in: ${new Date(body.startDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`,
+          );
+        if ("endDate" in body)
+          changes.push(
+            `New check‑out: ${new Date(body.endDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`,
+          );
+        if ("pricePerDay" in body || "totalPrice" in body)
+          changes.push("Pricing updated");
+        const html = bookingUpdatedCustomerEmail({
+          kennelName,
+          customerName: row.owner.name,
+          changes,
+          dogs: [row.dog?.name].filter(Boolean) as string[],
+          startDate: new Date(row.startDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+          endDate: new Date(row.endDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+        });
+        await sendEmail({
+          to: row.owner.email,
+          subject: "Your booking was updated",
+          html,
+        });
+      }
+    } catch (e) {
+      console.warn("booking updated email failed", e);
     }
   }
 
