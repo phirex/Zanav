@@ -74,10 +74,11 @@ export class NotificationWorker {
             continue;
           }
 
-          // Send the WhatsApp message
+          // Send the WhatsApp message (template name equals trigger name in our setup)
           const result = await this.whatsappService.sendMessage({
             to: notification.recipient,
-            template: notification.template.name,
+            template:
+              notification.template.trigger || notification.template.name,
             variables: notification.variables as Record<string, string>,
           });
 

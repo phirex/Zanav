@@ -311,6 +311,60 @@ export function paymentReceiptCustomerEmail(params: {
   });
 }
 
+export function checkInReminderCustomerEmail(params: {
+  kennelName: string;
+  customerName: string;
+  dogs: string[];
+  startDate: string;
+  startTime?: string;
+  hoursBefore: number; // 72 or 24
+}) {
+  const { kennelName, customerName, dogs, startDate, startTime, hoursBefore } =
+    params;
+  const content = `
+    <p>Hi ${escapeHtml(customerName)} 👋</p>
+    <p>Friendly reminder: your check‑in at <strong>${escapeHtml(kennelName)}</strong> is in <strong>${hoursBefore} hours</strong>.</p>
+    <div style="margin-top:12px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr><td class="muted">Date</td><td align="right">${escapeHtml(startDate)}${startTime ? `, ${escapeHtml(startTime)}` : ""}</td></tr>
+        <tr><td class="muted">Dogs</td><td align="right">${escapeHtml(dogs.join(", "))}</td></tr>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:12px">If you need to make changes, reply to this email.</p>
+  `;
+  return baseEmailTemplate({
+    title: `Check‑in reminder (${hoursBefore}h)`,
+    preview: `Check‑in in ${hoursBefore} hours at ${kennelName}`,
+    contentHtml: content,
+  });
+}
+
+export function checkOutReminderCustomerEmail(params: {
+  kennelName: string;
+  customerName: string;
+  dogs: string[];
+  endDate: string;
+  endTime?: string;
+}) {
+  const { kennelName, customerName, dogs, endDate, endTime } = params;
+  const content = `
+    <p>Hi ${escapeHtml(customerName)} 👋</p>
+    <p>Quick heads‑up: your check‑out from <strong>${escapeHtml(kennelName)}</strong> is tomorrow.</p>
+    <div style="margin-top:12px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr><td class="muted">Date</td><td align="right">${escapeHtml(endDate)}${endTime ? `, ${escapeHtml(endTime)}` : ""}</td></tr>
+        <tr><td class="muted">Dogs</td><td align="right">${escapeHtml(dogs.join(", "))}</td></tr>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:12px">We loved hosting your pup(s)! Reply if you need a later pickup.</p>
+  `;
+  return baseEmailTemplate({
+    title: "Check‑out reminder (24h)",
+    preview: `Check‑out tomorrow from ${kennelName}`,
+    contentHtml: content,
+  });
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")

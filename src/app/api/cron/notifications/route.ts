@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Process pending notifications
     await worker.processNotifications();
+    // Optional: daily digest could be triggered here at a fixed hour using an env var flag
 
     return NextResponse.json({
       success: true,
