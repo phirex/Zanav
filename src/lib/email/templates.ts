@@ -253,6 +253,64 @@ export function bookingCancelledCustomerEmail(params: {
   });
 }
 
+export function paymentReceiptCustomerEmail(params: {
+  kennelName: string;
+  customerName: string;
+  amountFormatted: string;
+  dogs: string[];
+  startDate?: string;
+  endDate?: string;
+  balanceFormatted?: string;
+}) {
+  const {
+    kennelName,
+    customerName,
+    amountFormatted,
+    dogs,
+    startDate,
+    endDate,
+    balanceFormatted,
+  } = params;
+  const content = `
+    <p>Hi ${escapeHtml(customerName)} 🧾</p>
+    <p>We received your payment at <strong>${escapeHtml(
+      kennelName,
+    )}</strong>.</p>
+    <div style="margin-top:12px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr><td class="muted">Amount</td><td align="right" class="price">${escapeHtml(
+          amountFormatted,
+        )}</td></tr>
+        <tr><td class="muted">Dogs</td><td align="right">${escapeHtml(
+          dogs.join(", "),
+        )}</td></tr>
+        ${
+          startDate && endDate
+            ? `<tr><td class="muted">Dates</td><td align="right">${escapeHtml(
+                startDate,
+              )} → ${escapeHtml(endDate)}</td></tr>`
+            : ""
+        }
+        ${
+          balanceFormatted
+            ? `<tr><td class="muted">Remaining balance</td><td align="right">${escapeHtml(
+                balanceFormatted,
+              )}</td></tr>`
+            : ""
+        }
+      </table>
+    </div>
+    <p class="muted" style="margin-top:12px">Thank you for choosing ${escapeHtml(
+      kennelName,
+    )}.</p>
+  `;
+  return baseEmailTemplate({
+    title: "Payment receipt",
+    preview: `Payment received at ${kennelName}`,
+    contentHtml: content,
+  });
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")

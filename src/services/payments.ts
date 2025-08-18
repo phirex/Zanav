@@ -120,5 +120,61 @@ export async function createPayment(
     .select("*, booking:Booking(*, dog:Dog(*, owner:Owner(*)))")
     .eq("id", paymentRow.id)
     .single();
+
+  // Send receipt email if owner has an email
+  try {
+    const { sendEmail } = await import("@/lib/email/resend");
+    const { paymentReceiptCustomerEmail } = await import(
+      "@/lib/email/templates"
+    );
+    // Get kennel name and currency
+    const { data: settingsRows } = await client
+      .from("Setting")
+      .select("key,value")
+      .eq("tenantId", existingBooking.tenantId);
+    const settings = new Map(
+      (settingsRows || []).map((r: any) => [r.key, r.value]),
+    );
+    const kennelName =
+      settings.get("kennelName") ||
+      settings.get("businessName") ||
+      "Your Kennel";
+    const currency = (settings.get("default_currency") || "usd").toUpperCase();
+
+    const ownerEmail = completed?.booking?.dog?.owner?.email as
+      | string
+      | undefined;
+    const ownerName = completed?.booking?.dog?.owner?.name as
+      | string
+      | undefined;
+    const dogName = completed?.booking?.dog?.name as string | undefined;
+
+    if (ownerEmail && ownerName) {
+      const amountFormatted = `${Number(amount).toFixed(2)} ${currency}`;
+      const startStr = new Date(existingBooking.startDate).toLocaleDateString(
+        "en-US",
+        { year: "numeric", month: "short", day: "numeric" },
+      );
+      const endStr = new Date(existingBooking.endDate).toLocaleDateString(
+        "en-US",
+        { year: "numeric", month: "short", day: "numeric" },
+      );
+      const balance = Math.max(0, totalAmount - totalPaid);
+      const balanceFormatted = `${balance.toFixed(2)} ${currency}`;
+      const html = paymentReceiptCustomerEmail({
+        kennelName,
+        customerName: ownerName,
+        amountFormatted,
+        dogs: [dogName].filter(Boolean) as string[],
+        startDate: startStr,
+        endDate: endStr,
+        balanceFormatted,
+      });
+      await sendEmail({ to: ownerEmail, subject: "Payment receipt", html });
+    }
+  } catch (e) {
+    console.warn("Payment receipt email failed", e);
+  }
+
   return completed;
 }
