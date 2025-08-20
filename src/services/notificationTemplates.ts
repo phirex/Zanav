@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import { assertTemplateActivationAllowed } from "@/lib/plan";
 
 type TriggerType = Database["public"]["Enums"]["TriggerType"];
 
@@ -7,15 +8,12 @@ export async function listTemplates(
   client: SupabaseClient<Database>,
   tenantId: string,
 ) {
-  let query = client
-    .from("NotificationTemplate")
-    .select("*")
-    .order("name");
-  
+  let query = client.from("NotificationTemplate").select("*").order("name");
+
   if (tenantId) {
     query = query.eq("tenantId", tenantId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data;
@@ -41,6 +39,10 @@ export async function createTemplate(
     // @ts-ignore dynamic
     if (!dto[key]) throw new Error(`Missing required field: ${key}`);
   }
+  // If template is requested active, enforce plan cap first
+  if (dto.active !== false) {
+    await assertTemplateActivationAllowed(tenantId);
+  }
   const { data, error } = await client
     .from("NotificationTemplate")
     .insert({
@@ -64,15 +66,12 @@ export async function getTemplate(
   tenantId: string,
   id: string,
 ) {
-  let query = client
-    .from("NotificationTemplate")
-    .select("*")
-    .eq("id", id);
-  
+  let query = client.from("NotificationTemplate").select("*").eq("id", id);
+
   if (tenantId) {
     query = query.eq("tenantId", tenantId);
   }
-  
+
   const { data, error } = await query.maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Template not found");
@@ -85,15 +84,16 @@ export async function updateTemplate(
   id: string,
   dto: Partial<TemplateDTO>,
 ) {
-  let query = client
-    .from("NotificationTemplate")
-    .update(dto)
-    .eq("id", id);
-  
+  // If toggling to active, verify cap
+  if (dto.active === true) {
+    await assertTemplateActivationAllowed(tenantId);
+  }
+  let query = client.from("NotificationTemplate").update(dto).eq("id", id);
+
   if (tenantId) {
     query = query.eq("tenantId", tenantId);
   }
-  
+
   const { data, error } = await query.select().single();
   if (error) {
     if (error.code === "23505")
@@ -109,21 +109,21 @@ export async function deleteTemplate(
   id: string,
 ) {
   // delete scheduled notifications first
-  let scheduledQuery = client.from("ScheduledNotification").delete().eq("templateId", id);
+  let scheduledQuery = client
+    .from("ScheduledNotification")
+    .delete()
+    .eq("templateId", id);
   if (tenantId) {
     scheduledQuery = scheduledQuery.eq("tenantId", tenantId);
   }
   await scheduledQuery;
-  
-  let templateQuery = client
-    .from("NotificationTemplate")
-    .delete()
-    .eq("id", id);
-  
+
+  let templateQuery = client.from("NotificationTemplate").delete().eq("id", id);
+
   if (tenantId) {
     templateQuery = templateQuery.eq("tenantId", tenantId);
   }
-  
+
   const { error } = await templateQuery;
   if (error) throw new Error(error.message);
   return { success: true };

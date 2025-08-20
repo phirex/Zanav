@@ -151,3 +151,24 @@ export async function assertUserInviteAllowed(tenantId: string): Promise<void> {
     throw error;
   }
 }
+
+export async function assertTemplateActivationAllowed(
+  tenantId: string,
+): Promise<void> {
+  const info = await getPlanInfo(tenantId);
+  if (info.effectiveTier === "trial" || info.effectiveTier === "pro") return;
+  const max = info.limits.maxActiveTemplates;
+  if (!max) return;
+  const supabase = supabaseServer();
+  const { count } = await supabase
+    .from("NotificationTemplate")
+    .select("id", { count: "exact", head: true })
+    .eq("tenantId", tenantId)
+    .eq("active", true);
+  if ((count || 0) >= max) {
+    const message = `Active templates limit reached for Standard plan (${max}). Deactivate a template or upgrade to Pro.`;
+    const error: any = new Error(message);
+    error.code = "limit_exceeded";
+    throw error;
+  }
+}
