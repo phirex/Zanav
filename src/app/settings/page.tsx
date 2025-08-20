@@ -359,6 +359,15 @@ function SettingsContent() {
     planInfo.effectiveTier !== "trial" &&
     !planInfo.limits?.features?.whatsapp;
 
+  const UpgradeHint = ({ feature }: { feature: string }) => (
+    <div className="mt-3 p-3 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-sm flex items-center justify-between">
+      <span>{feature} is a Pro feature.</span>
+      <a href="/billing" className="px-3 py-1 rounded bg-blue-600 text-white">
+        Upgrade
+      </a>
+    </div>
+  );
+
   const handleAddRoom = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAddingRoom(true);
@@ -698,6 +707,11 @@ function SettingsContent() {
                 </button>
               )}
             </div>
+            {planInfo &&
+              planInfo.effectiveTier !== "trial" &&
+              !planInfo.limits?.features?.paymentsStripe && (
+                <UpgradeHint feature="Stripe payments" />
+              )}
             <p className="text-gray-600 text-sm">
               {stripeStatus?.configured === false
                 ? "Stripe not configured on platform"
@@ -868,6 +882,7 @@ function SettingsContent() {
                     placeholder="+972xxxxxxxxx"
                   />
                 </div>
+                {whatsappLocked && <UpgradeHint feature="WhatsApp" />}
               </div>
 
               {message && (

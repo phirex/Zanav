@@ -40,9 +40,14 @@ function FinancialReportContent() {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState<MonthlyData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [planInfo, setPlanInfo] = useState<any | null>(null);
   const [selectedYear, setSelectedYear] = useState(2025); // Default to 2025 for demo data
 
   useEffect(() => {
+    fetch("/api/plan")
+      .then((r) => r.json())
+      .then(setPlanInfo)
+      .catch(() => {});
     const fetchData = async () => {
       try {
         const response = await fetch(
@@ -172,6 +177,34 @@ function FinancialReportContent() {
     );
   }
 
+  if (
+    planInfo &&
+    planInfo.effectiveTier !== "trial" &&
+    !planInfo.limits?.features?.reportsAdvanced
+  ) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-semibold mb-2">
+            {t("upgradeRequired", "Upgrade required")}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {t(
+              "reportsProOnly",
+              "Advanced financial reports are available on the Pro plan.",
+            )}
+          </p>
+          <a
+            href="/billing"
+            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg"
+          >
+            {t("upgradeToPro", "Upgrade to Pro")}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const yearTotal = {
     projected: data.reduce((sum, month) => sum + month.projectedTotal, 0),
     actual: data.reduce((sum, month) => sum + month.actualTotal, 0),
@@ -223,7 +256,9 @@ function FinancialReportContent() {
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">{t("monthlyBreakdown")}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {t("monthlyBreakdown")}
+          </h3>
         </div>
         <table className="w-full">
           <thead>
@@ -244,7 +279,10 @@ function FinancialReportContent() {
           </thead>
           <tbody>
             {data.map((month) => (
-              <tr key={month.month} className="border-t border-gray-200 hover:bg-gray-50 transition-colors">
+              <tr
+                key={month.month}
+                className="border-t border-gray-200 hover:bg-gray-50 transition-colors"
+              >
                 <td className="py-4 px-6 font-medium text-gray-900 text-left">
                   {month.rawDate
                     ? getLocalizedMonthName(month.rawDate)

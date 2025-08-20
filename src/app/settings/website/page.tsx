@@ -716,11 +716,19 @@ export default function WebsiteSettingsPage() {
                 {planInfo &&
                   planInfo.effectiveTier !== "trial" &&
                   !planInfo.limits?.features?.customDomain && (
-                    <div className="mt-3 p-3 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-sm">
-                      {t(
-                        "website.customDomainUpgrade",
-                        "Custom domain is a Pro feature. Upgrade to connect your own domain.",
-                      )}
+                    <div className="mt-3 p-3 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-sm flex items-center justify-between">
+                      <span>
+                        {t(
+                          "website.customDomainUpgrade",
+                          "Custom domain is a Pro feature. Upgrade to connect your own domain.",
+                        )}
+                      </span>
+                      <a
+                        href="/billing"
+                        className="px-3 py-1 rounded bg-blue-600 text-white"
+                      >
+                        {t("upgrade", "Upgrade")}
+                      </a>
                     </div>
                   )}
                 <p className="text-sm text-gray-500 mt-1">
