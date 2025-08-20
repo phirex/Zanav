@@ -51,8 +51,9 @@ export async function getPlanInfo(tenantId: string): Promise<PlanInfo> {
     (settingsRows || []).map((r: any) => [r.key, r.value]),
   );
   const selectedPlan = (settings.get("plan") as PlanInfo["plan"]) || "standard";
+  const planForced = settings.get("plan_forced") === "true";
 
-  const isTrial = new Date() < trialEnds;
+  const isTrial = !planForced && new Date() < trialEnds;
   const effectiveTier: PlanTier = isTrial ? "trial" : selectedPlan;
 
   const limitsByTier = (tier: PlanTier) => {
