@@ -679,12 +679,24 @@ function SettingsContent() {
                 <SettingsIcon className="h-5 w-5" />
                 <h2 className="text-xl font-bold">Payments (Stripe)</h2>
               </div>
-              <button
-                onClick={startStripeOnboarding}
-                className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors"
-              >
-                {stripeStatus?.connected ? "Reconnect" : "Connect Stripe"}
-              </button>
+              {planInfo &&
+              planInfo.effectiveTier !== "trial" &&
+              !planInfo.limits?.features?.paymentsStripe ? (
+                <button
+                  disabled
+                  className="px-4 py-2 bg-gray-200 text-gray-500 rounded-xl cursor-not-allowed"
+                  title="Upgrade to Pro to enable Stripe"
+                >
+                  Connect Stripe (Pro)
+                </button>
+              ) : (
+                <button
+                  onClick={startStripeOnboarding}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors"
+                >
+                  {stripeStatus?.connected ? "Reconnect" : "Connect Stripe"}
+                </button>
+              )}
             </div>
             <p className="text-gray-600 text-sm">
               {stripeStatus?.configured === false
