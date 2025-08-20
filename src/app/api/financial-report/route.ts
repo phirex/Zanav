@@ -13,6 +13,8 @@ export const GET = createHandler(async ({ client, tenantId, req }) => {
   const year = parseInt(yearParam, 10);
   if (isNaN(year)) throw new ApiError("invalid_year", "Invalid year");
 
+  if (!tenantId) throw new ApiError("missing_tenant", "Tenant ID is required");
+
   // Gate advanced reports by plan
   await assertFeatureEnabled(tenantId, "reportsAdvanced");
 
