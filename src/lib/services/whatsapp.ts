@@ -11,6 +11,7 @@ interface SendMessageOptions {
   to: string;
   template: string;
   variables: Record<string, string>;
+  tenantId?: string;
 }
 
 interface MessageResult {
