@@ -3,6 +3,7 @@ import {
   getNotificationTemplateByName,
 } from "@/lib/supabase/helpers";
 import type { Database } from "@/lib/database.types";
+import { assertFeatureEnabled } from "@/lib/plan";
 
 type TriggerType = Database["public"]["Enums"]["TriggerType"];
 
@@ -45,6 +46,10 @@ export class WhatsAppService {
   }
 
   async sendMessage(options: SendMessageOptions): Promise<MessageResult> {
+    // Enforce plan gate for WhatsApp messages per tenant
+    if (options.tenantId) {
+      await assertFeatureEnabled(options.tenantId, "whatsapp");
+    }
     try {
       const settings = await this.loadSettings();
 

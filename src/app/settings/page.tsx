@@ -77,6 +77,7 @@ function SettingsContent() {
     whatsappPhoneNumber: "",
     whatsappEnabled: false,
   });
+  const [planInfo, setPlanInfo] = useState<any | null>(null);
 
   const [kennelSettings, setKennelSettings] = useState<KennelSettings>({
     kennelName: "",
@@ -85,8 +86,15 @@ function SettingsContent() {
   });
 
   const [importing, setImporting] = useState(false);
-  const [stripeStatus, setStripeStatus] = useState<{connected?: boolean, configured?: boolean, accountId?: string} | null>(null);
-  const [pricingSettings, setPricingSettings] = useState<{ pricePerDay: string; currency: string }>({ pricePerDay: "", currency: "usd" });
+  const [stripeStatus, setStripeStatus] = useState<{
+    connected?: boolean;
+    configured?: boolean;
+    accountId?: string;
+  } | null>(null);
+  const [pricingSettings, setPricingSettings] = useState<{
+    pricePerDay: string;
+    currency: string;
+  }>({ pricePerDay: "", currency: "usd" });
   const [demoBusy, setDemoBusy] = useState(false);
 
   const fetchRooms = useCallback(async () => {
@@ -108,6 +116,13 @@ function SettingsContent() {
       }
     }
   }, [initialized]);
+
+  useEffect(() => {
+    fetch("/api/plan")
+      .then((r) => r.json())
+      .then(setPlanInfo)
+      .catch(() => {});
+  }, []);
 
   const fetchSettings = useCallback(async () => {
     if (!initialized) return;
@@ -165,7 +180,11 @@ function SettingsContent() {
           tenantId: tenantData.id || prev.tenantId || "",
         }));
       } else {
-        console.warn("/api/tenants/current not OK (", response.status, ") — preserving existing kennel name");
+        console.warn(
+          "/api/tenants/current not OK (",
+          response.status,
+          ") — preserving existing kennel name",
+        );
         // Preserve existing values on failure to avoid UI blanking
         setKennelSettings((prev) => ({ ...prev }));
       }
@@ -178,7 +197,9 @@ function SettingsContent() {
 
   const loadStripeStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/payments/stripe/connect/status", { headers: createTenantHeaders() });
+      const res = await fetch("/api/payments/stripe/connect/status", {
+        headers: createTenantHeaders(),
+      });
       if (res.ok) setStripeStatus(await res.json());
     } catch {}
   }, []);
@@ -187,11 +208,21 @@ function SettingsContent() {
     if (demoBusy) return;
     setDemoBusy(true);
     try {
-      const res = await fetchWithTenant("/api/generate-demo-data", { method: "POST" });
+      const res = await fetchWithTenant("/api/generate-demo-data", {
+        method: "POST",
+      });
       const ok = (res as any)?.success !== false;
-      setMessage({ type: ok ? "success" : "error", text: ok ? t("demoGenerated", "Demo data generated") : t("demoFailed", "Failed to generate demo data") });
+      setMessage({
+        type: ok ? "success" : "error",
+        text: ok
+          ? t("demoGenerated", "Demo data generated")
+          : t("demoFailed", "Failed to generate demo data"),
+      });
     } catch (e) {
-      setMessage({ type: "error", text: t("demoFailed", "Failed to generate demo data") });
+      setMessage({
+        type: "error",
+        text: t("demoFailed", "Failed to generate demo data"),
+      });
     } finally {
       setDemoBusy(false);
     }
@@ -201,11 +232,21 @@ function SettingsContent() {
     if (demoBusy) return;
     setDemoBusy(true);
     try {
-      const res = await fetchWithTenant("/api/restore-website-content", { method: "POST" });
+      const res = await fetchWithTenant("/api/restore-website-content", {
+        method: "POST",
+      });
       const ok = (res as any)?.success !== false;
-      setMessage({ type: ok ? "success" : "error", text: ok ? t("websiteRestored", "Website content restored") : t("websiteRestoreFailed", "Failed to restore website content") });
+      setMessage({
+        type: ok ? "success" : "error",
+        text: ok
+          ? t("websiteRestored", "Website content restored")
+          : t("websiteRestoreFailed", "Failed to restore website content"),
+      });
     } catch (e) {
-      setMessage({ type: "error", text: t("websiteRestoreFailed", "Failed to restore website content") });
+      setMessage({
+        type: "error",
+        text: t("websiteRestoreFailed", "Failed to restore website content"),
+      });
     } finally {
       setDemoBusy(false);
     }
@@ -313,6 +354,11 @@ function SettingsContent() {
     }
   };
 
+  const whatsappLocked =
+    planInfo &&
+    planInfo.effectiveTier !== "trial" &&
+    !planInfo.limits?.features?.whatsapp;
+
   const handleAddRoom = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAddingRoom(true);
@@ -383,7 +429,9 @@ function SettingsContent() {
           headers,
           body: JSON.stringify({
             kennelName: kennelSettings.kennelName,
-            default_language: (kennelSettings.defaultLanguage || "").toLowerCase(),
+            default_language: (
+              kennelSettings.defaultLanguage || ""
+            ).toLowerCase(),
           }),
         }),
         fetch("/api/tenants/current", {
@@ -448,7 +496,10 @@ function SettingsContent() {
 
   const startStripeOnboarding = async () => {
     try {
-      const res = await fetch("/api/payments/stripe/connect/start", { method: "POST", headers: createTenantHeaders() });
+      const res = await fetch("/api/payments/stripe/connect/start", {
+        method: "POST",
+        headers: createTenantHeaders(),
+      });
       const data = await res.json();
       if (data?.url) window.location.href = data.url;
     } catch {}
@@ -459,11 +510,17 @@ function SettingsContent() {
     setLoading(true);
     setMessage(null);
     try {
-      const headers = createTenantHeaders({ "Content-Type": "application/json" });
-      const response = await fetch("/api/settings", { method: "POST", headers, body: JSON.stringify({
-        default_price_per_day: pricingSettings.pricePerDay,
-        default_currency: pricingSettings.currency,
-      }) });
+      const headers = createTenantHeaders({
+        "Content-Type": "application/json",
+      });
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          default_price_per_day: pricingSettings.pricePerDay,
+          default_currency: pricingSettings.currency,
+        }),
+      });
       if (!response.ok) throw new Error("Failed to update pricing settings");
       setMessage({ type: "success", text: "Pricing settings saved" });
       await fetchSettings();
@@ -544,7 +601,9 @@ function SettingsContent() {
                     }
                     className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">{t("systemDefault", "System default")}</option>
+                    <option value="">
+                      {t("systemDefault", "System default")}
+                    </option>
                     <option value="en">English</option>
                     <option value="he">עברית</option>
                   </select>
@@ -584,14 +643,29 @@ function SettingsContent() {
           <div className="p-6">
             <div className="flex items-center gap-2 text-gray-700 mb-6">
               <Database className="h-5 w-5" />
-              <h2 className="text-xl font-bold">{t("dataAndDemo", "Data & Demo Tools")}</h2>
+              <h2 className="text-xl font-bold">
+                {t("dataAndDemo", "Data & Demo Tools")}
+              </h2>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button onClick={generateDemoData} disabled={demoBusy} className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 disabled:opacity-50">
-                {demoBusy ? t("working", "Working…") : t("generateDemoData", "Generate Demo Data")}
+              <button
+                onClick={generateDemoData}
+                disabled={demoBusy}
+                className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 disabled:opacity-50"
+              >
+                {demoBusy
+                  ? t("working", "Working…")
+                  : t("generateDemoData", "Generate Demo Data")}
               </button>
-              <button onClick={restoreWebsiteContent} disabled={demoBusy} className="px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 disabled:opacity-50 inline-flex items-center gap-2">
-                <Globe className="h-4 w-4" /> {demoBusy ? t("working", "Working…") : t("restoreWebsite", "Restore Website Content")}
+              <button
+                onClick={restoreWebsiteContent}
+                disabled={demoBusy}
+                className="px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                <Globe className="h-4 w-4" />{" "}
+                {demoBusy
+                  ? t("working", "Working…")
+                  : t("restoreWebsite", "Restore Website Content")}
               </button>
             </div>
           </div>
@@ -605,9 +679,20 @@ function SettingsContent() {
                 <SettingsIcon className="h-5 w-5" />
                 <h2 className="text-xl font-bold">Payments (Stripe)</h2>
               </div>
-              <button onClick={startStripeOnboarding} className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">{stripeStatus?.connected ? 'Reconnect' : 'Connect Stripe'}</button>
+              <button
+                onClick={startStripeOnboarding}
+                className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors"
+              >
+                {stripeStatus?.connected ? "Reconnect" : "Connect Stripe"}
+              </button>
             </div>
-            <p className="text-gray-600 text-sm">{stripeStatus?.configured === false ? 'Stripe not configured on platform' : stripeStatus?.connected ? `Connected (account ${stripeStatus.accountId})` : 'Not connected'}</p>
+            <p className="text-gray-600 text-sm">
+              {stripeStatus?.configured === false
+                ? "Stripe not configured on platform"
+                : stripeStatus?.connected
+                  ? `Connected (account ${stripeStatus.accountId})`
+                  : "Not connected"}
+            </p>
           </div>
         </div>
 
@@ -619,14 +704,40 @@ function SettingsContent() {
                 <h2 className="text-xl font-bold">Pricing</h2>
               </div>
             </div>
-            <form onSubmit={handlePricingSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form
+              onSubmit={handlePricingSubmit}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
               <div>
-                <label className="block text-sm text-gray-600">Default Price / Day</label>
-                <input className="w-full border rounded-lg px-3 py-2" type="number" min="0" step="0.01" value={pricingSettings.pricePerDay} onChange={(e)=>setPricingSettings(s=>({...s, pricePerDay: e.target.value}))} />
+                <label className="block text-sm text-gray-600">
+                  Default Price / Day
+                </label>
+                <input
+                  className="w-full border rounded-lg px-3 py-2"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={pricingSettings.pricePerDay}
+                  onChange={(e) =>
+                    setPricingSettings((s) => ({
+                      ...s,
+                      pricePerDay: e.target.value,
+                    }))
+                  }
+                />
               </div>
               <div>
                 <label className="block text-sm text-gray-600">Currency</label>
-                <select className="w-full border rounded-lg px-3 py-2" value={pricingSettings.currency} onChange={(e)=>setPricingSettings(s=>({...s, currency: e.target.value}))}>
+                <select
+                  className="w-full border rounded-lg px-3 py-2"
+                  value={pricingSettings.currency}
+                  onChange={(e) =>
+                    setPricingSettings((s) => ({
+                      ...s,
+                      currency: e.target.value,
+                    }))
+                  }
+                >
                   <option value="usd">USD</option>
                   <option value="eur">EUR</option>
                   <option value="ils">ILS</option>
@@ -634,7 +745,13 @@ function SettingsContent() {
                 </select>
               </div>
               <div className="flex items-end justify-end">
-                <button type="submit" disabled={loading} className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50"
+                >
+                  {loading ? "Saving..." : "Save"}
+                </button>
               </div>
             </form>
           </div>

@@ -172,3 +172,18 @@ export async function assertTemplateActivationAllowed(
     throw error;
   }
 }
+
+export async function assertFeatureEnabled(
+  tenantId: string,
+  feature: keyof PlanInfo["limits"]["features"],
+): Promise<void> {
+  const info = await getPlanInfo(tenantId);
+  if (info.effectiveTier === "trial") return; // trial has all features
+  const enabled = info.limits.features[feature];
+  if (!enabled) {
+    const message = `Feature not available on Standard plan: ${feature}. Upgrade to Pro to use this.`;
+    const error: any = new Error(message);
+    error.code = "feature_locked";
+    throw error;
+  }
+}
