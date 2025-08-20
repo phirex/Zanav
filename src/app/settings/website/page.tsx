@@ -73,6 +73,7 @@ const DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000000";
 
 export default function WebsiteSettingsPage() {
   const { t } = useTranslation();
+  const [planInfo, setPlanInfo] = useState<any | null>(null);
   const [websiteData, setWebsiteData] = useState<KennelWebsite>({});
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -84,6 +85,10 @@ export default function WebsiteSettingsPage() {
 
   // Fetch current website data
   useEffect(() => {
+    fetch("/api/plan")
+      .then((r) => r.json())
+      .then(setPlanInfo)
+      .catch(() => {});
     console.log("useEffect triggered - fetching website data");
     fetchWebsiteData();
   }, []);
@@ -108,14 +113,22 @@ export default function WebsiteSettingsPage() {
       }
       // Fallback to localStorage only if server lookup failed
       const fallback = localStorage.getItem("tenantId");
-      if (fallback && fallback !== DEFAULT_TENANT_ID && fallback.length === 36) {
+      if (
+        fallback &&
+        fallback !== DEFAULT_TENANT_ID &&
+        fallback.length === 36
+      ) {
         return fallback;
       }
       return null;
     } catch (e) {
       console.error("resolveTenantId error:", e);
       const fallback = localStorage.getItem("tenantId");
-      return fallback && fallback !== DEFAULT_TENANT_ID && fallback.length === 36 ? fallback : null;
+      return fallback &&
+        fallback !== DEFAULT_TENANT_ID &&
+        fallback.length === 36
+        ? fallback
+        : null;
     }
   };
 
@@ -126,13 +139,19 @@ export default function WebsiteSettingsPage() {
       const tenantId = await resolveTenantId();
       console.log("Fetching website data with resolved tenantId:", tenantId);
       if (!tenantId) {
-        toast({ title: t("toastErrorTitle", "Error"), description: t("website.noTenantId", "No tenant ID found"), variant: "destructive" });
+        toast({
+          title: t("toastErrorTitle", "Error"),
+          description: t("website.noTenantId", "No tenant ID found"),
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }
 
       // Request with resolved tenant header (authoritative), API will also fall back to auth if missing
-      const response = await fetch("/api/kennel-website", { headers: { "x-tenant-id": tenantId } });
+      const response = await fetch("/api/kennel-website", {
+        headers: { "x-tenant-id": tenantId },
+      });
 
       console.log("Fetch response status:", response.status);
 
@@ -175,7 +194,11 @@ export default function WebsiteSettingsPage() {
       }
     } catch (error) {
       console.error("Error fetching website data:", error);
-      toast({ title: t("toastErrorTitle", "Error"), description: t("website.loadFailed", "Failed to load website data"), variant: "destructive" });
+      toast({
+        title: t("toastErrorTitle", "Error"),
+        description: t("website.loadFailed", "Failed to load website data"),
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -206,7 +229,10 @@ export default function WebsiteSettingsPage() {
       if (!tenantId) {
         toast({
           title: t("toastErrorTitle", "Error"),
-          description: t("website.noTenantId", "No tenant ID found. Please refresh the page."),
+          description: t(
+            "website.noTenantId",
+            "No tenant ID found. Please refresh the page.",
+          ),
           variant: "destructive",
         });
         return;
@@ -240,7 +266,10 @@ export default function WebsiteSettingsPage() {
         setWebsiteData(result.data);
         toast({
           title: t("toastSuccessTitle", "Success"),
-          description: t("website.saveSuccess", "Website settings saved successfully"),
+          description: t(
+            "website.saveSuccess",
+            "Website settings saved successfully",
+          ),
         });
       } else {
         const errorText = await response.text();
@@ -285,7 +314,7 @@ export default function WebsiteSettingsPage() {
   const handleFieldChange = (field: keyof KennelWebsite, value: any) => {
     const updatedData = { ...websiteData, [field]: value };
     setWebsiteData(updatedData);
-    
+
     // Don't auto-save on every field change - only on manual save button
   };
 
@@ -316,7 +345,10 @@ export default function WebsiteSettingsPage() {
       if (!/^[a-z0-9-]+$/.test(newSubdomain)) {
         toast({
           title: t("toastErrorTitle", "Error"),
-          description: t("website.subdomainChars", "Subdomain can only contain lowercase letters, numbers, and hyphens"),
+          description: t(
+            "website.subdomainChars",
+            "Subdomain can only contain lowercase letters, numbers, and hyphens",
+          ),
           variant: "destructive",
         });
         return;
@@ -326,7 +358,10 @@ export default function WebsiteSettingsPage() {
       if (newSubdomain.length < 3 || newSubdomain.length > 63) {
         toast({
           title: t("toastErrorTitle", "Error"),
-          description: t("website.subdomainLength", "Subdomain must be between 3 and 63 characters"),
+          description: t(
+            "website.subdomainLength",
+            "Subdomain must be between 3 and 63 characters",
+          ),
           variant: "destructive",
         });
         return;
@@ -345,7 +380,9 @@ export default function WebsiteSettingsPage() {
         const error = await response.json();
         toast({
           title: t("toastErrorTitle", "Error"),
-          description: error.error || t("website.subdomainUpdateFailed", "Failed to update subdomain"),
+          description:
+            error.error ||
+            t("website.subdomainUpdateFailed", "Failed to update subdomain"),
           variant: "destructive",
         });
         // Revert the change
@@ -355,7 +392,10 @@ export default function WebsiteSettingsPage() {
         setWebsiteData((prev) => ({ ...prev, subdomain: newSubdomain }));
         toast({
           title: t("toastSuccessTitle", "Success"),
-          description: t("website.subdomainUpdated", "Subdomain updated successfully"),
+          description: t(
+            "website.subdomainUpdated",
+            "Subdomain updated successfully",
+          ),
         });
         // Refresh the website data to ensure consistency
         fetchWebsiteData();
@@ -364,7 +404,10 @@ export default function WebsiteSettingsPage() {
       console.error("Error updating subdomain:", error);
       toast({
         title: t("toastErrorTitle", "Error"),
-        description: t("website.subdomainUpdateFailed", "Failed to update subdomain"),
+        description: t(
+          "website.subdomainUpdateFailed",
+          "Failed to update subdomain",
+        ),
         variant: "destructive",
       });
       // Revert the change
@@ -400,13 +443,20 @@ export default function WebsiteSettingsPage() {
       // Validate file
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        handleGalleryUploadError(t("website.fileSizeError", "File size must be less than 5MB"));
+        handleGalleryUploadError(
+          t("website.fileSizeError", "File size must be less than 5MB"),
+        );
         return;
       }
 
       const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
       if (!allowedTypes.includes(file.type)) {
-        handleGalleryUploadError(t("website.fileTypeError", "Only JPEG, PNG, and WebP files are allowed"));
+        handleGalleryUploadError(
+          t(
+            "website.fileTypeError",
+            "Only JPEG, PNG, and WebP files are allowed",
+          ),
+        );
         return;
       }
 
@@ -426,7 +476,9 @@ export default function WebsiteSettingsPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || t("website.uploadFailed", "Upload failed"));
+        throw new Error(
+          errorData.error || t("website.uploadFailed", "Upload failed"),
+        );
       }
 
       const result = await response.json();
@@ -439,7 +491,9 @@ export default function WebsiteSettingsPage() {
     } catch (error) {
       console.error("Gallery upload error:", error);
       handleGalleryUploadError(
-        error instanceof Error ? error.message : t("website.uploadFailed", "Upload failed"),
+        error instanceof Error
+          ? error.message
+          : t("website.uploadFailed", "Upload failed"),
       );
     }
   };
@@ -514,7 +568,10 @@ export default function WebsiteSettingsPage() {
       if (file.size > maxSize) {
         toast({
           title: t("toastErrorTitle", "Upload Error"),
-          description: t("website.testimonialFileSizeError", "File size must be less than 5MB"),
+          description: t(
+            "website.testimonialFileSizeError",
+            "File size must be less than 5MB",
+          ),
           variant: "destructive",
         });
         return;
@@ -524,7 +581,10 @@ export default function WebsiteSettingsPage() {
       if (!allowedTypes.includes(file.type)) {
         toast({
           title: t("toastErrorTitle", "Upload Error"),
-          description: t("website.testimonialFileTypeError", "Only JPEG, PNG, and WebP files are allowed"),
+          description: t(
+            "website.testimonialFileTypeError",
+            "Only JPEG, PNG, and WebP files are allowed",
+          ),
           variant: "destructive",
         });
         return;
@@ -548,7 +608,9 @@ export default function WebsiteSettingsPage() {
         const error = await response.json();
         toast({
           title: t("toastErrorTitle", "Upload Error"),
-          description: error.error || t("website.testimonialUploadFailed", "Failed to upload image"),
+          description:
+            error.error ||
+            t("website.testimonialUploadFailed", "Failed to upload image"),
           variant: "destructive",
         });
         return;
@@ -562,13 +624,19 @@ export default function WebsiteSettingsPage() {
 
       toast({
         title: t("toastSuccessTitle", "Success"),
-        description: t("website.testimonialPhotoUploadSuccess", "Photo uploaded successfully"),
+        description: t(
+          "website.testimonialPhotoUploadSuccess",
+          "Photo uploaded successfully",
+        ),
       });
     } catch (error) {
       console.error("Error uploading testimonial photo:", error);
       toast({
         title: t("toastErrorTitle", "Upload Error"),
-        description: t("website.testimonialUploadFailed", "Failed to upload photo"),
+        description: t(
+          "website.testimonialUploadFailed",
+          "Failed to upload photo",
+        ),
         variant: "destructive",
       });
     }
@@ -611,21 +679,29 @@ export default function WebsiteSettingsPage() {
   return (
     <ClientLayout>
       <div className="max-w-3xl mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold mb-8">{t("website.settingsTitle", "Website Settings")}</h1>
+        <h1 className="text-3xl font-bold mb-8">
+          {t("website.settingsTitle", "Website Settings")}
+        </h1>
 
         <div className="space-y-8">
           {/* Website URL Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.urlSection", "Website URL")}</h2>
-            
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.urlSection", "Website URL")}
+            </h2>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("website.yourWebsiteUrl", "Your Website URL")}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("website.yourWebsiteUrl", "Your Website URL")}
+                </label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
                     value={websiteData.subdomain || ""}
-                    onChange={(e) => handleFieldChange("subdomain", e.target.value)}
+                    onChange={(e) =>
+                      handleFieldChange("subdomain", e.target.value)
+                    }
                     placeholder="your-kennel-name"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -637,8 +713,21 @@ export default function WebsiteSettingsPage() {
                     {t("save", "Save")}
                   </button>
                 </div>
+                {planInfo &&
+                  planInfo.effectiveTier !== "trial" &&
+                  !planInfo.limits?.features?.customDomain && (
+                    <div className="mt-3 p-3 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+                      {t(
+                        "website.customDomainUpgrade",
+                        "Custom domain is a Pro feature. Upgrade to connect your own domain.",
+                      )}
+                    </div>
+                  )}
                 <p className="text-sm text-gray-500 mt-1">
-                  {t("website.urlHelp", "This is your unique subdomain. Your website will be available at")}
+                  {t(
+                    "website.urlHelp",
+                    "This is your unique subdomain. Your website will be available at",
+                  )}
                   <span className="font-mono text-blue-600">
                     {websiteData.subdomain || "your-subdomain"}.zanav.io
                   </span>
@@ -661,13 +750,22 @@ export default function WebsiteSettingsPage() {
 
           {/* Cover Photo & Hero Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.coverHero", "Cover Photo & Hero")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.coverHero", "Cover Photo & Hero")}
+            </h2>
 
             <div className="space-y-6">
               {/* Cover Photo Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("website.coverPhoto", "Cover Photo")}</label>
-                <p className="text-sm text-gray-500 mb-4">{t("website.coverHelp", "This will be the main image displayed at the top of your website. Recommended size: 1920x1080px.")}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("website.coverPhoto", "Cover Photo")}
+                </label>
+                <p className="text-sm text-gray-500 mb-4">
+                  {t(
+                    "website.coverHelp",
+                    "This will be the main image displayed at the top of your website. Recommended size: 1920x1080px.",
+                  )}
+                </p>
                 <ImageUpload
                   onUploadComplete={handleCoverPhotoUpload}
                   onUploadError={handleCoverPhotoError}
@@ -693,10 +791,20 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleHeroTextChange("hero_title", e.target.value)
                   }
-                  placeholder={t("website.heroTitlePH", "Welcome to [Your Kennel Name]") as string}
+                  placeholder={
+                    t(
+                      "website.heroTitlePH",
+                      "Welcome to [Your Kennel Name]",
+                    ) as string
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500 mt-1">{t("website.heroTitleHelp", "This will appear as the main heading on your website.")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t(
+                    "website.heroTitleHelp",
+                    "This will appear as the main heading on your website.",
+                  )}
+                </p>
               </div>
 
               {/* Hero Tagline */}
@@ -714,19 +822,36 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleHeroTextChange("hero_tagline", e.target.value)
                   }
-                  placeholder={t("website.heroTaglinePH", "Where your furry friends feel at home") as string}
+                  placeholder={
+                    t(
+                      "website.heroTaglinePH",
+                      "Where your furry friends feel at home",
+                    ) as string
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500 mt-1">{t("website.heroTaglineHelp", "A short, catchy description that appears below the title.")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t(
+                    "website.heroTaglineHelp",
+                    "A short, catchy description that appears below the title.",
+                  )}
+                </p>
               </div>
             </div>
           </section>
 
           {/* Kennel Story Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.aboutTitle", "About Our Kennel")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.aboutTitle", "About Our Kennel")}
+            </h2>
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("website.aboutHelp", "Tell your kennel's story and introduce yourself to potential customers. This will appear right after the main image on your website.")}</p>
+              <p className="text-sm text-gray-500">
+                {t(
+                  "website.aboutHelp",
+                  "Tell your kennel's story and introduce yourself to potential customers. This will appear right after the main image on your website.",
+                )}
+              </p>
               <div>
                 <label
                   htmlFor="about_story"
@@ -737,22 +862,41 @@ export default function WebsiteSettingsPage() {
                 <textarea
                   id="about_story"
                   value={websiteData.about_story || ""}
-                  onChange={(e) => handleFieldChange("about_story", e.target.value)}
-                  placeholder={t("website.aboutPH", "Share your kennel's story, your experience, what makes you special, and why pet owners should trust you with their beloved pets...") as string}
+                  onChange={(e) =>
+                    handleFieldChange("about_story", e.target.value)
+                  }
+                  placeholder={
+                    t(
+                      "website.aboutPH",
+                      "Share your kennel's story, your experience, what makes you special, and why pet owners should trust you with their beloved pets...",
+                    ) as string
+                  }
                   rows={6}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
                 />
-                <p className="text-sm text-gray-500 mt-1">{t("website.aboutHelp2", "This is your chance to build trust and connect with potential customers. Share your passion, experience, and what makes your kennel unique.")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t(
+                    "website.aboutHelp2",
+                    "This is your chance to build trust and connect with potential customers. Share your passion, experience, and what makes your kennel unique.",
+                  )}
+                </p>
               </div>
             </div>
           </section>
 
           {/* Image Gallery Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.galleryTitle", "Image Gallery")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.galleryTitle", "Image Gallery")}
+            </h2>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("website.galleryHelp", "Upload images to showcase your kennel facilities and happy dogs.")}</p>
+              <p className="text-sm text-gray-500">
+                {t(
+                  "website.galleryHelp",
+                  "Upload images to showcase your kennel facilities and happy dogs.",
+                )}
+              </p>
 
               {/* Gallery Images Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -787,7 +931,12 @@ export default function WebsiteSettingsPage() {
                     <div className="p-3">
                       <input
                         type="text"
-                        placeholder={t("website.imageCaptionPH", "Image caption (optional)") as string}
+                        placeholder={
+                          t(
+                            "website.imageCaptionPH",
+                            "Image caption (optional)",
+                          ) as string
+                        }
                         value={image.caption || ""}
                         onChange={(e) =>
                           updateGalleryImage(index, "caption", e.target.value)
@@ -828,7 +977,10 @@ export default function WebsiteSettingsPage() {
                             className="cursor-pointer"
                           >
                             <span className="font-medium text-blue-600 hover:text-blue-500">
-                              {t("website.upload.clickOrDrag", "Click to upload or drag and drop")}
+                              {t(
+                                "website.upload.clickOrDrag",
+                                "Click to upload or drag and drop",
+                              )}
                             </span>
                             <span className="text-gray-500">
                               {" "}
@@ -836,7 +988,10 @@ export default function WebsiteSettingsPage() {
                             </span>
                           </label>
                           <p className="text-xs text-gray-500 mt-1">
-                            {t("website.pngJpgWebp", "PNG, JPG, WEBP up to 5MB")}
+                            {t(
+                              "website.pngJpgWebp",
+                              "PNG, JPG, WEBP up to 5MB",
+                            )}
                           </p>
                         </div>
                         <input
@@ -862,17 +1017,31 @@ export default function WebsiteSettingsPage() {
 
           {/* Video Gallery Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.videoTitle", "Video Gallery")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.videoTitle", "Video Gallery")}
+            </h2>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("website.videoHelp", "Add YouTube or Vimeo video links to showcase your kennel in action.")}</p>
+              <p className="text-sm text-gray-500">
+                {t(
+                  "website.videoHelp",
+                  "Add YouTube or Vimeo video links to showcase your kennel in action.",
+                )}
+              </p>
 
               {/* Videos */}
               <div className="space-y-4">
                 {videos.map((video, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium">{t("website.videoItem", { defaultValue: "Video {{num}}", num: index + 1 }) as unknown as string}</h4>
+                      <h4 className="font-medium">
+                        {
+                          t("website.videoItem", {
+                            defaultValue: "Video {{num}}",
+                            num: index + 1,
+                          }) as unknown as string
+                        }
+                      </h4>
                       <button
                         onClick={() => removeVideo(index)}
                         className="text-red-500 hover:text-red-700"
@@ -883,7 +1052,12 @@ export default function WebsiteSettingsPage() {
 
                     <input
                       type="url"
-                      placeholder={t("website.videoUrlPH", "Video URL (YouTube/Vimeo)") as string}
+                      placeholder={
+                        t(
+                          "website.videoUrlPH",
+                          "Video URL (YouTube/Vimeo)",
+                        ) as string
+                      }
                       value={video.video_url}
                       onChange={(e) =>
                         updateVideo(index, "video_url", e.target.value)
@@ -893,7 +1067,12 @@ export default function WebsiteSettingsPage() {
 
                     <input
                       type="text"
-                      placeholder={t("website.videoTitlePH", "Video title (optional)") as string}
+                      placeholder={
+                        t(
+                          "website.videoTitlePH",
+                          "Video title (optional)",
+                        ) as string
+                      }
                       value={video.title || ""}
                       onChange={(e) =>
                         updateVideo(index, "title", e.target.value)
@@ -902,7 +1081,12 @@ export default function WebsiteSettingsPage() {
                     />
 
                     <textarea
-                      placeholder={t("website.videoDescPH", "Video description (optional)") as string}
+                      placeholder={
+                        t(
+                          "website.videoDescPH",
+                          "Video description (optional)",
+                        ) as string
+                      }
                       value={video.description || ""}
                       onChange={(e) =>
                         updateVideo(index, "description", e.target.value)
@@ -927,17 +1111,31 @@ export default function WebsiteSettingsPage() {
 
           {/* Testimonials Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.testimonialsTitle", "Testimonials")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.testimonialsTitle", "Testimonials")}
+            </h2>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("website.testimonialsHelp", "Add customer testimonials to build trust with potential clients.")}</p>
+              <p className="text-sm text-gray-500">
+                {t(
+                  "website.testimonialsHelp",
+                  "Add customer testimonials to build trust with potential clients.",
+                )}
+              </p>
 
               {/* Testimonials */}
               <div className="space-y-4">
                 {testimonials.map((testimonial, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium">{t("website.testimonialItem", { defaultValue: "Testimonial {{num}}", num: index + 1 }) as unknown as string}</h4>
+                      <h4 className="font-medium">
+                        {
+                          t("website.testimonialItem", {
+                            defaultValue: "Testimonial {{num}}",
+                            num: index + 1,
+                          }) as unknown as string
+                        }
+                      </h4>
                       <button
                         onClick={() => removeTestimonial(index)}
                         className="text-red-500 hover:text-red-700"
@@ -948,7 +1146,9 @@ export default function WebsiteSettingsPage() {
 
                     <input
                       type="text"
-                      placeholder={t("website.customerNamePH", "Customer name") as string}
+                      placeholder={
+                        t("website.customerNamePH", "Customer name") as string
+                      }
                       value={testimonial.customer_name}
                       onChange={(e) =>
                         updateTestimonial(
@@ -962,7 +1162,9 @@ export default function WebsiteSettingsPage() {
 
                     {/* Customer Photo Upload */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t("website.customerPhoto", "Customer Photo")}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t("website.customerPhoto", "Customer Photo")}
+                      </label>
                       <div className="flex items-center space-x-4">
                         {testimonial.customer_photo_url ? (
                           <div className="relative">
@@ -972,7 +1174,13 @@ export default function WebsiteSettingsPage() {
                               className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                             />
                             <button
-                              onClick={() => updateTestimonial(index, "customer_photo_url", "")}
+                              onClick={() =>
+                                updateTestimonial(
+                                  index,
+                                  "customer_photo_url",
+                                  "",
+                                )
+                              }
                               className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
                             >
                               ×
@@ -983,14 +1191,16 @@ export default function WebsiteSettingsPage() {
                             <User className="h-8 w-8 text-gray-400" />
                           </div>
                         )}
-                        
+
                         <div className="flex-1">
                           <label
                             htmlFor={`testimonial-photo-upload-${index}`}
                             className="cursor-pointer inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <Upload className="h-4 w-4 mr-2" />
-                            {testimonial.customer_photo_url ? t("website.changePhoto", "Change Photo") : t("website.uploadPhoto", "Upload Photo")}
+                            {testimonial.customer_photo_url
+                              ? t("website.changePhoto", "Change Photo")
+                              : t("website.uploadPhoto", "Upload Photo")}
                           </label>
                           <input
                             id={`testimonial-photo-upload-${index}`}
@@ -1005,14 +1215,19 @@ export default function WebsiteSettingsPage() {
                             className="hidden"
                           />
                           <p className="text-xs text-gray-500 mt-1">
-                            {t("website.pngJpgWebp", "PNG, JPG, WEBP up to 5MB")}
+                            {t(
+                              "website.pngJpgWebp",
+                              "PNG, JPG, WEBP up to 5MB",
+                            )}
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{t("website.rating", "Rating")}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {t("website.rating", "Rating")}
+                      </label>
                       <div className="flex space-x-1">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
@@ -1029,7 +1244,12 @@ export default function WebsiteSettingsPage() {
                     </div>
 
                     <textarea
-                      placeholder={t("website.customerTestimonialPH", "Customer testimonial") as string}
+                      placeholder={
+                        t(
+                          "website.customerTestimonialPH",
+                          "Customer testimonial",
+                        ) as string
+                      }
                       value={testimonial.testimonial_text}
                       onChange={(e) =>
                         updateTestimonial(
@@ -1058,17 +1278,31 @@ export default function WebsiteSettingsPage() {
 
           {/* FAQ Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.faqTitle", "Frequently Asked Questions")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.faqTitle", "Frequently Asked Questions")}
+            </h2>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("website.faqHelp", "Add common questions and answers to help potential customers.")}</p>
+              <p className="text-sm text-gray-500">
+                {t(
+                  "website.faqHelp",
+                  "Add common questions and answers to help potential customers.",
+                )}
+              </p>
 
               {/* FAQs */}
               <div className="space-y-4">
                 {faqs.map((faq, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium">{t("website.faqItem", { defaultValue: "FAQ {{num}}", num: index + 1 }) as unknown as string}</h4>
+                      <h4 className="font-medium">
+                        {
+                          t("website.faqItem", {
+                            defaultValue: "FAQ {{num}}",
+                            num: index + 1,
+                          }) as unknown as string
+                        }
+                      </h4>
                       <button
                         onClick={() => removeFAQ(index)}
                         className="text-red-500 hover:text-red-700"
@@ -1079,7 +1313,9 @@ export default function WebsiteSettingsPage() {
 
                     <input
                       type="text"
-                      placeholder={t("website.questionPH", "Question") as string}
+                      placeholder={
+                        t("website.questionPH", "Question") as string
+                      }
                       value={faq.question}
                       onChange={(e) =>
                         updateFAQ(index, "question", e.target.value)
@@ -1113,7 +1349,9 @@ export default function WebsiteSettingsPage() {
 
           {/* Contact Info & Address Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.contactTitle", "Contact Info & Address")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.contactTitle", "Contact Info & Address")}
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -1124,7 +1362,12 @@ export default function WebsiteSettingsPage() {
                 <textarea
                   value={websiteData.address || ""}
                   onChange={(e) => handleFieldChange("address", e.target.value)}
-                  placeholder={t("website.addressPH", "Enter your kennel's full address") as string}
+                  placeholder={
+                    t(
+                      "website.addressPH",
+                      "Enter your kennel's full address",
+                    ) as string
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -1141,7 +1384,9 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleFieldChange("contact_phone", e.target.value)
                   }
-                  placeholder={t("website.phonePH", "+1 (555) 123-4567") as string}
+                  placeholder={
+                    t("website.phonePH", "+1 (555) 123-4567") as string
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -1157,7 +1402,9 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleFieldChange("contact_email", e.target.value)
                   }
-                  placeholder={t("website.emailPH", "info@yourkennel.com") as string}
+                  placeholder={
+                    t("website.emailPH", "info@yourkennel.com") as string
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -1173,7 +1420,9 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleFieldChange("contact_whatsapp", e.target.value)
                   }
-                  placeholder={t("website.whatsappPH", "+1 (555) 123-4567") as string}
+                  placeholder={
+                    t("website.whatsappPH", "+1 (555) 123-4567") as string
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -1188,27 +1437,49 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleFieldChange("map_embed_url", e.target.value)
                   }
-                  placeholder={t("website.mapsUrlPH", "https://www.google.com/maps/embed?pb=...") as string}
+                  placeholder={
+                    t(
+                      "website.mapsUrlPH",
+                      "https://www.google.com/maps/embed?pb=...",
+                    ) as string
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500 mt-1">{t("website.mapsHelp", "Get this from Google Maps → Share → Embed a map")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t(
+                    "website.mapsHelp",
+                    "Get this from Google Maps → Share → Embed a map",
+                  )}
+                </p>
               </div>
             </div>
           </section>
 
           {/* Special Restrictions Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.specialRestrictions", "Special Restrictions")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.specialRestrictions", "Special Restrictions")}
+            </h2>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("website.specialHelp", "List any special requirements or restrictions for your kennel.")}</p>
+              <p className="text-sm text-gray-500">
+                {t(
+                  "website.specialHelp",
+                  "List any special requirements or restrictions for your kennel.",
+                )}
+              </p>
 
               <textarea
                 value={websiteData.special_restrictions || ""}
                 onChange={(e) =>
                   handleFieldChange("special_restrictions", e.target.value)
                 }
-                placeholder={t("website.specialPH", "e.g., Only small dogs under 20kg, Must be vaccinated, No aggressive breeds, etc.") as string}
+                placeholder={
+                  t(
+                    "website.specialPH",
+                    "e.g., Only small dogs under 20kg, Must be vaccinated, No aggressive breeds, etc.",
+                  ) as string
+                }
                 rows={6}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -1217,7 +1488,9 @@ export default function WebsiteSettingsPage() {
 
           {/* Theme & Appearance Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.themeTitle", "Theme & Appearance")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.themeTitle", "Theme & Appearance")}
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -1243,7 +1516,12 @@ export default function WebsiteSettingsPage() {
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{t("website.themeHelp", "This color will be used for buttons, links, and accents on your website.")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t(
+                    "website.themeHelp",
+                    "This color will be used for buttons, links, and accents on your website.",
+                  )}
+                </p>
               </div>
 
               <div>
@@ -1256,10 +1534,20 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleFieldChange("seo_title", e.target.value)
                   }
-                  placeholder={t("website.seoTitlePH", "Your Kennel Name - Professional Dog Boarding") as string}
+                  placeholder={
+                    t(
+                      "website.seoTitlePH",
+                      "Your Kennel Name - Professional Dog Boarding",
+                    ) as string
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500 mt-1">{t("website.seoTitleHelp", "This appears in search engine results and browser tabs.")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t(
+                    "website.seoTitleHelp",
+                    "This appears in search engine results and browser tabs.",
+                  )}
+                </p>
               </div>
 
               <div>
@@ -1271,18 +1559,30 @@ export default function WebsiteSettingsPage() {
                   onChange={(e) =>
                     handleFieldChange("seo_description", e.target.value)
                   }
-                  placeholder={t("website.seoDescPH", "Professional dog boarding services in [Your City]. Safe, comfortable, and loving care for your furry friends.") as string}
+                  placeholder={
+                    t(
+                      "website.seoDescPH",
+                      "Professional dog boarding services in [Your City]. Safe, comfortable, and loving care for your furry friends.",
+                    ) as string
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500 mt-1">{t("website.seoDescHelp", "This description appears in search engine results.")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t(
+                    "website.seoDescHelp",
+                    "This description appears in search engine results.",
+                  )}
+                </p>
               </div>
             </div>
           </section>
 
           {/* Direct Booking Section */}
           <section className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("website.directBooking", "Direct Booking")}</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("website.directBooking", "Direct Booking")}
+            </h2>
 
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
@@ -1299,11 +1599,19 @@ export default function WebsiteSettingsPage() {
                   htmlFor="allow_direct_booking"
                   className="text-sm font-medium text-gray-700"
                 >
-                  {t("website.enableDirect", "Enable direct booking on website")}
+                  {t(
+                    "website.enableDirect",
+                    "Enable direct booking on website",
+                  )}
                 </label>
               </div>
 
-              <p className="text-sm text-gray-500">{t("website.directHelp", "When enabled, customers can book stays directly from your website. Payment processing and calendar integration will be added in a future update.")}</p>
+              <p className="text-sm text-gray-500">
+                {t(
+                  "website.directHelp",
+                  "When enabled, customers can book stays directly from your website. Payment processing and calendar integration will be added in a future update.",
+                )}
+              </p>
             </div>
           </section>
 
@@ -1314,7 +1622,9 @@ export default function WebsiteSettingsPage() {
               disabled={isSaving}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? t("saving", "Saving...") : t("website.saveAll", "Save All Changes")}
+              {isSaving
+                ? t("saving", "Saving...")
+                : t("website.saveAll", "Save All Changes")}
             </button>
           </div>
         </div>
