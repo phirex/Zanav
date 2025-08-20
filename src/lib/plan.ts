@@ -133,3 +133,21 @@ export async function assertRoomCreationAllowed(
     throw error;
   }
 }
+
+export async function assertUserInviteAllowed(tenantId: string): Promise<void> {
+  const info = await getPlanInfo(tenantId);
+  if (info.effectiveTier === "trial" || info.effectiveTier === "pro") return;
+  const max = info.limits.maxStaffUsers;
+  if (!max) return;
+  const supabase = supabaseServer();
+  const { count } = await supabase
+    .from("UserTenant")
+    .select("user_id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId);
+  if ((count || 0) >= max) {
+    const message = `User limit reached for Standard plan (${max}). Upgrade to Pro to add more team members.`;
+    const error: any = new Error(message);
+    error.code = "limit_exceeded";
+    throw error;
+  }
+}

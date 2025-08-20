@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types";
 import { Role } from "@/lib/auth";
+import { assertUserInviteAllowed } from "@/lib/plan";
 
 interface ListUsersInput {
   tenantId: string;
@@ -57,6 +58,8 @@ export async function addUser(
   }: AddUserInput,
 ) {
   if (!email || !role) throw new Error("Email and role are required");
+  // Enforce plan user limit (Standard plan)
+  await assertUserInviteAllowed(tenantId);
   let userId: string;
   let supabaseUserId: string | null = null;
 
