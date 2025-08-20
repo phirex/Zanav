@@ -42,17 +42,19 @@ export default function TenantsPage() {
   const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Get the current session
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         throw new Error("No session found");
       }
 
       const response = await fetch("/api/admin/tenants", {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!response.ok) {
@@ -97,9 +99,11 @@ export default function TenantsPage() {
 
     try {
       setIsCreating(true);
-      
+
       // Get the current session
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         throw new Error("No session found");
       }
@@ -108,7 +112,7 @@ export default function TenantsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${session.access_token}`
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ name: newTenantName }),
       });
@@ -145,9 +149,11 @@ export default function TenantsPage() {
   ) => {
     try {
       setIsConnecting(true);
-      
+
       // Get the current session
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         throw new Error("No session found");
       }
@@ -155,8 +161,8 @@ export default function TenantsPage() {
       const response = await fetch(`/api/admin/tenants/${tenantId}/connect`, {
         method: "POST",
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!response.ok) {
@@ -184,13 +190,21 @@ export default function TenantsPage() {
   };
 
   const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
-    if (window.confirm(`Are you sure you want to delete tenant "${tenantName}"? This action cannot be undone.`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete tenant "${tenantName}"? This action cannot be undone.`,
+      )
+    ) {
       try {
         setIsDeleting(true);
-        console.log(`[DELETE] Starting deletion of tenant: ${tenantName} (${tenantId})`);
-        
+        console.log(
+          `[DELETE] Starting deletion of tenant: ${tenantName} (${tenantId})`,
+        );
+
         // Get the current session
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) {
           throw new Error("No session found");
         }
@@ -198,12 +212,12 @@ export default function TenantsPage() {
         const response = await fetch(`/api/admin/tenants/${tenantId}`, {
           method: "DELETE",
           headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
+            Authorization: `Bearer ${session.access_token}`,
+          },
         });
 
         console.log(`[DELETE] Response status: ${response.status}`);
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           console.error(`[DELETE] Error response:`, errorData);
@@ -221,7 +235,6 @@ export default function TenantsPage() {
         console.log(`[DELETE] Refreshing tenants list...`);
         await fetchTenants();
         console.log(`[DELETE] Tenants list refreshed successfully`);
-        
       } catch (err) {
         console.error("Error deleting tenant:", err);
         toast({
@@ -233,6 +246,57 @@ export default function TenantsPage() {
       } finally {
         setIsDeleting(false);
       }
+    }
+  };
+
+  const handleSetPlan = async (tenantId: string, tenantName: string) => {
+    try {
+      // Ask admin for plan input
+      const planInput = window.prompt(
+        `Set plan for "${tenantName}" (standard|pro):`,
+        "pro",
+      );
+      if (!planInput) return;
+      const plan = planInput.trim().toLowerCase();
+      if (plan !== "standard" && plan !== "pro") {
+        toast({
+          title: t("toastErrorTitle"),
+          description: "Invalid plan. Use 'standard' or 'pro'",
+          variant: "destructive",
+        });
+        return;
+      }
+      const force = window.confirm(
+        "Force plan and bypass trial/grace?\nOK = Force, Cancel = Don't force",
+      );
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session found");
+
+      const res = await fetch(`/api/admin/tenants/${tenantId}/plan`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ plan, planForced: force }),
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e?.error || "Failed to set plan");
+      }
+      toast({
+        title: t("toastSuccessTitle"),
+        description: `Plan set to ${plan}${force ? " (forced)" : ""}`,
+      });
+    } catch (err) {
+      toast({
+        title: t("toastErrorTitle"),
+        description: err instanceof Error ? err.message : "Failed to set plan",
+        variant: "destructive",
+      });
     }
   };
 
@@ -316,7 +380,7 @@ export default function TenantsPage() {
                     </TableCell>
                     <TableCell className="table-cell">
                       {tenant.subdomain ? (
-                        <a 
+                        <a
                           href={`https://${tenant.subdomain}.zanav.io`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -348,11 +412,21 @@ export default function TenantsPage() {
                             ? t("connectingButton", "Connecting...")
                             : t("connectButton", "Connect")}
                         </Button>
-                        
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSetPlan(tenant.id, tenant.name)}
+                        >
+                          Plan
+                        </Button>
+
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                          onClick={() =>
+                            handleDeleteTenant(tenant.id, tenant.name)
+                          }
                           disabled={isDeleting}
                         >
                           {isDeleting ? "Deleting..." : "Delete"}
