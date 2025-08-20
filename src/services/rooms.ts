@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types";
+import { assertRoomCreationAllowed } from "@/lib/plan";
 
 export async function listRooms(
   client: SupabaseClient<Database>,
@@ -25,6 +26,9 @@ export async function createRoom(
   if (!tenantId) {
     throw new Error("Tenant ID is required for room creation");
   }
+
+  // Enforce plan limits (Standard max rooms)
+  await assertRoomCreationAllowed(tenantId);
 
   const { name, displayName, maxCapacity } = body;
   if (!name || !displayName || maxCapacity === undefined) {

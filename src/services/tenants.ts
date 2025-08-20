@@ -55,6 +55,7 @@ export async function createTenant(
     { key: "whatsappEnabled", value: "false" },
     { key: "currency", value: "ILS" },
     { key: "kennelName", value: name },
+    { key: "plan", value: "standard" },
   ];
 
   const now = new Date().toISOString();
